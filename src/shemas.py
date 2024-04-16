@@ -1,12 +1,12 @@
 import typing as t
 from re import fullmatch
-from datetime import date
+from datetime import date, datetime
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from errors import FieldValidationException
-from utils.funcs import to_date
+from utils.funcs import to_date, get_datetime_now_moscow
 
 
 __all__: list[str] = [
@@ -23,9 +23,10 @@ __all__: list[str] = [
     "NDTShema",
     "CreateNDTShema",
     "UpdateNDTShema",
-    # "EngineerShema",
-    # "EngineerCertificationShema",
-    # "UserShema",
+    "BaseUserShema",
+    "UserShema",
+    "CreateUserShema",
+    "UpdateUserShema"
 ]
 
 
@@ -59,7 +60,7 @@ class BaseShema(BaseModel):
 
 """
 ====================================================================================================
-Welder shema
+Welder shemas
 ====================================================================================================
 """
 
@@ -155,7 +156,7 @@ class UpdateWelderShema(BaseWelderShema):
 
 """
 ====================================================================================================
-Welder certification shema
+Welder certification shemas
 ====================================================================================================
 """
 
@@ -272,7 +273,7 @@ class UpdateWelderCertificationShema(BaseWelderCertificationShema):
 
 """
 ====================================================================================================
-NDT shema
+NDT shemas
 ====================================================================================================
 """
 
@@ -368,3 +369,34 @@ class UpdateNDTShema(BaseNDTShema):
             return v
         
         raise FieldValidationException(f"Invalid kleymo: {v}")
+        
+
+"""
+====================================================================================================
+User shemas
+====================================================================================================
+"""
+
+
+class BaseUserShema(BaseShema):
+    ident: UUID | None = Field(default=uuid4)
+    name: str | None = Field(default=None)
+    login: str | None = Field(default=None)
+    email: str | None = Field(default=None)
+    sign_date: datetime | None = Field(default=get_datetime_now_moscow)
+    update_date: datetime | None = Field(default=get_datetime_now_moscow)
+    login_date: datetime | None = Field(default=get_datetime_now_moscow)
+    is_superuser: bool | None = Field(default=None)
+
+
+class UserShema(BaseShema):
+    login: str
+    password: str
+    name: str
+    refresh_token: str
+
+
+class CreateUserShema(UserShema): ...
+
+
+class UpdateUserShema(BaseUserShema): ...

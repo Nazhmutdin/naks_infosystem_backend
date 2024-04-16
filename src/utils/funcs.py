@@ -2,6 +2,7 @@ import typing as t
 
 from datetime import datetime, date
 from dateutil.parser import parser
+from dateutil.tz import gettz
 
 
 def str_to_datetime(date_string, dayfirst: bool = False) -> datetime | None:
@@ -30,3 +31,7 @@ def to_date(date_data: str | date | t.Iterable[int] | None, dayfirst: bool = Fal
         return date(*date_data)
     
     raise ValueError(f"Invalid date data '{date_data}'")
+
+
+def get_datetime_now_moscow() -> datetime:
+    return datetime.now(gettz("Europe / Moscow"))

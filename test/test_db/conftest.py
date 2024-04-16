@@ -1,6 +1,6 @@
 import typing as t
 import pytest
-import pytest_asyncio
+from asyncio import run, run
 import json
 
 from db_engine import Base, engine
@@ -11,13 +11,16 @@ from shemas import *
 settings = Settings()
 
 
-@pytest_asyncio.fixture(scope="module", autouse=True)
-async def prepare_db():
+@pytest.fixture(scope="module", autouse=True)
+def prepare_db():
     assert settings.MODE() == "TEST"
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+    async def start_db():
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(Base.metadata.create_all)
+
+    run(start_db())
 
 
 def from_dict_to_cmd_args[T: dict](data: T) -> t.Iterator[str]:

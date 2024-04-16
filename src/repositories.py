@@ -27,7 +27,7 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from errors import GetDBException, GetManyDBException, UpdateDBException, DeleteDBException, CreateDBException
 from shemas import *
-from models import WelderModel, WelderCertificationModel, NDTModel
+from models import WelderModel, WelderCertificationModel, NDTModel, UserModel
 from db_engine import Base
 from shemas import UpdateWelderCertificationShema
 
@@ -184,3 +184,8 @@ class WelderCertificationRepository(BaseRepository[WelderCertificationShema, Cre
 class NDTRepository(BaseRepository[NDTShema, CreateNDTShema, UpdateNDTShema]):
     __shema__ = NDTShema
     __model__ = NDTModel
+
+
+class UserRepository(BaseRepository[UserShema, CreateUserShema, UpdateUserShema]):
+    __shema__ = UserShema
+    __model__ = UserModel

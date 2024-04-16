@@ -1,8 +1,6 @@
 import typing as t
 
-from sqlalchemy import event
-
-from db_engine import get_session, AsyncSession
+from db_engine import get_session
 from repositories import BaseRepository
 
 
