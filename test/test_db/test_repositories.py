@@ -1,21 +1,93 @@
 import pytest
+import typing as t
+from datetime import date
 
 from shemas import WelderCertificationShema
-from base_test_classes import BaseTestRepository
-from repositories import *
+from errors import CreateDBException
+from utils.funcs import to_date
+from db.repositories import *
+from db.uow import UnitOfWork
 from shemas import *
 
 
 """
 ===================================================================================================================
-Welder repository
+repository base test
+===================================================================================================================
+"""
+
+
+@pytest.mark.usefixtures("prepare_db")
+class BaseTestRepository[Shema: BaseShema]:
+    __create_shema__: type[BaseShema]
+    __update_shema__: type[BaseShema]
+    __repository__: type[BaseRepository]
+
+
+    async def test_add(self, data: list[Shema]) -> None:
+        async with UnitOfWork(repository_type=self.__repository__) as uow:
+            for el in data:
+                await uow.repository.add(self.__create_shema__.model_validate(el, from_attributes=True).model_dump())
+                assert await uow.repository.get(el.ident) == el
+
+            assert await uow.repository.count() == len(data)
+
+            await uow.commit()
+
+    
+    async def test_get(self, attr: str, el: Shema) -> None:
+        async with UnitOfWork(repository_type=self.__repository__) as uow:
+
+            assert await uow.repository.get(getattr(el, attr)) == el
+
+
+    async def test_res_type(self, ident: int | str, expectation: type[Shema]) -> None:
+        async with UnitOfWork(repository_type=self.__repository__) as uow:
+            assert type(await uow.repository.get(ident)) == expectation
+
+
+    async def test_add_existing(self, data: Shema) -> None:
+        async with UnitOfWork(repository_type=self.__repository__) as uow:
+            with pytest.raises(CreateDBException):
+                await uow.repository.add(self.__create_shema__.model_validate(data, from_attributes=True).model_dump())
+
+
+    async def test_update(self, ident: str, data: dict[str, t.Any]) -> None:
+        async with UnitOfWork(repository_type=self.__repository__) as uow:
+
+            await uow.repository.update(ident, data)
+            el = await uow.repository.get(ident)
+
+            for key, value in data.items():
+                if isinstance(getattr(el, key), date):
+                    assert getattr(el, key) == to_date(value, False)
+                    continue
+
+                assert getattr(el, key) == value
+
+            await uow.commit()
+
+    
+    async def test_delete(self, item: Shema) -> None:
+        async with UnitOfWork(repository_type=self.__repository__) as uow:
+
+            await uow.repository.delete(item.ident)
+
+            assert not bool(await uow.repository.get(item.ident))
+
+            await uow.repository.add(self.__create_shema__.model_validate(item, from_attributes=True).model_dump())
+            await uow.commit()
+
+
+"""
+===================================================================================================================
+Welder repository test
 ===================================================================================================================
 """
 
 
 @pytest.mark.asyncio
-@pytest.mark.run(order=1)
-class TestWelderRepository(BaseTestRepository):
+class TestWelderRepository(BaseTestRepository[WelderShema]):
     __repository__ = WelderRepository
     __create_shema__ = CreateWelderShema
     __update_shema__ = UpdateWelderShema
@@ -59,13 +131,13 @@ class TestWelderRepository(BaseTestRepository):
     @pytest.mark.parametrize(
             "ident, data",
             [
-                ("095898d1419641b3adf45af287aad3e7", {"name": "dsdsds", "birthday": "15.12.1995"}),
+                ("d6f81d0030a44b21afc6d6cc8d99e13b", {"name": "dsdsds", "birthday": "15.12.1995"}),
                 ("dc20817ed3844660a69b5c89d7df15ac", {"passport_number": "T15563212", "sicil": "1585254"}),
                 ("d00b26c65fdf4a819c5065e301dd81dd", {"nation": "RUS", "status": 1}),
             ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
-        return await super().test_update(ident, data)
+        return await super().test_update(ident, self.__update_shema__.model_validate(data).model_dump(exclude_unset=True))
     
 
     @pytest.mark.usefixtures('welders')
@@ -79,14 +151,13 @@ class TestWelderRepository(BaseTestRepository):
     
 """
 ===================================================================================================================
-Welder certification repository
+Welder certification repository test
 ===================================================================================================================
 """
 
 
 @pytest.mark.asyncio
-@pytest.mark.run(order=2)
-class TestWelderCertificationRepository(BaseTestRepository):
+class TestWelderCertificationRepository(BaseTestRepository[WelderCertificationShema]):
     __repository__ = WelderCertificationRepository
     __create_shema__ = CreateWelderCertificationShema
     __update_shema__ = UpdateWelderCertificationShema
@@ -133,7 +204,7 @@ class TestWelderCertificationRepository(BaseTestRepository):
             ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
-        await super().test_update(ident, data)
+        await super().test_update(ident, self.__update_shema__.model_validate(data).model_dump(exclude_unset=True))
 
 
     @pytest.mark.usefixtures('welder_certifications')
@@ -147,14 +218,13 @@ class TestWelderCertificationRepository(BaseTestRepository):
 
 """
 ===================================================================================================================
-NDT repository
+NDT repository test
 ===================================================================================================================
 """
 
 
 @pytest.mark.asyncio
-@pytest.mark.run(order=3)
-class TestNDTRepository(BaseTestRepository):
+class TestNDTRepository(BaseTestRepository[NDTShema]):
     __repository__ = NDTRepository
     __create_shema__ = CreateNDTShema
     __update_shema__ = UpdateNDTShema
@@ -198,7 +268,7 @@ class TestNDTRepository(BaseTestRepository):
             ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
-        await super().test_update(ident, data)
+        await super().test_update(ident, self.__update_shema__.model_validate(data).model_dump(exclude_unset=True))
 
 
     @pytest.mark.usefixtures('ndts')

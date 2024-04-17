@@ -1,15 +1,70 @@
 import pytest
+from datetime import date
 
 from pydantic import ValidationError
 
 from services.db_services import *
-from base_test_classes import BaseTestDBService
+from utils.funcs import str_to_datetime
 from shemas import *
+
+
+@pytest.mark.usefixtures("prepare_db")
+class BaseTestDBService[Shema: BaseShema]:
+    service: BaseDBService[Shema, Shema, Shema]
+    __create_Shema__: type[BaseShema]
+    __update_Shema__: type[BaseShema]
+
+    async def test_add(self, item: Shema) -> None:
+        await self.service.add((self.__create_Shema__.model_validate(item, from_attributes=True)))
+        assert await self.service.get(item.ident) == item
+
+
+    async def test_add_many(self, items: list[Shema]) -> None:
+        data = [self.__create_Shema__.model_validate(item, from_attributes=True) for item in items]
+
+        await self.service.add_many(data)
+
+
+    async def test_get(self, attr: str, item: Shema) -> None:
+
+        assert await self.service.get(getattr(item, attr)) == item
+
+
+    async def test_update(self, ident: str, data: dict) -> None:
+
+        assert await self.service.get(ident)
+
+        await self.service.update(ident, self.__update_Shema__.model_validate(data, from_attributes=True))
+        item = await self.service.get(ident)
+
+        for key, value in data.items():
+            if isinstance(getattr(item, key), date):
+                assert getattr(item, key) == str_to_datetime(value, False).date()
+                continue
+
+            assert getattr(item, key) == value
+
+    
+    async def test_fail_update(self, ident: str, data: dict, exception) -> None:
+        with pytest.raises(exception):
+            await self.service.update(ident, self.__update_Shema__.model_validate(data, from_attributes=True))
+
+
+    async def test_delete(self, item: Shema) -> None:
+
+        await self.service.delete(item.ident)
+
+        assert not bool(await self.service.get(item.ident))
+
+        await self.service.add(self.__create_Shema__.model_validate(item, from_attributes=True))
 
 
 @pytest.mark.asyncio
 class TestWelderDBService(BaseTestDBService):
     service = WelderDBService()
+    __create_Shema__ = CreateWelderShema
+    __update_Shema__ = UpdateWelderShema
+
 
     @pytest.mark.usefixtures('welders')
     async def test_add(self, welders: list[WelderShema]) -> None:
@@ -70,6 +125,9 @@ class TestWelderDBService(BaseTestDBService):
 @pytest.mark.asyncio
 class TestWelderCertificationDBService(BaseTestDBService):
     service = WelderCertificationDBService()
+    __create_Shema__ = CreateWelderCertificationShema
+    __update_Shema__ = UpdateWelderCertificationShema
+
 
     @pytest.mark.usefixtures('welder_certifications')
     async def test_add(self, welder_certifications: list[WelderCertificationShema]) -> None:
@@ -128,6 +186,9 @@ class TestWelderCertificationDBService(BaseTestDBService):
 @pytest.mark.asyncio
 class TestNDTDBService(BaseTestDBService):
     service = NDTDBService()
+    __create_Shema__ = CreateNDTShema
+    __update_Shema__ = UpdateNDTShema
+
 
     @pytest.mark.usefixtures('ndts')
     async def test_add(self, ndts: list[NDTShema]) -> None:
