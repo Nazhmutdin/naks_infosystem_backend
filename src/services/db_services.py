@@ -1,18 +1,8 @@
 from uuid import UUID
-import typing as t
 
-from _types import (
-    WelderData, 
-    WelderCertificationData, 
-    NDTData, 
-    DataBaseRequest,
-    WelderDataBaseRequest, 
-    WelderCertificationDataBaseRequest, 
-    NDTDataBaseRequest
-)
-from repositories import BaseRepository
-from utils.uow import UnitOfWork
-from repositories import *
+from db.repositories import BaseRepository
+from db.uow import UnitOfWork
+from db.repositories import *
 from shemas import *
 
 
@@ -21,13 +11,12 @@ __all__: list[str] = [
     "WelderDBService",
     "WelderCertificationDBService",
     "NDTDBService",
+    "UserDBService"
 ]
 
 
-class BaseDBService[Shema: BaseShema, Request: DataBaseRequest]:
-    _uow: UnitOfWork[BaseRepository[Shema, Shema, Shema]]
-    __create_shema__: type[BaseShema]
-    __update_shema__: type[BaseShema]
+class BaseDBService[Shema: BaseShema, CreateShema: BaseShema, UpdateShema: BaseShema]:
+    _uow: UnitOfWork[BaseRepository[Shema]]
 
 
     async def get(self, ident: str | UUID) -> Shema | None:
@@ -35,24 +24,23 @@ class BaseDBService[Shema: BaseShema, Request: DataBaseRequest]:
             return await uow.repository.get(ident)
 
 
-    async def add(self, data: dict) -> None:
+    async def add(self, data: CreateShema) -> None:
         async with self._uow as uow:
-            data = self.__create_shema__.model_validate(data)
-            await uow.repository.add(data)
+            await uow.repository.add(data.model_dump())
             await uow.commit()
 
 
-    async def add_many(self, data: list[dict]) -> None:
+    async def add_many(self, data: list[CreateShema]) -> None:
         async with self._uow as uow:
             for el in data:
-                await uow.repository.add(self.__create_shema__.model_validate(el))
+                await uow.repository.add(el.model_dump())
                 
             await uow.commit()
 
 
-    async def update(self, ident: str | UUID, data: dict) -> None:
+    async def update(self, ident: str | UUID, data: UpdateShema) -> None:
         async with self._uow as uow:
-            await uow.repository.update(ident, self.__update_shema__.model_validate(data))
+            await uow.repository.update(ident, data.model_dump(exclude_unset=True))
             await uow.commit()
 
 
@@ -67,43 +55,17 @@ class BaseDBService[Shema: BaseShema, Request: DataBaseRequest]:
             return await uow.repository.count()
 
 
-class WelderDBService(BaseDBService[WelderShema, WelderDataBaseRequest]):
+class WelderDBService(BaseDBService[WelderShema, CreateWelderShema, UpdateWelderShema]):
     _uow = UnitOfWork(WelderRepository)
-    __create_shema__ = CreateWelderShema
-    __update_shema__ = UpdateWelderShema
-
-    
-    async def add(self, **data: t.Unpack[WelderData]) -> None:
-        await super().add(data)
-    
-
-    async def update(self, ident: str | UUID, **data: t.Unpack[WelderData]) -> None:
-        await super().update(ident, data)
 
 
-class WelderCertificationDBService(BaseDBService[WelderCertificationShema, WelderCertificationDataBaseRequest]):
+class WelderCertificationDBService(BaseDBService[WelderCertificationShema, CreateWelderCertificationShema, UpdateWelderCertificationShema]):
     _uow = UnitOfWork(WelderCertificationRepository)
-    __create_shema__ = CreateWelderCertificationShema
-    __update_shema__ = UpdateWelderCertificationShema
-
-    
-    async def add(self, **data: t.Unpack[WelderCertificationData]) -> None:
-        await super().add(data)
 
 
-    async def update(self, ident: str | UUID, **data: t.Unpack[WelderCertificationData]) -> None:
-        await super().update(ident, data)
-
-
-class NDTDBService(BaseDBService[NDTShema, NDTDataBaseRequest]):
+class NDTDBService(BaseDBService[NDTShema, CreateNDTShema, UpdateNDTShema]):
     _uow = UnitOfWork(NDTRepository)
-    __create_shema__ = CreateNDTShema
-    __update_shema__ = UpdateNDTShema
 
-    
-    async def add(self, **data: t.Unpack[NDTData]) -> None:
-        await super().add(data)
-    
 
-    async def update(self, ident: str | UUID, **data: t.Unpack[NDTData]) -> None:
-        await super().update(ident, data)
+class UserDBService(BaseDBService[UserShema, CreateUserShema, UpdateUserShema]):
+    _uow = UnitOfWork(UserRepository)

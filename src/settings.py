@@ -3,8 +3,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-
-load_dotenv(f"{Path.cwd().parent}/.env")
+if os.getenv("MODE") == "PROD":
+    load_dotenv(f"{Path.cwd().parent}/.env")
+else:
+    load_dotenv(f"{Path.cwd().parent}/.dev.env")
 
 
 class Settings:
@@ -35,8 +37,8 @@ class Settings:
     
 
     @classmethod
-    def MODE(cls) -> str:
-        return os.getenv("MODE")
+    def SECRET_KEY(cls) -> str:
+        return os.getenv("SECRET_KEY")
     
 
     @classmethod

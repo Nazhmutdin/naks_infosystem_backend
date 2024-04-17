@@ -15,14 +15,7 @@ welder routes
 """
 
 
-@v1_router.get("/welders/{ident}")
-async def get_welder(ident: str) -> WelderShema:
-    service = WelderDBService()
-
-    return await service.get(ident)
-
-
-@v1_router.put("/welders")
+@v1_router.post("/welders")
 async def add_welder(data: CreateWelderShema):
     service = WelderDBService()
 
@@ -34,6 +27,13 @@ async def add_welder(data: CreateWelderShema):
     return {
         "detail": "welder data added"
     }
+
+
+@v1_router.get("/welders/{ident}")
+async def get_welder(ident: str) -> WelderShema:
+    service = WelderDBService()
+
+    return await service.get(ident)
 
 
 @v1_router.patch("/welders")
@@ -71,7 +71,7 @@ welder certification routes
 """
 
 
-@v1_router.put("/welder-certifications")
+@v1_router.post("/welder-certifications")
 async def add_welder_certification(data: CreateWelderCertificationShema):
     service = WelderCertificationDBService()
 
@@ -127,7 +127,7 @@ ndt routes
 """
 
 
-@v1_router.put("/ndts")
+@v1_router.post("/ndts")
 async def add_ndt(data: CreateNDTShema):
     service = NDTDBService()
 

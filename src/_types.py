@@ -153,5 +153,4 @@ class UserData(t.TypedDict):
     sign_date: datetime
     update_date: datetime
     login_date: datetime
-    is_active: bool
     is_superuser: bool

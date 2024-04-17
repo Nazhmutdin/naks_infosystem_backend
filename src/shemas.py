@@ -1,4 +1,5 @@
 import typing as t
+from asyncio import run
 from re import fullmatch
 from datetime import date, datetime
 from uuid import UUID, uuid4
@@ -7,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from errors import FieldValidationException
 from utils.funcs import to_date, get_datetime_now_moscow
+from services.auth_service import AuthService
 
 
 __all__: list[str] = [
@@ -379,7 +381,7 @@ User shemas
 
 
 class BaseUserShema(BaseShema):
-    ident: UUID | None = Field(default=uuid4)
+    ident: UUID | None = Field(default=None)
     name: str | None = Field(default=None)
     login: str | None = Field(default=None)
     email: str | None = Field(default=None)
@@ -389,14 +391,61 @@ class BaseUserShema(BaseShema):
     is_superuser: bool | None = Field(default=None)
 
 
-class UserShema(BaseShema):
+class UserShema(BaseUserShema):
+    ident: UUID
     login: str
-    password: str
+    hashed_password: str
     name: str
-    refresh_token: str
 
 
-class CreateUserShema(UserShema): ...
+class CreateUserShema(BaseUserShema): 
+    ident: UUID = Field(default=uuid4)
+    login: str
+    hashed_password: str
+    name: str
+    sign_date: datetime = Field(default=get_datetime_now_moscow)
+    update_date: datetime = Field(default=get_datetime_now_moscow)
+    login_date: datetime = Field(default=get_datetime_now_moscow)
+    is_superuser: bool = Field(default=False)
+        
+
+    @field_validator("hashed_password", mode="before")
+    @classmethod
+    def hash_password(cls, v: str | int | None):
+        if not v:
+            raise FieldValidationException("password must be str")
+        
+        return AuthService().hash_password(v)
 
 
 class UpdateUserShema(BaseUserShema): ...
+        
+
+"""
+====================================================================================================
+Refresh token shemas
+====================================================================================================
+"""
+
+
+class BaseRefreshTokeShema(BaseShema):
+    ident: UUID | None = Field(default=None)
+    user_ident: UUID | None = Field(default=None)
+    token: str | None = Field(default=None)
+    revoked: bool | None = Field(default=None)
+    exp: datetime | None = Field(default=None)
+
+
+class RefreshTokeShema(BaseRefreshTokeShema):
+    ident: UUID
+    user_ident: UUID
+    token: str 
+    revoked: bool
+    exp: datetime
+
+
+class CreateRefreshTokeShema(RefreshTokeShema):
+    ident: UUID
+    token: str  = Field()
+    revoked: bool = Field(default=False)
+    exp: datetime = Field(default=get_datetime_now_moscow)

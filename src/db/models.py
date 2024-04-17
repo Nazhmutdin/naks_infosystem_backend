@@ -2,9 +2,9 @@ from datetime import datetime, date
 import uuid
 
 from sqlalchemy.orm import Mapped, relationship
-from sqlalchemy import String, Column, Date, ForeignKey, Float, ARRAY, Boolean, DateTime, SMALLINT, UUID, Enum
+from sqlalchemy import String, Column, Date, ForeignKey, Float, ARRAY, Boolean, DateTime, SMALLINT, UUID
 
-from db_engine import Base
+from db.db_engine import Base
 
 
 class UserModel(Base):
@@ -19,7 +19,16 @@ class UserModel(Base):
     update_date: Mapped[datetime] = Column(DateTime(), nullable=True)
     login_date: Mapped[datetime] = Column(DateTime(), nullable=True)
     is_superuser: Mapped[bool] = Column(Boolean(), nullable=False)
-    refresh_token: Mapped[str] = Column(Boolean(), nullable=False)
+
+
+class RefreshTokenModel(Base):
+    __tablename__ = "refresh_token_table"
+
+    ident: Mapped[uuid.UUID] = Column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
+    user_ident: Mapped[uuid.UUID] = Column(UUID(as_uuid=True), nullable=False)
+    token: Mapped[str] = Column(Boolean(), nullable=False)
+    revoked: Mapped[bool] = Column(Boolean(), nullable=False)
+    exp: Mapped[datetime] = Column(DateTime(), nullable=False)
 
 
 class WelderModel(Base):

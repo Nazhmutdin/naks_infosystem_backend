@@ -1,7 +1,7 @@
 import typing as t
 
-from db_engine import get_session
-from repositories import BaseRepository
+from db.db_engine import get_session
+from db.repositories import BaseRepository
 
 
 class IUnitOfWork[Repository: BaseRepository](t.Protocol):
