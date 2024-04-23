@@ -2,7 +2,8 @@ from datetime import datetime, date
 import uuid
 
 from sqlalchemy.orm import Mapped, relationship
-from sqlalchemy import String, Column, Date, ForeignKey, Float, ARRAY, Boolean, DateTime, SMALLINT, UUID
+from sqlalchemy.schema import Constraint
+from sqlalchemy import String, Column, Date, ForeignKey, Float, ARRAY, Boolean, DateTime, SMALLINT, UUID, UniqueConstraint
 
 from db.db_engine import Base
 
@@ -83,6 +84,8 @@ class WelderCertificationModel(Base):
     welding_equipment: Mapped[str | None] = Column(String(), nullable=True)
 
     welder: Mapped[WelderModel] = relationship("WelderModel", back_populates="certifications")
+
+    certification_id = Constraint(UniqueConstraint("certification_number", "insert", "certification_date", "expiration_date_fact"))
 
 
 class NDTModel(Base):

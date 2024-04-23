@@ -6,10 +6,6 @@ from pathlib import Path
 __all__: list[str] = [
     "PathType",
     "AnyType",
-    "DataBaseRequest",
-    "WelderCertificationDataBaseRequest",
-    "WelderDataBaseRequest",
-    "NDTDataBaseRequest",
     "WelderData",
     "WelderCertificationData",
     "NDTData",
@@ -20,55 +16,6 @@ __all__: list[str] = [
 type PathType = str | Path
 type AnyType = str | int | float | date | datetime | None
 type Kleymo = str | int
-
-
-
-"""
-====================================================================================================
-Database Requests
-====================================================================================================
-"""
-
-
-class DataBaseRequest(t.TypedDict):
-    limit: float | None
-    offset: float | None
-
-
-class WelderCertificationDataBaseRequest(DataBaseRequest):
-    kleymos: list[str | int] | None
-    idents: list[str] | None
-    certification_numbers: list[str] | None
-    certification_date_from: date | None
-    certification_date_before: date | None
-    expiration_date_from: date | None
-    expiration_date_before: date | None
-    expiration_date_fact_from: date | None
-    expiration_date_fact_before: date | None
-    details_thikness_from: float | None
-    details_thikness_before: float | None
-    outer_diameter_from: float | None
-    outer_diameter_before: float | None
-    rod_diameter_from: float | None
-    rod_diameter_before: float | None
-    details_diameter_from: float | None
-    details_diameter_before: float | None
-    gtds: list[str] | None
-    methods: list[str] | None
-
-
-class WelderDataBaseRequest(WelderCertificationDataBaseRequest):
-    names: list[str] | None
-
-
-class NDTDataBaseRequest(DataBaseRequest):
-    names: list[str] | None
-    kleymos: list[str | int] | None
-    comps: list[str] | None
-    subcomps: list[str] | None
-    projects: list[str] | None
-    welding_date_from: date | None
-    welding_date_before: date | None
 
 
 """

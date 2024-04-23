@@ -20,20 +20,27 @@ async def add_welder(data: CreateWelderShema):
     service = WelderDBService()
 
     try:
-        await service.add(**data.model_dump(exclude_unset=True))
+        await service.add(data)
     except CreateDBException as e:
         raise HTTPException(400, e.args)
 
     return {
-        "detail": "welder data added"
+        "detail": "welder added"
     }
 
 
 @v1_router.get("/welders/{ident}")
-async def get_welder(ident: str) -> WelderShema:
+async def get_welder(ident: str) -> WelderShema | dict[str, str]:
     service = WelderDBService()
 
-    return await service.get(ident)
+    result = await service.get(ident)
+
+    if not result:
+        return {
+            "detail": "welder not found"
+        }
+
+    return result
 
 
 @v1_router.patch("/welders")
@@ -41,16 +48,16 @@ async def update_welder(ident: str, data: UpdateWelderShema):
     service = WelderDBService()
 
     try:
-        await service.update(ident, **data.model_dump(exclude_unset=True))
+        await service.update(ident, data)
     except UpdateDBException as e:
         raise HTTPException(400, e.args)
 
     return {
-        "detail": f"welder data updated"
+        "detail": f"welder ({ident}) updated"
     }
 
 
-@v1_router.delete("/welders")
+@v1_router.delete("/welders/{ident}")
 async def delete_welder(ident: str):
     service = WelderDBService()
 
@@ -60,7 +67,7 @@ async def delete_welder(ident: str):
         raise HTTPException(400, e.args)
 
     return {
-        "detail": f"welder data removed"
+        "detail": f"welder ({ident}) removed"
     }
 
 
@@ -76,20 +83,27 @@ async def add_welder_certification(data: CreateWelderCertificationShema):
     service = WelderCertificationDBService()
 
     try:
-        await service.add(**data.model_dump(exclude_unset=True))
+        await service.add(data)
     except CreateDBException as e:
         raise HTTPException(400, e.args)
 
     return {
-        "detail": "welder certification data added"
+        "detail": "welder certification added"
     }
 
 
 @v1_router.get("/welder-certifications/{ident}")
-async def get_welder_certification(ident: str) -> WelderCertificationShema:
+async def get_welder_certification(ident: str) -> WelderCertificationShema | dict[str, str]:
     service = WelderCertificationDBService()
 
-    return await service.get(ident)
+    result = await service.get(ident)
+
+    if not result:
+        return {
+            "detail": "welder certification not found"
+        }
+
+    return result
 
 
 @v1_router.patch("/welder-certifications")
@@ -97,16 +111,16 @@ async def update_welder_certification(ident: str, data: UpdateWelderCertificatio
     service = WelderCertificationDBService()
 
     try:
-        await service.update(ident, **data.model_dump(exclude_unset=True))
+        await service.update(ident, data)
     except UpdateDBException as e:
         raise HTTPException(400, e.args)
 
     return {
-        "detail": f"welder certification data updated"
+        "detail": f"welder certification ({ident}) updated"
     }
 
 
-@v1_router.delete("/welder-certifications")
+@v1_router.delete("/welder-certifications/{ident}")
 async def delete_welder_certification(ident: str):
     service = WelderCertificationDBService()
 
@@ -116,7 +130,7 @@ async def delete_welder_certification(ident: str):
         raise HTTPException(400, e.args)
 
     return {
-        "detail": f"welder certification data removed"
+        "detail": f"welder certification ({ident}) removed"
     }
 
 
@@ -132,12 +146,12 @@ async def add_ndt(data: CreateNDTShema):
     service = NDTDBService()
 
     try:
-        await service.add(**data.model_dump(exclude_unset=True))
+        await service.add(data)
     except CreateDBException as e:
         raise HTTPException(400, e.args)
 
     return {
-        "detail": "ndt data added"
+        "detail": f"ndt added"
     }
 
 
@@ -153,16 +167,16 @@ async def update_ndt(ident: str, data: UpdateNDTShema):
     service = NDTDBService()
 
     try:
-        await service.update(ident, **data.model_dump(exclude_unset=True))
+        await service.update(ident, data)
     except UpdateDBException as e:
         raise HTTPException(400, e.args)
 
     return {
-        "detail": f"ndt data updated"
+        "detail": f"ndt ({ident}) updated"
     }
 
 
-@v1_router.delete("/ndts")
+@v1_router.delete("/ndts/{ident}")
 async def delete_ndt(ident: str):
     service = NDTDBService()
 
@@ -172,5 +186,5 @@ async def delete_ndt(ident: str):
         raise HTTPException(400, e.args)
 
     return {
-        "detail": f"ndt data removed"
+        "detail": f"ndt ({ident}) removed"
     }

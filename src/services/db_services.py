@@ -11,7 +11,8 @@ __all__: list[str] = [
     "WelderDBService",
     "WelderCertificationDBService",
     "NDTDBService",
-    "UserDBService"
+    "UserDBService",
+    "RefreshTokenDBService"
 ]
 
 
@@ -69,3 +70,7 @@ class NDTDBService(BaseDBService[NDTShema, CreateNDTShema, UpdateNDTShema]):
 
 class UserDBService(BaseDBService[UserShema, CreateUserShema, UpdateUserShema]):
     _uow = UnitOfWork(UserRepository)
+
+
+class RefreshTokenDBService(BaseDBService[RefreshTokeShema, CreateRefreshTokeShema, UpdateRefreshTokeShema]):
+    _uow = UnitOfWork(RefreshTokenRepository)

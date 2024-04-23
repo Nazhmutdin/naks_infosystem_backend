@@ -27,9 +27,8 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from errors import GetDBException, GetManyDBException, UpdateDBException, DeleteDBException, CreateDBException
 from shemas import *
-from db.models import WelderModel, WelderCertificationModel, NDTModel, UserModel
+from db.models import WelderModel, WelderCertificationModel, NDTModel, UserModel, RefreshTokenModel
 from db.db_engine import Base
-from shemas import UpdateWelderCertificationShema
 
 
 __all__ = [
@@ -37,7 +36,8 @@ __all__ = [
     "WelderRepository",
     "WelderCertificationRepository",
     "NDTRepository",
-    "UserRepository"
+    "UserRepository",
+    "RefreshTokenRepository"
 ]
 
 
@@ -155,15 +155,35 @@ class WelderRepository(BaseRepository[WelderShema]):
         return WelderModel.ident if isinstance(ident, UUID) else WelderModel.kleymo
 
 
+"""
+====================================================================================================
+Welder certification repository
+====================================================================================================
+"""
+
 
 class WelderCertificationRepository(BaseRepository[WelderCertificationShema]):
     __shema__ = WelderCertificationShema
     __model__ = WelderCertificationModel
 
 
+"""
+====================================================================================================
+ndt repository
+====================================================================================================
+"""
+
+
 class NDTRepository(BaseRepository[NDTShema]):
     __shema__ = NDTShema
     __model__ = NDTModel
+
+
+"""
+====================================================================================================
+user repository
+====================================================================================================
+"""
 
 
 class UserRepository(BaseRepository[UserShema]):
@@ -178,3 +198,15 @@ class UserRepository(BaseRepository[UserShema]):
             return UserModel.ident
         except:
             return UserModel.login
+
+
+"""
+====================================================================================================
+refresh token repository
+====================================================================================================
+"""
+
+
+class RefreshTokenRepository(BaseRepository[RefreshTokeShema]):
+    __shema__ = RefreshTokeShema
+    __model__ = RefreshTokenModel

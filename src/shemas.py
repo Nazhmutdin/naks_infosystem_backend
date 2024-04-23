@@ -1,5 +1,4 @@
 import typing as t
-from asyncio import run
 from re import fullmatch
 from datetime import date, datetime
 from uuid import UUID, uuid4
@@ -7,7 +6,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from errors import FieldValidationException
-from utils.funcs import to_date, get_datetime_now_moscow
+from utils.funcs import to_date
 from services.auth_service import AuthService
 
 
@@ -28,7 +27,11 @@ __all__: list[str] = [
     "BaseUserShema",
     "UserShema",
     "CreateUserShema",
-    "UpdateUserShema"
+    "UpdateUserShema",
+    "BaseRefreshTokeShema",
+    "RefreshTokeShema",
+    "CreateRefreshTokeShema",
+    "UpdateRefreshTokeShema"
 ]
 
 
@@ -105,10 +108,10 @@ class WelderShema(BaseWelderShema):
     @field_validator("birthday")
     @classmethod
     def validate_birthday(cls, v: str | tuple[int, int, int] | None):
-        try:
-            return to_date(v)
-        except:
+        if not v:
             return None
+        
+        return to_date(v)
 
 
 
@@ -150,10 +153,10 @@ class UpdateWelderShema(BaseWelderShema):
     @field_validator("birthday", mode="before")
     @classmethod
     def validate_birthday(cls, v: str | tuple[int, int, int] | None):
-        try:
-            return to_date(v)
-        except:
+        if not v:
             return None
+        
+        return to_date(v)
 
 
 """
@@ -234,9 +237,6 @@ class WelderCertificationShema(BaseWelderCertificationShema):
     @field_validator("certification_date", "expiration_date", "expiration_date_fact", mode="before")
     @classmethod
     def validate_date(cls, v: str | tuple[int, int, int] | None):
-        if not v:
-            raise FieldValidationException(f"Invalid date data '{v}'")
-        
         try:
             return to_date(v)
         except:
@@ -267,10 +267,10 @@ class UpdateWelderCertificationShema(BaseWelderCertificationShema):
     @field_validator("certification_date", "expiration_date", "expiration_date_fact", mode="before")
     @classmethod
     def validate_date(cls, v: str | tuple[int, int, int] | None):
-        try:
-            return to_date(v)
-        except:
-            raise FieldValidationException(f"Invalid date data '{v}'")
+        if not v:
+            return None
+        
+        return to_date(v)
         
 
 """
@@ -352,10 +352,10 @@ class UpdateNDTShema(BaseNDTShema):
 
     @field_validator("welding_date", mode="before")
     def validate_welding_date(cls, v: str | tuple[int, int, int] | None):
-        try:
-            return to_date(v)
-        except:
-            raise FieldValidationException(f"Invalid date data '{v}'")
+        if not v:
+            return None
+        
+        return to_date(v)
         
 
     @field_validator("kleymo")
@@ -385,9 +385,9 @@ class BaseUserShema(BaseShema):
     name: str | None = Field(default=None)
     login: str | None = Field(default=None)
     email: str | None = Field(default=None)
-    sign_date: datetime | None = Field(default=get_datetime_now_moscow)
-    update_date: datetime | None = Field(default=get_datetime_now_moscow)
-    login_date: datetime | None = Field(default=get_datetime_now_moscow)
+    sign_date: datetime | None = Field(default=datetime.now)
+    update_date: datetime | None = Field(default=datetime.now)
+    login_date: datetime | None = Field(default=datetime.now)
     is_superuser: bool | None = Field(default=None)
 
 
@@ -403,9 +403,9 @@ class CreateUserShema(BaseUserShema):
     login: str
     hashed_password: str
     name: str
-    sign_date: datetime = Field(default=get_datetime_now_moscow)
-    update_date: datetime = Field(default=get_datetime_now_moscow)
-    login_date: datetime = Field(default=get_datetime_now_moscow)
+    sign_date: datetime = Field(default=datetime.now)
+    update_date: datetime = Field(default=datetime.now)
+    login_date: datetime = Field(default=datetime.now)
     is_superuser: bool = Field(default=False)
         
 
@@ -429,7 +429,6 @@ Refresh token shemas
 
 
 class BaseRefreshTokeShema(BaseShema):
-    ident: UUID | None = Field(default=None)
     user_ident: UUID | None = Field(default=None)
     token: str | None = Field(default=None)
     revoked: bool | None = Field(default=None)
@@ -445,7 +444,10 @@ class RefreshTokeShema(BaseRefreshTokeShema):
 
 
 class CreateRefreshTokeShema(RefreshTokeShema):
-    ident: UUID
-    token: str  = Field()
+    ident: UUID = Field(default=uuid4)
+    token: str
     revoked: bool = Field(default=False)
-    exp: datetime = Field(default=get_datetime_now_moscow)
+    exp: datetime = Field(default=datetime.now)
+
+
+class UpdateRefreshTokeShema(BaseRefreshTokeShema): ...

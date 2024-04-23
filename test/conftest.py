@@ -43,6 +43,21 @@ def get_users() -> list[UserShema]:
     return [UserShema.model_validate(user) for user in users]
 
 
+def get_test_welders() -> list[WelderShema]:
+    welders = json.load(open("test/test_data/test_welders.json", "r", encoding="utf-8"))
+    return [WelderShema.model_validate(welder) for welder in welders]
+
+
+def get_test_welder_certifications() -> list[WelderCertificationShema]:
+    certifications = json.load(open("test/test_data/test_welder_certifications.json", "r", encoding="utf-8"))
+    return [WelderCertificationShema.model_validate(certification) for certification in certifications]
+
+
+def get_test_welder_ndts() -> list[NDTShema]:
+    ndts = json.load(open("test/test_data/test_welder_ndts.json", "r", encoding="utf-8"))
+    return [NDTShema.model_validate(ndt) for ndt in ndts]
+
+
 @pytest.fixture
 def welders() -> list[WelderShema]:
     return get_welders()
@@ -60,3 +75,18 @@ def ndts() -> list[NDTShema]:
 @pytest.fixture
 def users() -> list[UserShema]:
     return get_users()
+
+
+@pytest.fixture
+def test_welders() -> list[WelderShema]:
+    return get_test_welders()
+
+
+@pytest.fixture
+def test_welder_certifications() -> list[WelderCertificationShema]:
+    return get_test_welder_certifications()
+
+
+@pytest.fixture
+def test_ndts() -> list[NDTShema]:
+    return get_test_welder_ndts()
