@@ -6,6 +6,7 @@ from abc import ABC
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import (
     BinaryExpression, 
+    Row,
     Column,
     Select,
     Update,
@@ -25,7 +26,7 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
-from errors import GetDBException, GetManyDBException, UpdateDBException, DeleteDBException, CreateDBException
+from errors import GetDBException, UpdateDBException, DeleteDBException, CreateDBException
 from shemas import *
 from db.models import WelderModel, WelderCertificationModel, NDTModel, UserModel, RefreshTokenModel
 from db.db_engine import Base
@@ -48,31 +49,27 @@ Base repository
 """
 
 
-class BaseRepository[Shema: BaseShema](ABC):
+class BaseRepository(ABC):
     __model__: type[Base]
-    __shema__: type[Shema]
 
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
 
-    async def get(self, ident: UUID | str) -> Shema | None:
+    async def get(self, ident: UUID | str) -> Row | None:
         try:
             stmt = await self._dump_get_stmt(ident)
             response = await self._session.execute(stmt)
-            result = response.scalar_one_or_none()
+            result = response.one_or_none()
 
-            if not result:
-                return None
-
-            return self.__shema__.model_validate(result, from_attributes=True)
+            return result
 
         except IntegrityError as e:
             raise GetDBException(e.args[0])
 
 
-    async def add(self, data: dict[str, t.Any]) -> None:
+    async def add(self, data: list[dict[str, t.Any]]) -> None:
         try:
             stmt = await self._dump_add_stmt(data)
             await self._session.execute(stmt)
@@ -110,12 +107,11 @@ class BaseRepository[Shema: BaseShema](ABC):
         return inspect(self.__model__).primary_key[0]
     
 
-    async def _dump_add_stmt(self, data: dict[str, t.Any]) -> Insert:
+    async def _dump_add_stmt(self, data: list[dict[str, t.Any]]) -> Insert:
         return insert(self.__model__).values(
-            **data
+            data
         )
     
-
     async def _dump_get_stmt(self, ident: str | UUID) -> Select:
         return select(self.__model__).where(
             await self._get_column(ident) == ident
@@ -143,8 +139,7 @@ Welder repository
 """
 
 
-class WelderRepository(BaseRepository[WelderShema]):
-    __shema__ = WelderShema
+class WelderRepository(BaseRepository):
     __model__ = WelderModel
     
 
@@ -162,8 +157,7 @@ Welder certification repository
 """
 
 
-class WelderCertificationRepository(BaseRepository[WelderCertificationShema]):
-    __shema__ = WelderCertificationShema
+class WelderCertificationRepository(BaseRepository):
     __model__ = WelderCertificationModel
 
 
@@ -174,8 +168,7 @@ ndt repository
 """
 
 
-class NDTRepository(BaseRepository[NDTShema]):
-    __shema__ = NDTShema
+class NDTRepository(BaseRepository):
     __model__ = NDTModel
 
 
@@ -186,8 +179,7 @@ user repository
 """
 
 
-class UserRepository(BaseRepository[UserShema]):
-    __shema__ = UserShema
+class UserRepository(BaseRepository):
     __model__ = UserModel
     
 
@@ -207,6 +199,5 @@ refresh token repository
 """
 
 
-class RefreshTokenRepository(BaseRepository[RefreshTokeShema]):
-    __shema__ = RefreshTokeShema
+class RefreshTokenRepository(BaseRepository):
     __model__ = RefreshTokenModel

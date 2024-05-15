@@ -14,15 +14,11 @@ class BaseTestDBService[Shema: BaseShema]:
     __create_Shema__: type[BaseShema]
     __update_Shema__: type[BaseShema]
 
-    async def test_add(self, item: Shema) -> None:
-        await self.service.add((self.__create_Shema__.model_validate(item, from_attributes=True)))
-        assert await self.service.get(item.ident) == item
 
-
-    async def test_add_many(self, items: list[Shema]) -> None:
+    async def test_add(self, items: list[Shema]) -> None:
         data = [self.__create_Shema__.model_validate(item, from_attributes=True) for item in items]
 
-        await self.service.add_many(data)
+        await self.service.add(*data)
 
 
     async def test_get(self, attr: str, item: Shema) -> None:
@@ -68,12 +64,7 @@ class TestWelderDBService(BaseTestDBService):
 
     @pytest.mark.usefixtures('welders')
     async def test_add(self, welders: list[WelderShema]) -> None:
-        await super().test_add(welders[0])
-
-
-    @pytest.mark.usefixtures('welders')
-    async def test_add_many(self, welders: list[WelderShema]) -> None:
-        await super().test_add_many(welders[1:])
+        await super().test_add(welders)
 
 
     @pytest.mark.usefixtures('welders')
@@ -93,7 +84,7 @@ class TestWelderDBService(BaseTestDBService):
     @pytest.mark.parametrize(
             "ident, data",
             [
-                ("095898d1419641b3adf45af287aad3e7", {"name": "dsdsds", "birthday": "15.12.1995"}),
+                ("b322c9931e85407d8aa4a7463cf78d79", {"name": "dsdsds", "birthday": "15.12.1995"}),
                 ("dc20817ed3844660a69b5c89d7df15ac", {"passport_number": "T15563212", "sicil": "1585254"}),
                 ("d00b26c65fdf4a819c5065e301dd81dd", {"nation": "RUS", "status": 1}),
             ]
@@ -131,12 +122,7 @@ class TestWelderCertificationDBService(BaseTestDBService):
 
     @pytest.mark.usefixtures('welder_certifications')
     async def test_add(self, welder_certifications: list[WelderCertificationShema]) -> None:
-        await super().test_add(welder_certifications[0])
-
-
-    @pytest.mark.usefixtures('welder_certifications')
-    async def test_add_many(self, welder_certifications: list[WelderCertificationShema]) -> None:
-        await super().test_add_many(welder_certifications[1:])
+        await super().test_add(welder_certifications)
 
 
     @pytest.mark.usefixtures('welder_certifications')
@@ -192,12 +178,7 @@ class TestNDTDBService(BaseTestDBService):
 
     @pytest.mark.usefixtures('ndts')
     async def test_add(self, ndts: list[NDTShema]) -> None:
-        await super().test_add(ndts[0])
-
-
-    @pytest.mark.usefixtures('ndts')
-    async def test_add_many(self, ndts: list[NDTShema]) -> None:
-        await super().test_add_many(ndts[1:])
+        await super().test_add(ndts)
 
 
     @pytest.mark.usefixtures('ndts')
@@ -212,7 +193,7 @@ class TestNDTDBService(BaseTestDBService):
     @pytest.mark.parametrize(
             "ident, data",
             [
-                ("97c1a8b30a764bae84be20dab742644a", {"kleymo": "11F9", "company": "adsdsad"}),
+                ("94c6aacab12a40f2af32abb3e376bd7f", {"kleymo": "11F9", "company": "adsdsad"}),
                 ("0d92a1ae45f942a5bfba4d26b8a34cd7", {"subcompany": "ппмffфва", "welding_date": "1990-05-15"}),
                 ("45c040e0a78e4a3994b6cc12d3ba3d81", {"total_weld_1": 0.5, "total_weld_2": 5.36}),
             ]

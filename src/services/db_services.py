@@ -17,25 +17,26 @@ __all__: list[str] = [
 
 
 class BaseDBService[Shema: BaseShema, CreateShema: BaseShema, UpdateShema: BaseShema]:
-    _uow: UnitOfWork[BaseRepository[Shema]]
+    _uow: UnitOfWork[BaseRepository]
+    __shema__: type[BaseShema]
 
 
     async def get(self, ident: str | UUID) -> Shema | None:
         async with self._uow as uow:
-            return await uow.repository.get(ident)
+
+            res = await uow.repository.get(ident)
+
+            if res:
+                return self.__shema__.model_validate(res[0], from_attributes=True)
+            
+            return None
 
 
-    async def add(self, data: CreateShema) -> None:
+    async def add(self, *data: CreateShema) -> None:
         async with self._uow as uow:
-            await uow.repository.add(data.model_dump())
-            await uow.commit()
+            data = [el.model_dump() for el in data]
+            await uow.repository.add(data)
 
-
-    async def add_many(self, data: list[CreateShema]) -> None:
-        async with self._uow as uow:
-            for el in data:
-                await uow.repository.add(el.model_dump())
-                
             await uow.commit()
 
 
@@ -45,9 +46,11 @@ class BaseDBService[Shema: BaseShema, CreateShema: BaseShema, UpdateShema: BaseS
             await uow.commit()
 
 
-    async def delete(self, ident: str | UUID) -> None:
+    async def delete(self, *idents: str | UUID) -> None:
         async with self._uow as uow:
-            await uow.repository.delete(ident)
+            for ident in idents:
+                await uow.repository.delete(ident)
+            
             await uow.commit()
 
     
@@ -58,19 +61,24 @@ class BaseDBService[Shema: BaseShema, CreateShema: BaseShema, UpdateShema: BaseS
 
 class WelderDBService(BaseDBService[WelderShema, CreateWelderShema, UpdateWelderShema]):
     _uow = UnitOfWork(WelderRepository)
+    __shema__ = WelderShema
 
 
 class WelderCertificationDBService(BaseDBService[WelderCertificationShema, CreateWelderCertificationShema, UpdateWelderCertificationShema]):
     _uow = UnitOfWork(WelderCertificationRepository)
+    __shema__ = WelderCertificationShema
 
 
 class NDTDBService(BaseDBService[NDTShema, CreateNDTShema, UpdateNDTShema]):
     _uow = UnitOfWork(NDTRepository)
+    __shema__ = NDTShema
 
 
 class UserDBService(BaseDBService[UserShema, CreateUserShema, UpdateUserShema]):
     _uow = UnitOfWork(UserRepository)
+    __shema__ = UserShema
 
 
 class RefreshTokenDBService(BaseDBService[RefreshTokeShema, CreateRefreshTokeShema, UpdateRefreshTokeShema]):
     _uow = UnitOfWork(RefreshTokenRepository)
+    __shema__ = RefreshTokeShema
