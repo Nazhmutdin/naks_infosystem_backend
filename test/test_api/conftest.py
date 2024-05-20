@@ -12,6 +12,6 @@ def add_users(users: list[UserShema]):
     async def add_users_async(users: list[UserShema]):
         service = UserDBService()
         
-        await service.add_many([CreateUserShema.model_validate(user, from_attributes=True) for user in users])
+        await service.add(*[CreateUserShema.model_validate(user, from_attributes=True) for user in users])
     
     run(add_users_async(users))

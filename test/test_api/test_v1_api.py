@@ -8,6 +8,7 @@ from shemas import *
 from shemas import WelderShema
 
 
+@pytest.mark.usefixtures("prepare_db")
 class BaseTestCRUDEndpoints[Shema: BaseShema]:
 
     def test_add(self, api_path, shema: Shema):

@@ -10,7 +10,7 @@ class TestAuthEndpoints:
 
     def test_authenticate(self):
         res = client.post(
-            "/api/auth/authenticate",
+            "/auth/authenticate",
             json={
                 "login": "TestUser",
                 "password": "QWE123df"
