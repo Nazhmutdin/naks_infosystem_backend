@@ -80,7 +80,15 @@ class AuthService:
 
     def read_token(self, token: str) -> dict[str, t.Any]:
         return jwt_decode(token, Settings.SECRET_KEY(), algorithms=self.algorithms)
+    
 
+    def validate_token(self, token: str) -> bool:
+        try:
+            self.read_token(token)
+            return True
+        except:
+            return False
+        
 
     def hash_password(self, password: str) -> str:
         return sha256(password.encode()).hexdigest()

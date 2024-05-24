@@ -20,20 +20,20 @@ repository base test
 @pytest.mark.usefixtures("prepare_db")
 class BaseTestRepository[Shema: BaseShema]:
     __shema__: type[BaseShema]
-    __create_shema__: type[BaseShema]
-    __update_shema__: type[BaseShema]
     __repository__: type[BaseRepository]
 
 
     async def test_add(self, data: list[Shema]) -> None:
         async with UnitOfWork(repository_type=self.__repository__) as uow:
+            insert_data = [
+                el.model_dump() for el in data
+            ]
+            
+            await uow.repository.add(*insert_data)
+
             for el in data:
-                await uow.repository.add(self.__create_shema__.model_validate(el, from_attributes=True).model_dump())
-                res = await uow.repository.get(el.ident)
-
-                assert res
-
-                assert self.__shema__.model_validate(res[0], from_attributes=True) == el
+                result = self.__shema__.model_validate((await uow.repository.get(el.ident))[0], from_attributes=True)
+                assert result == el
 
             assert await uow.repository.count() == len(data)
 
@@ -51,7 +51,7 @@ class BaseTestRepository[Shema: BaseShema]:
     async def test_add_existing(self, data: Shema) -> None:
         async with UnitOfWork(repository_type=self.__repository__) as uow:
             with pytest.raises(CreateDBException):
-                await uow.repository.add(self.__create_shema__.model_validate(data, from_attributes=True).model_dump())
+                await uow.repository.add(data.model_dump())
 
 
     async def test_update(self, ident: str, data: dict[str, t.Any]) -> None:
@@ -79,7 +79,7 @@ class BaseTestRepository[Shema: BaseShema]:
 
             assert not await uow.repository.get(item.ident)
 
-            await uow.repository.add(self.__create_shema__.model_validate(item, from_attributes=True).model_dump())
+            await uow.repository.add(item.model_dump())
             await uow.commit()
 
 
@@ -94,8 +94,6 @@ Welder repository test
 class TestWelderRepository(BaseTestRepository[WelderShema]):
     __shema__ = WelderShema
     __repository__ = WelderRepository
-    __create_shema__ = CreateWelderShema
-    __update_shema__ = UpdateWelderShema
 
     @pytest.mark.usefixtures('welders')
     async def test_add(self, welders: list[WelderShema]) -> None:
@@ -128,13 +126,13 @@ class TestWelderRepository(BaseTestRepository[WelderShema]):
     @pytest.mark.parametrize(
             "ident, data",
             [
-                ("d6f81d0030a44b21afc6d6cc8d99e13b", {"name": "dsdsds", "birthday": "15.12.1995"}),
+                ("d6f81d0030a44b21afc6d6cc8d99e13b", {"name": "dsdsds", "birthday": date(1995, 2, 2)}),
                 ("dc20817ed3844660a69b5c89d7df15ac", {"passport_number": "T15563212", "sicil": "1585254"}),
                 ("d00b26c65fdf4a819c5065e301dd81dd", {"nation": "RUS", "status": 1}),
             ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
-        return await super().test_update(ident, self.__update_shema__.model_validate(data).model_dump(exclude_unset=True))
+        return await super().test_update(ident, data)
     
 
     @pytest.mark.usefixtures('welders')
@@ -157,8 +155,6 @@ Welder certification repository test
 class TestWelderCertificationRepository(BaseTestRepository[WelderCertificationShema]):
     __shema__ = WelderCertificationShema
     __repository__ = WelderCertificationRepository
-    __create_shema__ = CreateWelderCertificationShema
-    __update_shema__ = UpdateWelderCertificationShema
 
 
     @pytest.mark.usefixtures('welder_certifications')
@@ -187,14 +183,14 @@ class TestWelderCertificationRepository(BaseTestRepository[WelderCertificationSh
     @pytest.mark.parametrize(
             "ident, data",
             [
-                ("cccba2a0ea9047c8837691a740513f6d", {"welding_materials_groups": ["dsdsds"], "certification_date": "15.12.1995"}),
-                ("422786ffabd54d74867a8f34950ee0b5", {"job_title": "ппмфва", "kleymo": "11F9", "expiration_date": "1990-05-15"}),
-                ("71c20a79706d4fb28f7b84e94881565c", {"insert": "В1", "company": "asasas", "expiration_date_fact": "2025-10-20"}),
+                ("cccba2a0ea9047c8837691a740513f6d", {"welding_materials_groups": ["dsdsds"], "certification_date": date(1984, 1, 7)}),
+                ("422786ffabd54d74867a8f34950ee0b5", {"job_title": "ппмфва", "kleymo": "11F9", "expiration_date": date(1990, 3, 17)}),
+                ("71c20a79706d4fb28f7b84e94881565c", {"insert": "В1", "company": "asasas", "expiration_date_fact": date(2000, 1, 1)}),
                 ("435a9de3ade64c38b316dd08c3c7bc7c", {"connection_type": "gggg", "outer_diameter_from": 11.65, "details_type": ["2025-10-20", "ffff"]}),
             ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
-        await super().test_update(ident, self.__update_shema__.model_validate(data).model_dump(exclude_unset=True))
+        await super().test_update(ident, data)
 
 
     @pytest.mark.usefixtures('welder_certifications')
@@ -217,8 +213,6 @@ NDT repository test
 class TestNDTRepository(BaseTestRepository[NDTShema]):
     __shema__ = NDTShema
     __repository__ = NDTRepository
-    __create_shema__ = CreateNDTShema
-    __update_shema__ = UpdateNDTShema
 
 
     @pytest.mark.usefixtures('ndts')
@@ -247,12 +241,12 @@ class TestNDTRepository(BaseTestRepository[NDTShema]):
             "ident, data",
             [
                 ("97c1a8b30a764bae84be20dab742644a", {"kleymo": "11F9", "company": "adsdsad"}),
-                ("0d92a1ae45f942a5bfba4d26b8a34cd7", {"subcompany": "ппмffфва", "welding_date": "1990-05-15"}),
+                ("0d92a1ae45f942a5bfba4d26b8a34cd7", {"subcompany": "ппмffфва", "welding_date": date(1968, 7, 11)}),
                 ("45c040e0a78e4a3994b6cc12d3ba3d81", {"total_weld_1": 0.5, "total_weld_2": 5.36}),
             ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
-        await super().test_update(ident, self.__update_shema__.model_validate(data).model_dump(exclude_unset=True))
+        await super().test_update(ident, data)
 
 
     @pytest.mark.usefixtures('ndts')

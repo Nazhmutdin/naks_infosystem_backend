@@ -1,8 +1,10 @@
 from typing import Callable, Awaitable
 
-from fastapi import Request
+from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
+
+from services.auth_service import AuthService
 
 
 class CheckAccessTokenMiddleware(BaseHTTPMiddleware):
@@ -11,9 +13,24 @@ class CheckAccessTokenMiddleware(BaseHTTPMiddleware):
         request_path = request.url.path
 
         if request_path.startswith(
-            ("api/v1")
+            ("/api/v1")
         ):
-            ...
+            service = AuthService()
+            token = request.cookies.get("access_token")
+
+            if not token:
+                raise HTTPException(
+                    400,
+                    "access token required"
+                )
+            
+            is_valid_token = service.validate_token(token)
+            
+            if not is_valid_token:
+                raise HTTPException(
+                    400,
+                    "invalid access token"
+                )
 
         res = await call_next(request)
 

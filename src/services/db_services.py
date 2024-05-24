@@ -35,7 +35,7 @@ class BaseDBService[Shema: BaseShema, CreateShema: BaseShema, UpdateShema: BaseS
     async def add(self, *data: CreateShema) -> None:
         async with self._uow as uow:
             data = [el.model_dump() for el in data]
-            await uow.repository.add(data)
+            await uow.repository.add(*data)
 
             await uow.commit()
 

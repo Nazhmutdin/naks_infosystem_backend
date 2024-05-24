@@ -27,7 +27,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from errors import GetDBException, UpdateDBException, DeleteDBException, CreateDBException
-from shemas import *
 from db.models import WelderModel, WelderCertificationModel, NDTModel, UserModel, RefreshTokenModel
 from db.db_engine import Base
 
@@ -69,7 +68,7 @@ class BaseRepository(ABC):
             raise GetDBException(e.args[0])
 
 
-    async def add(self, data: list[dict[str, t.Any]]) -> None:
+    async def add(self, *data: dict[str, t.Any]) -> None:
         try:
             stmt = await self._dump_add_stmt(data)
             await self._session.execute(stmt)
@@ -102,16 +101,17 @@ class BaseRepository(ABC):
         else:
             return (await self._session.execute(select(func.count()).select_from(self.__model__))).scalar_one()
 
-    
+
     async def _get_column(self, ident: str | UUID) -> Column:
         return inspect(self.__model__).primary_key[0]
-    
+
 
     async def _dump_add_stmt(self, data: list[dict[str, t.Any]]) -> Insert:
         return insert(self.__model__).values(
             data
         )
-    
+
+
     async def _dump_get_stmt(self, ident: str | UUID) -> Select:
         return select(self.__model__).where(
             await self._get_column(ident) == ident
