@@ -8,12 +8,9 @@ from settings import Settings
 from shemas import *
 
 
-settings = Settings()
-
-
 @pytest.fixture(scope="module")
 def prepare_db():
-    assert settings.DB_NAME() == "rhi_test"
+    assert Settings.DB_NAME() == "rhi_test"
 
     async def start_db():
         async with engine.begin() as conn:

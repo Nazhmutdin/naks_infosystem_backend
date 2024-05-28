@@ -3,20 +3,22 @@ from uuid import UUID
 from datetime import datetime
 from hashlib import sha256
 
-from jose.jwt import encode as jwt_encode, decode as jwt_decode
+from jose.jwt import encode as jwt_encode, decode as jwt_decode, get_unverified_claims
 
 from settings import Settings
+from utils.funcs import validate_uuid, to_uuid
 
 
 class AccessTokenPayloadData(t.TypedDict):
-    exp_dt: datetime
-    user_id: UUID
+    gen_dt: datetime
+    user_id: UUID | str
 
 
 class RefreshTokenPayloadData(t.TypedDict):
     gen_dt: datetime
     exp_dt: datetime
-    user_id: UUID
+    token_id: UUID | str
+    user_id: UUID | str
 
 
 class AuthService:
@@ -24,56 +26,35 @@ class AuthService:
         self.algorithms = alg
 
 
-    def create_token(self, **payloads: t.Unpack[AccessTokenPayloadData]) -> str:
+    def create_access_token(self, **payloads: t.Unpack[AccessTokenPayloadData]) -> str:
 
-        if not payloads.get("exp_dt"):
-            raise ValueError("exp_dt is required")
+        if not payloads.get("gen_dt") or not isinstance(payloads.get("gen_dt"), datetime):
+            raise ValueError("gen_dt is required")
 
-        if not payloads.get("user_id"):
-            raise ValueError("user_id is required")
-
-        if not isinstance(payloads.get("exp_dt"), datetime):
-            raise ValueError("exp_dt must be datetime object")
-
-        if not isinstance(payloads.get("user_id"), UUID):
-            try:
-                payloads["user_id"] = UUID(payloads["user_id"])
-            except:
-                raise ValueError("invalid user_id")
+        if not validate_uuid(payloads.get("user_id")):
+            raise ValueError("invalid user_id")
         
-        payloads["exp_dt"] = payloads["exp_dt"].strftime("%Y/%m/%d, %H:%M:%S")
-        payloads["user_id"] = payloads["user_id"].hex
+        payloads["gen_dt"] = payloads["gen_dt"].strftime("%Y/%m/%d, %H:%M:%S")
+        payloads["user_id"] = to_uuid(payloads["user_id"]).hex
 
         return jwt_encode(payloads, Settings.SECRET_KEY(), algorithm=self.algorithms)
 
 
-    def gen_refresh_token(self, **payloads: t.Unpack[RefreshTokenPayloadData]):
+    def create_refresh_token(self, **payloads: t.Unpack[RefreshTokenPayloadData]):
 
-        if not payloads.get("gen_dt"):
-            raise ValueError("gen is required")
+        if not payloads.get("gen_dt") or not isinstance(payloads.get("gen_dt"), datetime):
+            raise ValueError("gen_dt is required")
 
-        if not payloads.get("exp_dt"):
+        if not payloads.get("exp_dt") or not isinstance(payloads.get("exp_dt"), datetime):
             raise ValueError("exp_dt is required")
 
-        if not payloads.get("user_id"):
-            raise ValueError("user_id is required")
-
-        if not isinstance(payloads.get("exp_dt"), datetime):
-            raise ValueError("exp_dt must be datetime object")
-
-        if not isinstance(payloads.get("gen_dt"), datetime):
-            raise ValueError("gen_dt must be datetime object")
-
-        if not isinstance(payloads.get("user_id"), UUID):
-            try:
-                payloads["user_id"] = UUID(payloads["user_id"])
-            except:
-                raise ValueError("invalid user_id")
+        if not validate_uuid(payloads.get("user_id")):
+            raise ValueError("invalid user_id")
         
         payloads["gen_dt"] = payloads["gen_dt"].strftime("%Y/%m/%d, %H:%M:%S")
-        
         payloads["exp_dt"] = payloads["exp_dt"].strftime("%Y/%m/%d, %H:%M:%S")
-        payloads["user_id"] = payloads["user_id"].hex
+        payloads["user_id"] = to_uuid(payloads["user_id"]).hex
+        payloads["token_id"] = to_uuid(payloads["token_id"]).hex
 
         return jwt_encode(payloads, Settings.SECRET_KEY(), algorithm=self.algorithms)
 
@@ -83,11 +64,10 @@ class AuthService:
     
 
     def validate_token(self, token: str) -> bool:
-        try:
-            self.read_token(token)
-            return True
-        except:
-            return False
+        payload = get_unverified_claims(token)
+        payload["gen_dt"] = datetime.strptime(payload["gen_dt"], "%Y/%m/%d, %H:%M:%S")
+
+        return self.create_access_token(**payload) == token
         
 
     def hash_password(self, password: str) -> str:

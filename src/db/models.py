@@ -16,9 +16,9 @@ class UserModel(Base):
     login: Mapped[str] = Column(String(), unique=True, nullable=False)
     hashed_password: Mapped[str] = Column(String(), nullable=False)
     email: Mapped[str | None] = Column(String(), nullable=True)
-    sign_date: Mapped[datetime] = Column(DateTime(), nullable=True)
-    update_date: Mapped[datetime] = Column(DateTime(), nullable=True)
-    login_date: Mapped[datetime] = Column(DateTime(), nullable=True)
+    sign_date: Mapped[datetime] = Column(DateTime(), nullable=False)
+    update_date: Mapped[datetime] = Column(DateTime(), nullable=False)
+    login_date: Mapped[datetime] = Column(DateTime(), nullable=False)
     is_superuser: Mapped[bool] = Column(Boolean(), nullable=False)
 
 
@@ -35,7 +35,7 @@ class RefreshTokenModel(Base):
 class WelderModel(Base):
     __tablename__ = "welder_table"
 
-    ident: Mapped[uuid.UUID] = Column(UUID(), primary_key=True, nullable=False, default=uuid.uuid4)
+    ident: Mapped[uuid.UUID] = Column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
     kleymo: Mapped[str] = Column(String(4), unique=True)
     name: Mapped[str | None] = Column(String(), nullable=True)
     birthday: Mapped[str | None] = Column(Date(), nullable=True)

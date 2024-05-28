@@ -1,5 +1,7 @@
+from datetime import datetime, timedelta
+
 from pydantic import BaseModel
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 
 from shemas import UserShema
 from services.auth_service import AuthService
@@ -29,3 +31,31 @@ async def get_user(auth_data: AuthData) -> UserShema:
         )
 
     return user
+
+
+async def create_access_token(user: UserShema = Depends(get_user)) -> str:
+    
+    auth_service = AuthService()
+
+    token = auth_service.create_access_token(
+        user_id=user.ident.hex,
+        gen_dt=datetime.now()
+    )
+
+    return token
+
+
+async def create_refresh_token(user: UserShema = Depends(get_user)) -> str:
+    
+    auth_service = AuthService()
+
+    exp = datetime.now() + timedelta(days=1)
+
+    token = auth_service.gen_refresh_token(
+        user_id=user.ident.hex,
+        gen_dt=datetime.now(),
+        exp_dt=exp
+    )
+
+    return token
+

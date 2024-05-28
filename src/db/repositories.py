@@ -5,22 +5,17 @@ from abc import ABC
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import (
-    BinaryExpression, 
     Row,
     Column,
     Select,
     Update,
-    Delete, 
+    Delete,
     Insert,
-    select, 
-    and_, 
-    or_, 
-    any_,
-    inspect, 
-    delete, 
-    insert, 
-    update, 
-    desc, 
+    select,
+    inspect,
+    delete,
+    insert,
+    update,
     func
 )
 from sqlalchemy.exc import IntegrityError
@@ -58,7 +53,7 @@ class BaseRepository(ABC):
 
     async def get(self, ident: UUID | str) -> Row | None:
         try:
-            stmt = await self._dump_get_stmt(ident)
+            stmt = self._dump_get_stmt(ident)
             response = await self._session.execute(stmt)
             result = response.one_or_none()
 
@@ -70,7 +65,7 @@ class BaseRepository(ABC):
 
     async def add(self, *data: dict[str, t.Any]) -> None:
         try:
-            stmt = await self._dump_add_stmt(data)
+            stmt = self._dump_add_stmt(data)
             await self._session.execute(stmt)
         except IntegrityError as e:
             raise CreateDBException(e.args[0])
@@ -78,7 +73,7 @@ class BaseRepository(ABC):
 
     async def update(self, ident: UUID | str, data: dict[str, t.Any]) -> None:
         try:
-            stmt = await self._dump_update_stmt(ident, data)
+            stmt = self._dump_update_stmt(ident, data)
             await self._session.execute(stmt)
         except IntegrityError as e:
             raise UpdateDBException(e.args[0])
@@ -86,7 +81,7 @@ class BaseRepository(ABC):
 
     async def delete(self, ident: UUID | str) -> None:
         try:
-            stmt = await self._dump_delete_stmt(ident)
+            stmt = self._dump_delete_stmt(ident)
             await self._session.execute(stmt)
         except IntegrityError as e:
             raise DeleteDBException(e.args[0])
@@ -102,33 +97,33 @@ class BaseRepository(ABC):
             return (await self._session.execute(select(func.count()).select_from(self.__model__))).scalar_one()
 
 
-    async def _get_column(self, ident: str | UUID) -> Column:
+    def _get_column(self, ident: str | UUID) -> Column:
         return inspect(self.__model__).primary_key[0]
 
 
-    async def _dump_add_stmt(self, data: list[dict[str, t.Any]]) -> Insert:
+    def _dump_add_stmt(self, data: list[dict[str, t.Any]]) -> Insert:
         return insert(self.__model__).values(
             data
         )
 
 
-    async def _dump_get_stmt(self, ident: str | UUID) -> Select:
+    def _dump_get_stmt(self, ident: str | UUID) -> Select:
         return select(self.__model__).where(
-            await self._get_column(ident) == ident
+            self._get_column(ident) == ident
         )
     
 
-    async def _dump_update_stmt(self, ident: str | UUID, data: dict[str, t.Any]) -> Update:
+    def _dump_update_stmt(self, ident: str | UUID, data: dict[str, t.Any]) -> Update:
         return update(self.__model__).where(
-            await self._get_column(ident) == ident
+            self._get_column(ident) == ident
         ).values(
             **data
         )
 
 
-    async def _dump_delete_stmt(self, ident: str | UUID) -> Delete:
+    def _dump_delete_stmt(self, ident: str | UUID) -> Delete:
         return delete(self.__model__).where(
-            await self._get_column(ident) == ident
+            self._get_column(ident) == ident
         )
 
 
@@ -141,9 +136,8 @@ Welder repository
 
 class WelderRepository(BaseRepository):
     __model__ = WelderModel
-    
 
-    async def _get_column(self, ident: str | UUID) -> InstrumentedAttribute:
+    def _get_column(self, ident: str | UUID) -> InstrumentedAttribute:
         if isinstance(ident, str) and not fullmatch("[A-Z0-9]{4}", ident):
             ident = UUID(ident)
 
@@ -183,8 +177,10 @@ class UserRepository(BaseRepository):
     __model__ = UserModel
     
 
-    async def _get_column(self, ident: str | UUID) -> InstrumentedAttribute:
-
+    def _get_column(self, ident: str | UUID) -> InstrumentedAttribute:
+        if isinstance(ident, UUID):
+            return UserModel.ident
+        
         try:
             UUID(ident)
             return UserModel.ident

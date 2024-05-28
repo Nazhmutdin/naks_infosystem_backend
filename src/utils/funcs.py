@@ -1,7 +1,23 @@
 import typing as t
+from uuid import UUID
 
 from datetime import datetime, date
 from dateutil.parser import parser
+
+
+def validate_uuid(uuid: str | UUID) -> True:
+    try:
+        UUID(uuid)
+        return True
+    except:
+        return False
+    
+
+def to_uuid(v: str | UUID) -> UUID:
+    if isinstance(v, UUID):
+        return v
+    
+    return UUID(v)
 
 
 def str_to_datetime(date_string, dayfirst: bool = False) -> datetime | None:

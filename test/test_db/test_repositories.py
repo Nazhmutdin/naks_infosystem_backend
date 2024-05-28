@@ -1,8 +1,8 @@
 import pytest
 import typing as t
-from datetime import date
+from datetime import date, datetime
 
-from shemas import WelderCertificationShema
+from shemas import UserShema, WelderCertificationShema
 from errors import CreateDBException
 from utils.funcs import to_date
 from db.repositories import *
@@ -256,3 +256,93 @@ class TestNDTRepository(BaseTestRepository[NDTShema]):
     )
     async def test_delete(self, ndts: list[NDTShema], index: int) -> None:
         await super().test_delete(ndts[index])
+
+
+"""
+===================================================================================================================
+User repository test
+===================================================================================================================
+"""
+
+
+@pytest.mark.asyncio
+class TestUserRepository(BaseTestRepository[UserShema]):
+    __shema__ = UserShema
+    __repository__ = UserRepository
+
+
+    @pytest.mark.usefixtures('users')
+    async def test_add(self, users: list[UserShema]) -> None:
+        await super().test_add(users)
+
+
+    @pytest.mark.usefixtures('users')
+    @pytest.mark.parametrize(
+            "index",
+            [1, 2, 7]
+    )
+    async def test_add_existing(self, users: list[UserShema], index: int) -> None:
+        await super().test_add_existing(users[index])
+
+
+    @pytest.mark.usefixtures('users')
+    @pytest.mark.parametrize(
+            "index, attr",
+            [
+                (1, "login"),
+                (3, "ident"),
+                (7, "login"),
+                (5, "ident")
+            ]
+    )
+    async def test_get(self, users: list[UserShema], index: int, attr: str) -> None:
+        await super().test_get(attr, users[index])
+
+
+    @pytest.mark.parametrize(
+            "ident, data",
+            [
+                ("TestUser", {"name": "UpdatedName", "email": "hello@mail.ru"}),
+                ("eee02230b2f34440bb349480a809bb10", {"sign_date": datetime(2024, 1, 11, 8, 38, 12, 906854), "is_superuser": False}),
+                ("TestUser6", {"login_date": datetime(2024, 1, 1, 8, 38, 12, 906854)}),
+            ]
+    )
+    async def test_update(self, ident: str, data: dict) -> None:
+        await super().test_update(ident, data)
+
+
+    @pytest.mark.usefixtures('users')
+    @pytest.mark.parametrize(
+            "index",
+            [0, 5, 9]
+    )
+    async def test_delete(self, users: list[UserShema], index: int) -> None:
+        await super().test_delete(users[index])
+
+
+"""
+===================================================================================================================
+refresh token repository test
+===================================================================================================================
+"""
+
+
+@pytest.mark.asyncio
+class TestRefreshTokenRepository(BaseTestRepository[RefreshTokeShema]): 
+    __shema__ = RefreshTokeShema
+    __repository__ = RefreshTokenRepository
+
+
+    async def test_add(self) -> None: ...
+
+
+    async def test_add_existing(self) -> None: ...
+
+
+    async def test_get(self) -> None: ...
+
+
+    async def test_update(self) -> None: ...
+
+
+    async def test_delete(self) -> None: ...
