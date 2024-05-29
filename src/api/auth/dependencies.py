@@ -38,7 +38,7 @@ async def create_access_token(user: UserShema = Depends(get_user)) -> str:
     auth_service = AuthService()
 
     token = auth_service.create_access_token(
-        user_id=user.ident.hex,
+        user_ident=user.ident.hex,
         gen_dt=datetime.now()
     )
 
@@ -51,8 +51,8 @@ async def create_refresh_token(user: UserShema = Depends(get_user)) -> str:
 
     exp = datetime.now() + timedelta(days=1)
 
-    token = auth_service.gen_refresh_token(
-        user_id=user.ident.hex,
+    token = auth_service.create_refresh_token(
+        user_ident=user.ident.hex,
         gen_dt=datetime.now(),
         exp_dt=exp
     )

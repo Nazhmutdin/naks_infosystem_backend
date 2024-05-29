@@ -79,6 +79,6 @@ class UserDBService(BaseDBService[UserShema, CreateUserShema, UpdateUserShema]):
     __shema__ = UserShema
 
 
-class RefreshTokenDBService(BaseDBService[RefreshTokeShema, CreateRefreshTokeShema, UpdateRefreshTokeShema]):
+class RefreshTokenDBService(BaseDBService[RefreshTokenShema, CreateRefreshTokenShema, UpdateRefreshTokenShema]):
     _uow = UnitOfWork(RefreshTokenRepository)
-    __shema__ = RefreshTokeShema
+    __shema__ = RefreshTokenShema

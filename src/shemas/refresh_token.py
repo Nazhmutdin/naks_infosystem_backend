@@ -1,13 +1,14 @@
+from typing import Any
 from uuid import UUID, uuid4
 from datetime import datetime
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, computed_field
 
 from shemas.base import BaseShema
-from shemas.validators import to_datetime_validator, validate_jwt_token
+from shemas.validators import to_datetime_validator, validate_jwt_refresh_token
 
 
-class BaseRefreshTokeShema(BaseShema):
+class BaseRefreshTokenShema(BaseShema):
     user_ident: UUID | None = Field(default=None)
     token: str | None = Field(default=None)
     revoked: bool | None = Field(default=None)
@@ -27,13 +28,13 @@ class BaseRefreshTokeShema(BaseShema):
         if v == None:
             return None
         
-        if validate_jwt_token(v):
+        if validate_jwt_refresh_token(v):
             return v
         
         raise ValueError("invalid token")
 
 
-class RefreshTokeShema(BaseRefreshTokeShema):
+class RefreshTokenShema(BaseRefreshTokenShema):
     ident: UUID
     user_ident: UUID
     token: str
@@ -47,7 +48,7 @@ class RefreshTokeShema(BaseRefreshTokeShema):
         if v == None:
             raise ValueError("token cannot be None")
         
-        if validate_jwt_token(v):
+        if validate_jwt_refresh_token(v):
             return v
         
         raise ValueError("invalid token")
@@ -62,10 +63,23 @@ class RefreshTokeShema(BaseRefreshTokeShema):
             raise ValueError(f"invalid date data: {v}")
         
         return result
+    
+
+    @computed_field
+    @property
+    def expired(self) -> bool:
+        return datetime.now() > self.exp_dt
             
 
-class CreateRefreshTokeShema(RefreshTokeShema):
+class CreateRefreshTokenShema(RefreshTokenShema):
     ident: UUID = Field(default_factory=uuid4)
 
+    def model_dump(self, *, mode: str = 'python', include: set[int] | set[str] | dict[int, Any] | dict[str, Any] | None = None, exclude: set[int] | set[str] | dict[int, Any] | dict[str, Any] | None = None, by_alias: bool = False, exclude_unset: bool = False, exclude_defaults: bool = False, exclude_none: bool = False, round_trip: bool = False, warnings: bool = True) -> dict[str, Any]:
+        data = super().model_dump(mode=mode, include=include, exclude=exclude, by_alias=by_alias, exclude_unset=exclude_unset, exclude_defaults=exclude_defaults, exclude_none=exclude_none, round_trip=round_trip, warnings=warnings)
 
-class UpdateRefreshTokeShema(BaseRefreshTokeShema): ...
+        del data["expired"]
+
+        return data
+
+
+class UpdateRefreshTokenShema(BaseRefreshTokenShema): ...

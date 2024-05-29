@@ -1,7 +1,8 @@
-import pytest
+from uuid import UUID
 from datetime import date, datetime
 
 from pydantic import ValidationError
+import pytest
 
 from services.db_services import *
 from utils.funcs import str_to_datetime
@@ -285,3 +286,58 @@ class TestUserDBService(BaseTestDBService[UserShema]):
     )
     async def test_delete(self, users: list[UserShema], index: int) -> None:
         await super().test_delete(users[index])
+
+
+
+@pytest.mark.asyncio
+class TestRefreshTokenDBService(BaseTestDBService[RefreshTokenShema]): 
+    service = RefreshTokenDBService()
+    __create_shema__ = CreateRefreshTokenShema
+    __update_shema__ = UpdateRefreshTokenShema
+
+
+    @pytest.mark.usefixtures("refresh_tokens")
+    async def test_add(self, refresh_tokens: list[RefreshTokenShema]) -> None:
+        await super().test_add(refresh_tokens)
+
+
+    @pytest.mark.usefixtures('refresh_tokens')
+    @pytest.mark.parametrize(
+            "index",
+            [1, 2, 4]
+    )
+    async def test_get(self, refresh_tokens: list[RefreshTokenShema], index: int) -> None:
+        await super().test_get("ident", refresh_tokens[index])
+
+
+    @pytest.mark.parametrize(
+        "ident, data",
+        [
+            ("60b5e81a6c2840648a0be60d294fbf63", {"revoked": True}),
+            ("cdf7987d87a649259a7cf937282216a4", {"user_ident": UUID("72e38f60a025499db25c74aac04ca19b")}),
+            ("a7088f670ef94b4f9ef75e3e7fdbfb8e", {"exp_dt": "2024-06-01T13:38:12"}),
+        ]
+    )
+    async def test_update(self, ident: str, data: dict) -> None:
+        await super().test_update(ident, data)
+
+
+    @pytest.mark.parametrize(
+        "ident, data, exception",
+        [
+            ("60b5e81a6c2840648a0be60d294fbf63", {"revoked": "hello"}, ValidationError),
+            ("cdf7987d87a649259a7cf937282216a4", {"user_ident": "72e38f60a024495c7c04ca19b"}, ValidationError),
+            ("a7088f670ef94b4f9ef75e3e7fdbfb8e", {"exp_dt": "ggg"}, ValidationError),
+        ]
+    )
+    async def test_fail_update(self, ident: str, data: dict, exception) -> None:
+        await super().test_fail_update(ident, data, exception)
+
+
+    @pytest.mark.usefixtures('refresh_tokens')
+    @pytest.mark.parametrize(
+            "index",
+            [1, 2, 4]
+    )
+    async def test_delete(self, refresh_tokens: list[RefreshTokenShema], index: int) -> None:
+        await super().test_delete(refresh_tokens[index])

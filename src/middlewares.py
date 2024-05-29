@@ -24,7 +24,7 @@ class CheckAccessTokenMiddleware(BaseHTTPMiddleware):
                     "access token required"
                 )
             
-            is_valid_token = service.validate_token(token)
+            is_valid_token = service.validate_access_token(token)
             
             if not is_valid_token:
                 raise HTTPException(

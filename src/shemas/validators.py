@@ -13,8 +13,8 @@ def validate_kleymo(v: str) -> bool:
     return False
 
 
-def validate_jwt_token(v: str) -> bool:
-    return AuthService().validate_token(v)
+def validate_jwt_refresh_token(v: str) -> bool:
+    return AuthService().validate_refresh_token(v)
 
 
 def to_date_validator(v: str | date | datetime | None) -> date | None:

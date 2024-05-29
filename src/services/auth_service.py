@@ -11,14 +11,14 @@ from utils.funcs import validate_uuid, to_uuid
 
 class AccessTokenPayloadData(t.TypedDict):
     gen_dt: datetime
-    user_id: UUID | str
+    user_ident: UUID | str
 
 
 class RefreshTokenPayloadData(t.TypedDict):
     gen_dt: datetime
     exp_dt: datetime
-    token_id: UUID | str
-    user_id: UUID | str
+    ident: UUID | str
+    user_ident: UUID | str
 
 
 class AuthService:
@@ -31,11 +31,11 @@ class AuthService:
         if not payloads.get("gen_dt") or not isinstance(payloads.get("gen_dt"), datetime):
             raise ValueError("gen_dt is required")
 
-        if not validate_uuid(payloads.get("user_id")):
-            raise ValueError("invalid user_id")
+        if not validate_uuid(payloads.get("user_ident")):
+            raise ValueError("invalid user_ident")
         
         payloads["gen_dt"] = payloads["gen_dt"].strftime("%Y/%m/%d, %H:%M:%S")
-        payloads["user_id"] = to_uuid(payloads["user_id"]).hex
+        payloads["user_ident"] = to_uuid(payloads["user_ident"]).hex
 
         return jwt_encode(payloads, Settings.SECRET_KEY(), algorithm=self.algorithms)
 
@@ -48,13 +48,13 @@ class AuthService:
         if not payloads.get("exp_dt") or not isinstance(payloads.get("exp_dt"), datetime):
             raise ValueError("exp_dt is required")
 
-        if not validate_uuid(payloads.get("user_id")):
-            raise ValueError("invalid user_id")
+        if not validate_uuid(payloads.get("user_ident")):
+            raise ValueError("invalid user_ident")
         
         payloads["gen_dt"] = payloads["gen_dt"].strftime("%Y/%m/%d, %H:%M:%S")
         payloads["exp_dt"] = payloads["exp_dt"].strftime("%Y/%m/%d, %H:%M:%S")
-        payloads["user_id"] = to_uuid(payloads["user_id"]).hex
-        payloads["token_id"] = to_uuid(payloads["token_id"]).hex
+        payloads["user_ident"] = to_uuid(payloads["user_ident"]).hex
+        payloads["ident"] = to_uuid(payloads["ident"]).hex
 
         return jwt_encode(payloads, Settings.SECRET_KEY(), algorithm=self.algorithms)
 
@@ -63,11 +63,34 @@ class AuthService:
         return jwt_decode(token, Settings.SECRET_KEY(), algorithms=self.algorithms)
     
 
-    def validate_token(self, token: str) -> bool:
-        payload = get_unverified_claims(token)
+    def validate_access_token(self, token: str) -> bool:
+        payload = self._get_token_claims(token)
+        
+        if not payload:
+            return False
+        
         payload["gen_dt"] = datetime.strptime(payload["gen_dt"], "%Y/%m/%d, %H:%M:%S")
 
         return self.create_access_token(**payload) == token
+    
+
+    def validate_refresh_token(self, token: str) -> bool:
+        payload = self._get_token_claims(token)
+
+        if not payload:
+            return False
+        
+        payload["gen_dt"] = datetime.strptime(payload["gen_dt"], "%Y/%m/%d, %H:%M:%S")
+        payload["exp_dt"] = datetime.strptime(payload["exp_dt"], "%Y/%m/%d, %H:%M:%S")
+
+        return self.create_refresh_token(**payload) == token
+    
+
+    def _get_token_claims(self, token: str) -> dict | None:
+        try:
+            return get_unverified_claims(token)
+        except:
+            return None
         
 
     def hash_password(self, password: str) -> str:

@@ -40,6 +40,11 @@ def get_users() -> list[UserShema]:
     return [UserShema.model_validate(user) for user in users]
 
 
+def get_refresh_tokens() -> list[RefreshTokenShema]:
+    tokens = json.load(open("test/test_data/refresh_tokens.json", "r", encoding="utf-8"))
+    return [RefreshTokenShema.model_validate(token) for token in tokens]
+
+
 def get_test_welders() -> list[WelderShema]:
     welders = json.load(open("test/test_data/test_welders.json", "r", encoding="utf-8"))
     return [WelderShema.model_validate(welder) for welder in welders]
@@ -69,9 +74,15 @@ def welder_certifications() -> list[WelderCertificationShema]:
 def ndts() -> list[NDTShema]:
     return get_welder_ndts()
 
+
 @pytest.fixture
 def users() -> list[UserShema]:
     return get_users()
+
+
+@pytest.fixture
+def refresh_tokens() -> list[RefreshTokenShema]:
+    return get_refresh_tokens()
 
 
 @pytest.fixture

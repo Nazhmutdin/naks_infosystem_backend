@@ -3,7 +3,7 @@ from shemas.welder import BaseWelderShema, WelderShema, CreateWelderShema, Updat
 from shemas.welder_certification import BaseWelderCertificationShema, WelderCertificationShema, CreateWelderCertificationShema, UpdateWelderCertificationShema
 from shemas.ndt import BaseNDTShema, NDTShema, CreateNDTShema, UpdateNDTShema
 from shemas.user import BaseUserShema, UserShema, CreateUserShema, UpdateUserShema
-from shemas.refresh_token import BaseRefreshTokeShema, RefreshTokeShema, CreateRefreshTokeShema, UpdateRefreshTokeShema
+from shemas.refresh_token import BaseRefreshTokenShema, RefreshTokenShema, CreateRefreshTokenShema, UpdateRefreshTokenShema
 
 
 __all__: list[str] = [
@@ -24,8 +24,8 @@ __all__: list[str] = [
     "UserShema",
     "CreateUserShema",
     "UpdateUserShema",
-    "BaseRefreshTokeShema",
-    "RefreshTokeShema",
-    "CreateRefreshTokeShema",
-    "UpdateRefreshTokeShema"
+    "BaseRefreshTokenShema",
+    "RefreshTokenShema",
+    "CreateRefreshTokenShema",
+    "UpdateRefreshTokenShema"
 ]

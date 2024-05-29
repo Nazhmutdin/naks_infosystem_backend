@@ -26,10 +26,11 @@ class RefreshTokenModel(Base):
     __tablename__ = "refresh_token_table"
 
     ident: Mapped[uuid.UUID] = Column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
-    user_ident: Mapped[uuid.UUID] = Column(UUID(as_uuid=True), nullable=False)
-    token: Mapped[str] = Column(Boolean(), nullable=False)
+    user_ident: Mapped[uuid.UUID] = Column(UUID(as_uuid=True), ForeignKey("user_table.ident", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    token: Mapped[str] = Column(String(), nullable=False)
     revoked: Mapped[bool] = Column(Boolean(), nullable=False)
-    exp: Mapped[datetime] = Column(DateTime(), nullable=False)
+    exp_dt: Mapped[datetime] = Column(DateTime(), nullable=False)
+    gen_dt: Mapped[datetime] = Column(DateTime(), nullable=False)
 
 
 class WelderModel(Base):
