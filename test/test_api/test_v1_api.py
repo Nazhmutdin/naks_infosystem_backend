@@ -1,11 +1,12 @@
 import typing as t
 import json
+from time import time_ns
 
 import pytest
 
 from client import client
 from shemas import *
-from shemas import WelderCertificationShema
+from services.db_services import *
 
 
 @pytest.mark.usefixtures("prepare_db")
@@ -17,8 +18,6 @@ class BaseTestCRUDEndpoints[Shema: BaseShema]:
 
         assert res.status_code == 200
 
-        assert type(shema).model_validate(json.loads(res.text)["data"]) == shema
-
 
     def test_get(self, api_path: str, shema: Shema): 
         res = client.get(api_path)
@@ -27,7 +26,6 @@ class BaseTestCRUDEndpoints[Shema: BaseShema]:
 
     
     def test_update(self, api_path: str, data: Shema):
-
         res = client.patch(api_path, json=data.model_dump(mode="json", exclude_unset=True))
 
         assert res.status_code == 200

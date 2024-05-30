@@ -3,9 +3,10 @@ import json
 from asyncio import run
 
 from shemas import *
-from db.db_engine import Base, engine
+from database import engine
 from settings import Settings
 from shemas import *
+from models import Base
 
 
 @pytest.fixture(scope="module")

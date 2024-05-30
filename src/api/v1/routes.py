@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1.dependencies import *
-
 from shemas import *
 from services.db_services import *
+from database import get_session
+from errors import *
 
 
 v1_router = APIRouter()
@@ -17,20 +19,31 @@ welder routes
 
 
 @v1_router.post("/welders")
-async def add_welder(result: WelderShema = Depends(add_welder_dependency)) -> dict[str, str | WelderShema]:
+async def add_welder(data: CreateWelderShema, session: AsyncSession = Depends(get_session)) -> dict[str, str]:
+    service = WelderDBService(session)
+
+    try:
+        await service.add(data)
+    except UpdateDBException as e:
+        raise HTTPException(400, e.args)
 
     return {
-        "detail": "welder added",
-        "data": result
+        "detail": "welder added"
     }
 
 
 @v1_router.get("/welders/{ident}")
-async def get_welder(result: WelderShema | None = Depends(get_welder_dependency)) -> WelderShema:
+async def get_welder(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> WelderShema:
+    service = WelderDBService(session)
+
+    try:
+        result = await service.get(ident)
+    except GetDBException as e:
+        raise HTTPException(400, e.args)
 
     if not result:
         raise HTTPException(
-            detail="welder certification not found",
+            detail=f"welder ({ident}) not found",
             status_code=400
         )
 
@@ -38,7 +51,13 @@ async def get_welder(result: WelderShema | None = Depends(get_welder_dependency)
 
 
 @v1_router.patch("/welders/{ident}")
-async def update_welder(ident: str = Depends(update_welder_dependency)) -> dict[str, str]:
+async def update_welder(data: UpdateWelderShema, ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> dict[str, str]:
+    service = WelderDBService(session)
+
+    try:
+        await service.update(ident, data)
+    except UpdateDBException as e:
+        raise HTTPException(400, e.args)
 
     return {
         "detail": f"welder ({ident}) updated"
@@ -46,7 +65,13 @@ async def update_welder(ident: str = Depends(update_welder_dependency)) -> dict[
 
 
 @v1_router.delete("/welders/{ident}")
-async def delete_welder(ident: str = Depends(delete_welder_dependency)):
+async def delete_welder(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):
+    service = WelderDBService(session)
+
+    try:
+        await service.delete(ident)
+    except DeleteDBException as e:
+        raise HTTPException(400, e.args)
 
     return {
         "detail": f"welder ({ident}) removed"
@@ -61,20 +86,32 @@ welder certification routes
 
 
 @v1_router.post("/welder-certifications")
-async def add_welder_certification(result: WelderCertificationShema = Depends(add_welder_certification_dependency)) -> dict[str, str | WelderCertificationShema]:
+async def add_welder_certification(data: CreateWelderCertificationShema, session: AsyncSession = Depends(get_session)) -> dict[str, str | WelderCertificationShema]:
 
+    service = WelderCertificationDBService(session)
+
+    try:
+        await service.add(data)
+    except UpdateDBException as e:
+        raise HTTPException(400, e.args)
+    
     return {
-        "detail": "welder certification added",
-        "data": result
+        "detail": "welder certification added"
     }
 
 
 @v1_router.get("/welder-certifications/{ident}")
-async def get_welder_certification(result: WelderCertificationShema | None = Depends(get_welder_certification_dependency)) -> WelderCertificationShema:
+async def get_welder_certification(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> WelderCertificationShema:
+    service = WelderCertificationDBService(session)
+
+    try:
+        result = await service.get(ident)
+    except GetDBException as e:
+        raise HTTPException(400, e.args)
 
     if not result:
         raise HTTPException(
-            detail="welder certification not found",
+            detail=f"welder certification ({ident}) not found",
             status_code=400
         )
 
@@ -82,14 +119,29 @@ async def get_welder_certification(result: WelderCertificationShema | None = Dep
 
 
 @v1_router.patch("/welder-certifications/{ident}")
-async def update_welder_certification(ident: str = Depends(update_welder_certification_dependency)):
+async def update_welder_certification(data: UpdateWelderCertificationShema, ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):
+    service = WelderCertificationDBService(session)
+
+    try:
+        await service.update(ident, data)
+    except UpdateDBException as e:
+        raise HTTPException(400, e.args)
+    
     return {
         "detail": f"welder certification ({ident}) updated"
     }
 
 
 @v1_router.delete("/welder-certifications/{ident}")
-async def delete_welder_certification(ident: str = Depends(delete_welder_certification_dependency)):
+async def delete_welder_certification(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):
+    
+    service = WelderCertificationDBService(session)
+
+    try:
+        await service.delete(ident)
+    except DeleteDBException as e:
+        raise HTTPException(400, e.args)
+    
     return {
         "detail": f"welder certification ({ident}) removed"
     }
@@ -103,17 +155,28 @@ ndt routes
 
 
 @v1_router.post("/ndts")
-async def add_ndt(result: NDTShema = Depends(add_ndt_dependency)) -> dict[str, str | NDTShema]:
+async def add_ndt(data: CreateNDTShema, session: AsyncSession = Depends(get_session)) -> dict[str, str | NDTShema]:
+    service = NDTDBService(session)
+
+    try:
+        await service.add(data)
+    except UpdateDBException as e:
+        raise HTTPException(400, e.args)
 
     return {
-        "detail": f"ndt added",
-        "data": result
+        "detail": f"ndt added"
     }
 
 
 @v1_router.get("/ndts/{ident}")
-async def get_ndt(result: NDTShema | None = Depends(get_ndt_dependency)) -> NDTShema:
+async def get_ndt(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> NDTShema:
+    service = NDTDBService(session)
 
+    try:
+        result = await service.get(ident)
+    except GetDBException as e:
+        raise HTTPException(400, e.args)
+    
     if not result:
         raise HTTPException(
             detail="ndt not found",
@@ -124,7 +187,13 @@ async def get_ndt(result: NDTShema | None = Depends(get_ndt_dependency)) -> NDTS
 
 
 @v1_router.patch("/ndts/{ident}")
-async def update_ndt(ident: str = Depends(update_ndt_dependency)):
+async def update_ndt(data: UpdateNDTShema, ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):    
+    service = NDTDBService(session)
+
+    try:
+        await service.update(ident, data)
+    except UpdateDBException as e:
+        raise HTTPException(400, e.args)
 
     return {
         "detail": f"ndt ({ident}) updated"
@@ -132,7 +201,13 @@ async def update_ndt(ident: str = Depends(update_ndt_dependency)):
 
 
 @v1_router.delete("/ndts/{ident}")
-async def delete_ndt(ident: str = Depends(delete_ndt_dependency)):
+async def delete_ndt(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):    
+    service = NDTDBService(session)
+
+    try:
+        await service.delete(ident)
+    except DeleteDBException as e:
+        raise HTTPException(400, e.args)
 
     return {
         "detail": f"ndt ({ident}) removed"

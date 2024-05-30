@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from fastapi import HTTPException, Depends
 
 from shemas import UserShema
+from database import get_session
 from services.auth_service import AuthService
 from services.db_services import UserDBService
 
@@ -13,10 +14,10 @@ class AuthData(BaseModel):
     login: str
 
 
-async def get_user(auth_data: AuthData) -> UserShema:
+async def get_user(auth_data: AuthData, session = Depends(get_session)) -> UserShema:
     
     service = AuthService()
-    user = await UserDBService().get(auth_data.login)
+    user = await UserDBService(session).get(auth_data.login)
 
     if not user:
         raise HTTPException(

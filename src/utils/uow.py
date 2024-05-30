@@ -1,6 +1,6 @@
 import typing as t
 
-from db.db_engine import get_session
+from database import get_session
 from db.repositories import BaseRepository
 
 
@@ -28,13 +28,31 @@ class UnitOfWork[Repository: BaseRepository]:
     async def __aenter__(self) -> t.Self:
         self.session = await get_session()
         self.repository = self.repository_type(self.session)
-        # event.listen(self.engine, "before_cursor_execute", self.callback)
 
         return self
 
 
     async def __aexit__(self, *args) -> None:
-        # event.remove(self.session.bind, "before_cursor_execute", self.callback)
+        await self.rollback()
+        await self.session.close()
+
+
+    async def commit(self) -> None:
+        await self.session.commit()
+
+
+    async def rollback(self) -> None:
+        await self.session.rollback()
+
+
+class UnitOfWorkUpdated:
+
+    async def __aenter__(self) -> t.Self:
+        self.session = await get_session()
+        return self
+
+
+    async def __aexit__(self, *args) -> None:
         await self.rollback()
         await self.session.close()
 

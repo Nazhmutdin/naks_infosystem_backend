@@ -1,16 +1,24 @@
 import typing as t
 from uuid import UUID
+from re import fullmatch
 
 from datetime import datetime, date
 from dateutil.parser import parser
 
 
-def validate_uuid(uuid: str | UUID) -> True:
+def is_uuid(uuid: str | UUID) -> True:
     try:
         UUID(uuid)
         return True
     except:
         return False
+    
+
+def is_kleymo(v: str) -> True:
+    if fullmatch(r"[A-Z0-9]{4}", v):
+        return True
+    
+    return False
     
 
 def to_uuid(v: str | UUID) -> UUID:

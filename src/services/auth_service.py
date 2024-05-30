@@ -6,7 +6,7 @@ from hashlib import sha256
 from jose.jwt import encode as jwt_encode, decode as jwt_decode, get_unverified_claims
 
 from settings import Settings
-from utils.funcs import validate_uuid, to_uuid
+from utils.funcs import is_uuid, to_uuid
 
 
 class AccessTokenPayloadData(t.TypedDict):
@@ -31,7 +31,7 @@ class AuthService:
         if not payloads.get("gen_dt") or not isinstance(payloads.get("gen_dt"), datetime):
             raise ValueError("gen_dt is required")
 
-        if not validate_uuid(payloads.get("user_ident")):
+        if not is_uuid(payloads.get("user_ident")):
             raise ValueError("invalid user_ident")
         
         payloads["gen_dt"] = payloads["gen_dt"].strftime("%Y/%m/%d, %H:%M:%S")
@@ -48,7 +48,7 @@ class AuthService:
         if not payloads.get("exp_dt") or not isinstance(payloads.get("exp_dt"), datetime):
             raise ValueError("exp_dt is required")
 
-        if not validate_uuid(payloads.get("user_ident")):
+        if not is_uuid(payloads.get("user_ident")):
             raise ValueError("invalid user_ident")
         
         payloads["gen_dt"] = payloads["gen_dt"].strftime("%Y/%m/%d, %H:%M:%S")

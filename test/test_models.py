@@ -1,13 +1,16 @@
 import pytest
 import typing as t
-from uuid import UUID
 from datetime import date, datetime
+from uuid import UUID
+from time import time_ns
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import CreateDBException
 from utils.funcs import to_date
-from db.repositories import *
-from db.uow import UnitOfWork
 from shemas import *
+from models import *
+from database import engine
 
 
 """
@@ -18,49 +21,79 @@ repository base test
 
 
 @pytest.mark.usefixtures("prepare_db")
-class BaseTestRepository[Shema: BaseShema]:
+class BaseTestModel[Shema: BaseShema]:
     __shema__: type[BaseShema]
-    __create_shema__: type[BaseShema]
-    __repository__: type[BaseRepository]
+    __model__: type[Base]
+
+    session = AsyncSession(engine)
 
 
-    async def test_add(self, data: list[Shema]) -> None:
-        async with UnitOfWork(repository_type=self.__repository__) as uow:
+    async def test_create(self, data: list[Shema]) -> None:
+        start = time_ns()
+
+        async with self.session.begin():
+
             insert_data = [
-                self.__create_shema__.model_validate(el, from_attributes=True).model_dump() for el in data
+                el.model_dump() for el in data
             ]
             
-            await uow.repository.add(*insert_data)
+            await self.__model__.create(
+                *insert_data,
+                session=self.session
+            )
 
             for el in data:
-                result = self.__shema__.model_validate((await uow.repository.get(el.ident))[0], from_attributes=True)
+                el = self.__shema__.model_validate(el, from_attributes=True)
+                result = self.__shema__.model_validate((await self.__model__.get(self.session, el.ident))[0], from_attributes=True)
                 assert result == el
 
-            assert await uow.repository.count() == len(data)
+            assert await self.__model__.count(self.session) == len(data)
 
-            await uow.commit()
+            await self.session.commit()
+            await self.session.close()
+
+        print(f"\nExecution time: {(time_ns() - start) / 1_000_000_000} s")
+
+
+    async def test_create_existing(self, data: Shema) -> None:
+        start = time_ns()
+
+        async with self.session.begin():
+
+            with pytest.raises(CreateDBException):
+                await self.__model__.create(
+                    data.model_dump(),
+                    session=self.session
+                )
+
+            await self.session.commit()
+            await self.session.close()
+
+        print(f"\nExecution time: {(time_ns() - start) / 1_000_000_000} s")
 
     
     async def test_get(self, attr: str, el: Shema) -> None:
-        async with UnitOfWork(repository_type=self.__repository__) as uow:
+        start = time_ns()
 
-            res = await uow.repository.get(getattr(el, attr))
+        async with self.session.begin():
+
+            res = await self.__model__.get(self.session, getattr(el, attr))
 
             assert self.__shema__.model_validate(res[0], from_attributes=True) == el
 
+            await self.session.close()
 
-    async def test_add_existing(self, data: Shema) -> None:
-        async with UnitOfWork(repository_type=self.__repository__) as uow:
-            with pytest.raises(CreateDBException):
-                await uow.repository.add(self.__create_shema__.model_validate(data, from_attributes=True).model_dump())
+        print(f"\nExecution time: {(time_ns() - start) / 1_000_000_000} s")
 
 
     async def test_update(self, ident: str, data: dict[str, t.Any]) -> None:
-        async with UnitOfWork(repository_type=self.__repository__) as uow:
+        start = time_ns()
 
-            await uow.repository.update(ident, data)
+        async with self.session.begin():
 
-            res = await uow.repository.get(ident)
+            await self.__model__.update(self.session, ident, data)
+
+            res = await self.__model__.get(self.session, ident)
 
             el = self.__shema__.model_validate(res[0], from_attributes=True)
 
@@ -71,18 +104,27 @@ class BaseTestRepository[Shema: BaseShema]:
 
                 assert getattr(el, key) == value
 
-            await uow.commit()
+            await self.session.commit()
+            await self.session.close()
+
+        print(f"\nExecution time: {(time_ns() - start) / 1_000_000_000} s")
 
     
     async def test_delete(self, item: Shema) -> None:
-        async with UnitOfWork(repository_type=self.__repository__) as uow:
+        start = time_ns()
 
-            await uow.repository.delete(item.ident)
+        async with self.session.begin():
 
-            assert not await uow.repository.get(item.ident)
+            await self.__model__.delete(self.session, item.ident)
 
-            await uow.repository.add(self.__create_shema__.model_validate(item, from_attributes=True).model_dump())
-            await uow.commit()
+            assert not await self.__model__.get(self.session, item.ident)
+
+            await self.__model__.create(item.model_dump(), session=self.session)
+
+            await self.session.commit()
+            await self.session.close()
+
+        print(f"\nExecution time: {(time_ns() - start) / 1_000_000_000} s")
 
 
 """
@@ -93,14 +135,13 @@ Welder repository test
 
 
 @pytest.mark.asyncio
-class TestWelderRepository(BaseTestRepository[WelderShema]):
+class TestWelderModel(BaseTestModel[WelderShema]):
     __shema__ = WelderShema
-    __create_shema__ = CreateWelderShema
-    __repository__ = WelderRepository
+    __model__ = WelderModel
 
     @pytest.mark.usefixtures('welders')
-    async def test_add(self, welders: list[WelderShema]) -> None:
-        return await super().test_add(welders)
+    async def test_create(self, welders: list[WelderShema]) -> None:
+        return await super().test_create(welders)
     
 
     @pytest.mark.usefixtures('welders')
@@ -108,8 +149,8 @@ class TestWelderRepository(BaseTestRepository[WelderShema]):
         "index",
         [1, 2, 63, 4, 5, 11]
     )
-    async def test_add_existing(self, welders: list[WelderShema], index: int) -> None:
-        return await super().test_add_existing(welders[index])
+    async def test_create_existing(self, welders: list[WelderShema], index: int) -> None:
+        return await super().test_create_existing(welders[index])
     
 
     @pytest.mark.usefixtures('welders')
@@ -155,15 +196,14 @@ Welder certification repository test
 
 
 @pytest.mark.asyncio
-class TestWelderCertificationRepository(BaseTestRepository[WelderCertificationShema]):
+class TestWelderCertificationModel(BaseTestModel[WelderCertificationShema]):
     __shema__ = WelderCertificationShema
-    __create_shema__ = CreateWelderCertificationShema
-    __repository__ = WelderCertificationRepository
+    __model__ = WelderCertificationModel
 
 
     @pytest.mark.usefixtures('welder_certifications')
-    async def test_add(self, welder_certifications: list[WelderCertificationShema]) -> None:
-        await super().test_add(welder_certifications)
+    async def test_create(self, welder_certifications: list[WelderCertificationShema]) -> None:
+        await super().test_create(welder_certifications)
 
 
     @pytest.mark.usefixtures('welder_certifications')
@@ -180,8 +220,8 @@ class TestWelderCertificationRepository(BaseTestRepository[WelderCertificationSh
             "index",
             [1, 13, 63, 31, 75, 89]
     )
-    async def test_add_existing(self, welder_certifications: list[WelderCertificationShema], index: int) -> None:
-        await super().test_add_existing(welder_certifications[index])
+    async def test_create_existing(self, welder_certifications: list[WelderCertificationShema], index: int) -> None:
+        await super().test_create_existing(welder_certifications[index])
 
 
     @pytest.mark.parametrize(
@@ -214,15 +254,14 @@ NDT repository test
 
 
 @pytest.mark.asyncio
-class TestNDTRepository(BaseTestRepository[NDTShema]):
+class TestNDTModel(BaseTestModel[NDTShema]):
     __shema__ = NDTShema
-    __create_shema__ = CreateNDTShema
-    __repository__ = NDTRepository
+    __model__ = NDTModel
 
 
     @pytest.mark.usefixtures('ndts')
-    async def test_add(self, ndts: list[NDTShema]) -> None:
-        await super().test_add(ndts)
+    async def test_create(self, ndts: list[NDTShema]) -> None:
+        await super().test_create(ndts)
 
 
     @pytest.mark.usefixtures('ndts')
@@ -238,8 +277,8 @@ class TestNDTRepository(BaseTestRepository[NDTShema]):
         "index",
         [1, 2, 63, 4, 5, 11]
     )
-    async def test_add_existing(self, ndts: list[NDTShema], index: int) -> None:
-        await super().test_add_existing(ndts[index])
+    async def test_create_existing(self, ndts: list[NDTShema], index: int) -> None:
+        await super().test_create_existing(ndts[index])
 
     
     @pytest.mark.parametrize(
@@ -271,15 +310,14 @@ User repository test
 
 
 @pytest.mark.asyncio
-class TestUserRepository(BaseTestRepository[UserShema]):
+class TestUserModel(BaseTestModel[UserShema]):
     __shema__ = UserShema
-    __create_shema__ = CreateUserShema
-    __repository__ = UserRepository
+    __model__ = UserModel
 
 
     @pytest.mark.usefixtures('users')
-    async def test_add(self, users: list[UserShema]) -> None:
-        await super().test_add(users)
+    async def test_create(self, users: list[UserShema]) -> None:
+        await super().test_create(users)
 
 
     @pytest.mark.usefixtures('users')
@@ -287,8 +325,8 @@ class TestUserRepository(BaseTestRepository[UserShema]):
             "index",
             [1, 2, 7]
     )
-    async def test_add_existing(self, users: list[UserShema], index: int) -> None:
-        await super().test_add_existing(users[index])
+    async def test_create_existing(self, users: list[UserShema], index: int) -> None:
+        await super().test_create_existing(users[index])
 
 
     @pytest.mark.usefixtures('users')
@@ -334,15 +372,15 @@ refresh token repository test
 
 
 @pytest.mark.asyncio
-class TestRefreshTokenRepository(BaseTestRepository[RefreshTokenShema]): 
+class TestRefreshTokenModel(BaseTestModel[RefreshTokenShema]): 
     __shema__ = RefreshTokenShema
-    __create_shema__ = CreateRefreshTokenShema
-    __repository__ = RefreshTokenRepository
+    __model__ = RefreshTokenModel
 
 
     @pytest.mark.usefixtures("refresh_tokens")
-    async def test_add(self, refresh_tokens: list[RefreshTokenShema]) -> None:
-        await super().test_add(refresh_tokens)
+    async def test_create(self, refresh_tokens: list[RefreshTokenShema]) -> None:
+        refresh_tokens = [CreateRefreshTokenShema.model_validate(el, from_attributes=True) for el in refresh_tokens]
+        await super().test_create(refresh_tokens)
 
 
     @pytest.mark.usefixtures('refresh_tokens')
@@ -350,8 +388,9 @@ class TestRefreshTokenRepository(BaseTestRepository[RefreshTokenShema]):
             "index",
             [1, 2, 4]
     )
-    async def test_add_existing(self, refresh_tokens: list[RefreshTokenShema], index: int) -> None: 
-        await super().test_add_existing(refresh_tokens[index])
+    async def test_create_existing(self, refresh_tokens: list[RefreshTokenShema], index: int) -> None: 
+        refresh_tokens = [CreateRefreshTokenShema.model_validate(el, from_attributes=True) for el in refresh_tokens]
+        await super().test_create_existing(refresh_tokens[index])
 
 
     @pytest.mark.usefixtures('refresh_tokens')
@@ -381,4 +420,5 @@ class TestRefreshTokenRepository(BaseTestRepository[RefreshTokenShema]):
             [1, 2, 4]
     )
     async def test_delete(self, refresh_tokens: list[RefreshTokenShema], index: int) -> None:
+        refresh_tokens = [CreateRefreshTokenShema.model_validate(el, from_attributes=True) for el in refresh_tokens]
         await super().test_delete(refresh_tokens[index])

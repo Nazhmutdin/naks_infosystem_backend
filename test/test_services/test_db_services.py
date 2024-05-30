@@ -2,10 +2,12 @@ from uuid import UUID
 from datetime import date, datetime
 
 from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
 import pytest
 
 from services.db_services import *
 from utils.funcs import str_to_datetime
+from database import engine
 from shemas import *
 
 
@@ -63,7 +65,7 @@ class BaseTestDBService[Shema: BaseShema]:
 
 @pytest.mark.asyncio
 class TestWelderDBService(BaseTestDBService):
-    service = WelderDBService()
+    service = WelderDBService(AsyncSession(engine))
     __create_shema__ = CreateWelderShema
     __update_shema__ = UpdateWelderShema
 
@@ -121,7 +123,7 @@ class TestWelderDBService(BaseTestDBService):
 
 @pytest.mark.asyncio
 class TestWelderCertificationDBService(BaseTestDBService):
-    service = WelderCertificationDBService()
+    service = WelderCertificationDBService(AsyncSession(engine))
     __create_shema__ = CreateWelderCertificationShema
     __update_shema__ = UpdateWelderCertificationShema
 
@@ -177,7 +179,7 @@ class TestWelderCertificationDBService(BaseTestDBService):
 
 @pytest.mark.asyncio
 class TestNDTDBService(BaseTestDBService):
-    service = NDTDBService()
+    service = NDTDBService(AsyncSession(engine))
     __create_shema__ = CreateNDTShema
     __update_shema__ = UpdateNDTShema
 
@@ -231,7 +233,7 @@ class TestNDTDBService(BaseTestDBService):
 
 @pytest.mark.asyncio
 class TestUserDBService(BaseTestDBService[UserShema]):
-    service = UserDBService()
+    service = UserDBService(AsyncSession(engine))
     __create_shema__ = CreateUserShema
     __update_shema__ = UpdateUserShema
 
@@ -291,7 +293,7 @@ class TestUserDBService(BaseTestDBService[UserShema]):
 
 @pytest.mark.asyncio
 class TestRefreshTokenDBService(BaseTestDBService[RefreshTokenShema]): 
-    service = RefreshTokenDBService()
+    service = RefreshTokenDBService(AsyncSession(engine))
     __create_shema__ = CreateRefreshTokenShema
     __update_shema__ = UpdateRefreshTokenShema
 
