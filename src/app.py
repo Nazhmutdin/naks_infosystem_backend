@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from api.v1.routes import v1_router
 from api.auth.routes import auth_router
 from middlewares import CheckAccessTokenMiddleware
+from database import get_session
 
 
 app = FastAPI()

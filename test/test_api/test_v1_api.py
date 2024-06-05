@@ -1,15 +1,13 @@
 import typing as t
 import json
-from time import time_ns
 
 import pytest
 
+from services.db_services import *
 from client import client
 from shemas import *
-from services.db_services import *
 
 
-@pytest.mark.usefixtures("prepare_db")
 class BaseTestCRUDEndpoints[Shema: BaseShema]:
     __shema__: type[Shema]
 
@@ -51,17 +49,19 @@ class BaseTestCRUDEndpoints[Shema: BaseShema]:
         
         res = client.post(api_path, json=shema.model_dump(mode="json"))
 
+        assert res.status_code == 200
+
 
 class TestWelderCRUDEndpoints(BaseTestCRUDEndpoints[WelderShema]):
     __shema__ = WelderShema
 
     @pytest.mark.parametrize(
             "index",
-            [0, 1, 2, 3]
+            [0, 1, 2, 3, 4]
     )
-    @pytest.mark.usefixtures("test_welders")
-    def test_add(self, index: int, test_welders: list[WelderShema]):
-        welder = test_welders[index]
+    @pytest.mark.usefixtures("welders")
+    def test_add(self, index: int, welders: list[WelderShema]):
+        welder = welders[index]
 
         return super().test_add(
             f"/api/v1/welders",
@@ -73,9 +73,9 @@ class TestWelderCRUDEndpoints(BaseTestCRUDEndpoints[WelderShema]):
             "index",
             [0, 1, 2, 3]
     )
-    @pytest.mark.usefixtures("test_welders")
-    def test_get(self, index: int, test_welders: list[WelderShema]):
-        welder = test_welders[index]
+    @pytest.mark.usefixtures("welders")
+    def test_get(self, index: int, welders: list[WelderShema]):
+        welder = welders[index]
 
         return super().test_get(
             f"/api/v1/welders/{welder.ident.hex}",
@@ -87,9 +87,9 @@ class TestWelderCRUDEndpoints(BaseTestCRUDEndpoints[WelderShema]):
             "index",
             [0, 1, 2, 3]
     )
-    @pytest.mark.usefixtures("test_welders")
-    def test_get_by_kleymo(self, index: int, test_welders: list[WelderShema]):
-        welder = test_welders[index]
+    @pytest.mark.usefixtures("welders")
+    def test_get_by_kleymo(self, index: int, welders: list[WelderShema]):
+        welder = welders[index]
 
         return super().test_get(
             f"/api/v1/welders/{welder.kleymo}",
@@ -98,26 +98,26 @@ class TestWelderCRUDEndpoints(BaseTestCRUDEndpoints[WelderShema]):
     
 
     @pytest.mark.parametrize(
-            "ident, data",
-            [
-                (
-                    "d0099cbcb62345c2bc28a527642ab39c", 
-                    {
-                        "kleymo": "8M8S",
-                        "name": "Йадав Аджай",
-                        "birthday": "2000.01.01",
-                        "passport_number": "55442233",
-                    }
-                ),
-                (
-                    "BKFC", 
-                    {
-                        "name": "Моханан Сануп",
-                        "sicil": "126542",
-                        "nation": "RUS",
-                    }
-                )
-            ]
+        "ident, data",
+        [
+            (
+                "095898d1419641b3adf45af287aad3e7", 
+                {
+                    "kleymo": "8M8S",
+                    "name": "Йадав Аджай",
+                    "birthday": "2000.01.01",
+                    "passport_number": "55442233",
+                }
+            ),
+            (
+                "01ES", 
+                {
+                    "name": "Моханан Сануп",
+                    "sicil": "126542",
+                    "nation": "RUS",
+                }
+            )
+        ]
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
@@ -130,9 +130,9 @@ class TestWelderCRUDEndpoints(BaseTestCRUDEndpoints[WelderShema]):
             "index",
             [0, 1, 2, 3]
     )
-    @pytest.mark.usefixtures("test_welders")
-    def test_delete(self, index: int, test_welders: list[WelderShema]):
-        welder = test_welders[index]
+    @pytest.mark.usefixtures("welders")
+    def test_delete(self, index: int, welders: list[WelderShema]):
+        welder = welders[index]
 
         return super().test_delete(
             f"/api/v1/welders",
@@ -147,9 +147,9 @@ class TestWelderCertificationCRUDEndpoints(BaseTestCRUDEndpoints[WelderCertifica
             "index",
             [0, 1, 2, 3]
     )
-    @pytest.mark.usefixtures("test_welder_certifications")
-    def test_add(self, index: int, test_welder_certifications: list[WelderCertificationShema]):
-        certification = test_welder_certifications[index]
+    @pytest.mark.usefixtures("welder_certifications")
+    def test_add(self, index: int, welder_certifications: list[WelderCertificationShema]): 
+        certification = welder_certifications[index]
 
         return super().test_add(
             f"/api/v1/welder-certifications",
@@ -161,9 +161,9 @@ class TestWelderCertificationCRUDEndpoints(BaseTestCRUDEndpoints[WelderCertifica
             "index",
             [0, 1, 2, 3]
     )
-    @pytest.mark.usefixtures("test_welder_certifications")
-    def test_get(self, index: int, test_welder_certifications: list[WelderCertificationShema]):
-        certification = test_welder_certifications[index]
+    @pytest.mark.usefixtures("welder_certifications")
+    def test_get(self, index: int, welder_certifications: list[WelderCertificationShema]):
+        certification = welder_certifications[index]
 
         return super().test_get(
             f"/api/v1/welder-certifications/{certification.ident.hex}",
@@ -175,18 +175,18 @@ class TestWelderCertificationCRUDEndpoints(BaseTestCRUDEndpoints[WelderCertifica
             "ident, data",
             [
                 (
-                    "eac5ab3126ef48ac9e3d45022bb4571b", 
+                    "dc628e8a800b47aeb8701b4994b5de20", 
                     {
                         "details_thikness_from": 2,
                         "joint_type": [
                             "УШ",
                             "СШ"
                         ],
-                        "kleymo": "B2MV",
+                        "kleymo": "01E0",
                     }
                 ),
                 (
-                    "4d061eb7bf9a4a16913223ea3926aa19", 
+                    "46a9381ae8cb4143958152bf25c30fbe", 
                     {
                         "welding_materials_groups": [
                             "M01",
@@ -210,9 +210,9 @@ class TestWelderCertificationCRUDEndpoints(BaseTestCRUDEndpoints[WelderCertifica
             "index",
             [0, 1, 2, 3]
     )
-    @pytest.mark.usefixtures("test_welder_certifications")
-    def test_delete(self, index: int, test_welder_certifications: list[WelderCertificationShema]):
-        certification = test_welder_certifications[index]
+    @pytest.mark.usefixtures("welder_certifications")
+    def test_delete(self, index: int, welder_certifications: list[WelderCertificationShema]):
+        certification = welder_certifications[index]
 
         return super().test_delete(
             f"/api/v1/welder-certifications",
@@ -227,9 +227,9 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
             "index",
             [0, 1, 2, 3, 4]
     )
-    @pytest.mark.usefixtures("test_ndts")
-    def test_add(self, index: int, test_ndts: list[NDTShema]):
-        ndt = test_ndts[index]
+    @pytest.mark.usefixtures("ndts")
+    def test_add(self, index: int, ndts: list[NDTShema]):
+        ndt = ndts[index]
 
         return super().test_add(
             f"/api/v1/ndts",
@@ -241,9 +241,9 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
             "index",
             [0, 1, 2, 3]
     )
-    @pytest.mark.usefixtures("test_ndts")
-    def test_get(self, index: int, test_ndts: list[NDTShema]):
-        ndt = test_ndts[index]
+    @pytest.mark.usefixtures("ndts")
+    def test_get(self, index: int, ndts: list[NDTShema]):
+        ndt = ndts[index]
 
         return super().test_get(
             f"/api/v1/ndts/{ndt.ident.hex}",
@@ -255,18 +255,18 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
             "ident, data",
             [
                 (
-                    "415e23fbd655402bb99b96868f4ec2d5", 
+                    "6aaadee3fd7a45b4b26477f7ce573ff6", 
                     {
-                        "total_weld_2": 4255.0,
-                        "total_ndt_2": 306.0,
-                        "total_accepted_2": 30118.0,
+                        "total_welded": 4255.0,
+                        "total_ndt": 306.0,
+                        "accepted": 30118.0,
                     }
                 ),
                 (
-                    "778fd525f17e4c1c9f929adfca0ad300", 
+                    "95b61f9d1b1c4dc2b79cce036d85f527", 
                     {
-                        "comp": "PIRAM",
-                        "subcon": "PIRAMITd122",
+                        "company": "PIRAM",
+                        "subcompany": "PIRAMITd122",
                         "project": "AWP1Bdwe",
                         "welding_date": "2022-05-17"
                     }
@@ -284,9 +284,9 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
             "index",
             [0, 1, 2, 3]
     )
-    @pytest.mark.usefixtures("test_ndts")
-    def test_delete(self, index: int, test_ndts: list[NDTShema]):
-        ndt = test_ndts[index]
+    @pytest.mark.usefixtures("ndts")
+    def test_delete(self, index: int, ndts: list[NDTShema]):
+        ndt = ndts[index]
 
         return super().test_delete(
             f"/api/v1/ndts",

@@ -33,7 +33,7 @@ async def add_welder(data: CreateWelderShema, session: AsyncSession = Depends(ge
 
 
 @v1_router.get("/welders/{ident}")
-async def get_welder(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> WelderShema:
+async def get_welder(ident: str = Depends(validate_welder_ident_dependency), session: AsyncSession = Depends(get_session)) -> WelderShema:
     service = WelderDBService(session)
 
     try:
@@ -51,7 +51,7 @@ async def get_welder(ident: str = Depends(validate_ident_dependency), session: A
 
 
 @v1_router.patch("/welders/{ident}")
-async def update_welder(data: UpdateWelderShema, ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> dict[str, str]:
+async def update_welder(data: UpdateWelderShema, ident: str = Depends(validate_welder_ident_dependency), session: AsyncSession = Depends(get_session)) -> dict[str, str]:
     service = WelderDBService(session)
 
     try:
@@ -65,7 +65,7 @@ async def update_welder(data: UpdateWelderShema, ident: str = Depends(validate_i
 
 
 @v1_router.delete("/welders/{ident}")
-async def delete_welder(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):
+async def delete_welder(ident: str = Depends(validate_welder_ident_dependency), session: AsyncSession = Depends(get_session)):
     service = WelderDBService(session)
 
     try:
@@ -86,13 +86,13 @@ welder certification routes
 
 
 @v1_router.post("/welder-certifications")
-async def add_welder_certification(data: CreateWelderCertificationShema, session: AsyncSession = Depends(get_session)) -> dict[str, str | WelderCertificationShema]:
+async def add_welder_certification(data: CreateWelderCertificationShema, session: AsyncSession = Depends(get_session)) -> dict[str, str]:
 
     service = WelderCertificationDBService(session)
 
     try:
         await service.add(data)
-    except UpdateDBException as e:
+    except CreateDBException as e:
         raise HTTPException(400, e.args)
     
     return {
@@ -155,7 +155,7 @@ ndt routes
 
 
 @v1_router.post("/ndts")
-async def add_ndt(data: CreateNDTShema, session: AsyncSession = Depends(get_session)) -> dict[str, str | NDTShema]:
+async def add_ndt(data: CreateNDTShema, session: AsyncSession = Depends(get_session)) -> dict[str, str]:
     service = NDTDBService(session)
 
     try:

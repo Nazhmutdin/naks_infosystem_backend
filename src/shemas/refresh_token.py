@@ -1,11 +1,12 @@
 from typing import Any
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, UTC
 
 from pydantic import Field, field_validator, computed_field
 
 from shemas.base import BaseShema
 from shemas.validators import to_datetime_validator, validate_jwt_refresh_token
+from utils.funcs import refresh_token_expiration_dt
 
 
 class BaseRefreshTokenShema(BaseShema):
@@ -19,12 +20,20 @@ class BaseRefreshTokenShema(BaseShema):
     @field_validator("exp_dt", "gen_dt", mode="before")
     @classmethod
     def validate_datetimes(cls, v: str | datetime | None):
-        return to_datetime_validator(v)
+        if v == None:
+            return v
+        
+        res =  to_datetime_validator(v)
+
+        if not res:
+            raise ValueError(f"Invalid date data: {v}")
+        
+        return res
         
 
     @field_validator("token")
     @classmethod
-    def validate_datetimes(cls, v: str | None):
+    def validate_token(cls, v: str | None):
         if v == None:
             return None
         
@@ -38,9 +47,9 @@ class RefreshTokenShema(BaseRefreshTokenShema):
     ident: UUID
     user_ident: UUID
     token: str
-    revoked: bool
-    exp_dt: datetime
-    gen_dt: datetime
+    revoked: bool = Field(default=False)
+    gen_dt: datetime = Field(default_factory=datetime.now)
+    exp_dt: datetime = Field(default_factory=refresh_token_expiration_dt)
 
 
     @field_validator("token")
@@ -50,8 +59,8 @@ class RefreshTokenShema(BaseRefreshTokenShema):
         
         if validate_jwt_refresh_token(v):
             return v
-        
-        raise ValueError("invalid token")
+        else:
+            raise ValueError(f"invalid token {v}")
 
 
     @field_validator("exp_dt", "gen_dt", mode="before")
@@ -68,7 +77,7 @@ class RefreshTokenShema(BaseRefreshTokenShema):
     @computed_field
     @property
     def expired(self) -> bool:
-        return datetime.now() > self.exp_dt
+        return datetime.now(UTC).replace(tzinfo=None) > self.exp_dt
             
 
 class CreateRefreshTokenShema(RefreshTokenShema):

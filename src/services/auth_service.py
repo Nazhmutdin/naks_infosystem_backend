@@ -1,12 +1,12 @@
 import typing as t
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timedelta, UTC
 from hashlib import sha256
 
 from jose.jwt import encode as jwt_encode, decode as jwt_decode, get_unverified_claims
 
 from settings import Settings
-from utils.funcs import is_uuid, to_uuid
+from utils.funcs import is_uuid, to_uuid, str_to_datetime
 
 
 class AccessTokenPayloadData(t.TypedDict):
@@ -22,8 +22,9 @@ class RefreshTokenPayloadData(t.TypedDict):
 
 
 class AuthService:
-    def __init__(self, alg: str | list[str]="HS256") -> None:
+    def __init__(self, alg: str | list[str]="HS256", secret: str = Settings.SECRET_KEY()) -> None:
         self.algorithms = alg
+        self.secret = secret
 
 
     def create_access_token(self, **payloads: t.Unpack[AccessTokenPayloadData]) -> str:
@@ -34,10 +35,10 @@ class AuthService:
         if not is_uuid(payloads.get("user_ident")):
             raise ValueError("invalid user_ident")
         
-        payloads["gen_dt"] = payloads["gen_dt"].strftime("%Y/%m/%d, %H:%M:%S")
+        payloads["gen_dt"] = payloads["gen_dt"].strftime("%Y/%m/%d, %H:%M:%S.%f")
         payloads["user_ident"] = to_uuid(payloads["user_ident"]).hex
 
-        return jwt_encode(payloads, Settings.SECRET_KEY(), algorithm=self.algorithms)
+        return jwt_encode(payloads, self.secret, algorithm=self.algorithms)
 
 
     def create_refresh_token(self, **payloads: t.Unpack[RefreshTokenPayloadData]):
@@ -56,22 +57,22 @@ class AuthService:
         payloads["user_ident"] = to_uuid(payloads["user_ident"]).hex
         payloads["ident"] = to_uuid(payloads["ident"]).hex
 
-        return jwt_encode(payloads, Settings.SECRET_KEY(), algorithm=self.algorithms)
+        return jwt_encode(payloads, self.secret, algorithm=self.algorithms)
 
 
     def read_token(self, token: str) -> dict[str, t.Any]:
-        return jwt_decode(token, Settings.SECRET_KEY(), algorithms=self.algorithms)
+        return jwt_decode(token, self.secret, algorithms=self.algorithms)
     
 
-    def validate_access_token(self, token: str) -> bool:
+    def validate_access_token(self, token: str) -> bool: 
         payload = self._get_token_claims(token)
         
         if not payload:
             return False
         
-        payload["gen_dt"] = datetime.strptime(payload["gen_dt"], "%Y/%m/%d, %H:%M:%S")
+        payload["gen_dt"] = str_to_datetime(payload["gen_dt"])
 
-        return self.create_access_token(**payload) == token
+        return self.create_access_token(**payload) == token and (payload["gen_dt"] + timedelta(minutes=60) > datetime.now(UTC).replace(tzinfo=None))
     
 
     def validate_refresh_token(self, token: str) -> bool:
@@ -80,9 +81,9 @@ class AuthService:
         if not payload:
             return False
         
-        payload["gen_dt"] = datetime.strptime(payload["gen_dt"], "%Y/%m/%d, %H:%M:%S")
-        payload["exp_dt"] = datetime.strptime(payload["exp_dt"], "%Y/%m/%d, %H:%M:%S")
-
+        payload["gen_dt"] = str_to_datetime(payload["gen_dt"])
+        payload["exp_dt"] = str_to_datetime(payload["exp_dt"])
+        
         return self.create_refresh_token(**payload) == token
     
 

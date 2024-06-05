@@ -1,12 +1,12 @@
-from uuid import UUID
 from datetime import date, datetime
+from uuid import UUID
 
-from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import ValidationError
 import pytest
 
-from services.db_services import *
 from utils.funcs import str_to_datetime
+from services.db_services import *
 from database import engine
 from shemas import *
 
@@ -201,9 +201,9 @@ class TestNDTDBService(BaseTestDBService):
     @pytest.mark.parametrize(
         "ident, data",
         [
-            ("94c6aacab12a40f2af32abb3e376bd7f", {"kleymo": "11F9", "company": "adsdsad"}),
-            ("0d92a1ae45f942a5bfba4d26b8a34cd7", {"subcompany": "ппмffфва", "welding_date": "1990-05-15"}),
-            ("45c040e0a78e4a3994b6cc12d3ba3d81", {"total_weld_1": 0.5, "total_weld_2": 5.36}),
+            ("b02dd9d6740b403b8853b2d50917a20f", {"kleymo": "11F9", "company": "adsdsad"}),
+            ("0164e678f8ae4acaa3a9921f25edf797", {"subcompany": "ппмffфва", "welding_date": "1990-05-15"}),
+            ("4a71c969b3e1464b8951ed987a55ed90", {"total_welded": 0.5, "accepted": 5.36}),
         ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
@@ -213,8 +213,8 @@ class TestNDTDBService(BaseTestDBService):
     @pytest.mark.parametrize(
         "ident, data, exception",
         [
-            ("45c040e0a78e4a3994b6cc12d3ba3d81", {"welding_date": "dsdsds"}, ValidationError),
-            ("0d92a1ae45f942a5bfba4d26b8a34cd7", {"kleymo": "asdd"}, ValidationError)
+            ("4a71c969b3e1464b8951ed987a55ed90", {"welding_date": "dsdsds"}, ValidationError),
+            ("14130c3550454d0faad45f15bd88993f", {"kleymo": "asdd"}, ValidationError)
         ]
     )
     async def test_fail_update(self, ident: str, data: dict, exception) -> None:
@@ -315,9 +315,9 @@ class TestRefreshTokenDBService(BaseTestDBService[RefreshTokenShema]):
     @pytest.mark.parametrize(
         "ident, data",
         [
-            ("60b5e81a6c2840648a0be60d294fbf63", {"revoked": True}),
-            ("cdf7987d87a649259a7cf937282216a4", {"user_ident": UUID("72e38f60a025499db25c74aac04ca19b")}),
-            ("a7088f670ef94b4f9ef75e3e7fdbfb8e", {"exp_dt": "2024-06-01T13:38:12"}),
+            ("01167611c3964222ae5263363c3b33f6", {"revoked": True}),
+            ("c4b256677aac45a994ef5ee414f44772", {"user_ident": UUID("72e38f60a025499db25c74aac04ca19b")}),
+            ("5f741f170c8045648e769e4fd63dba7e", {"exp_dt": "2024-06-01T13:38:12"}),
         ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
@@ -327,9 +327,9 @@ class TestRefreshTokenDBService(BaseTestDBService[RefreshTokenShema]):
     @pytest.mark.parametrize(
         "ident, data, exception",
         [
-            ("60b5e81a6c2840648a0be60d294fbf63", {"revoked": "hello"}, ValidationError),
-            ("cdf7987d87a649259a7cf937282216a4", {"user_ident": "72e38f60a024495c7c04ca19b"}, ValidationError),
-            ("a7088f670ef94b4f9ef75e3e7fdbfb8e", {"exp_dt": "ggg"}, ValidationError),
+            ("7b0d0e8a4f214fbbafd6f4a6f5cdd9e3", {"revoked": "hello"}, ValidationError),
+            ("c4b256677aac45a994ef5ee414f44772", {"user_ident": "72e38f60a024495c7c04ca19b"}, ValidationError),
+            ("f7e416d52ad542f38fb0e3947f673119", {"exp_dt": "ggg"}, ValidationError),
         ]
     )
     async def test_fail_update(self, ident: str, data: dict, exception) -> None:

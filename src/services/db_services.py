@@ -1,9 +1,11 @@
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import update
 
 from models import *
 from shemas import *
+from utils.funcs import to_uuid
 
 
 __all__: list[str] = [
@@ -16,9 +18,9 @@ __all__: list[str] = [
 ]
 
 
-class BaseDBService[Shema: BaseShema, CreateShema: BaseShema, UpdateShema: BaseShema]:
-    __shema__: type[BaseShema]
-    __model__: type[Base]
+class BaseDBService[Shema: BaseShema, Model: Base]:
+    __shema__: type[Shema]
+    __model__: type[Model]
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -35,7 +37,18 @@ class BaseDBService[Shema: BaseShema, CreateShema: BaseShema, UpdateShema: BaseS
             return None
 
 
-    async def add(self, *data: CreateShema) -> None:
+    async def get_many(self, request_shema: BaseRequestShema) -> list[Shema] | None:
+        async with self.session.begin():
+
+            res = await self.__model__.get_many(self.session, request_shema.dump_expression())
+
+            if res:
+                return [self.__shema__.model_validate(el[0], from_attributes=True) for el in res]
+            
+            return None
+
+
+    async def add[CreateShema: BaseShema](self, *data: CreateShema) -> None:
         async with self.session.begin():
             data = [el.model_dump() for el in data]
             await self.__model__.create(*data, session=self.session)
@@ -43,7 +56,7 @@ class BaseDBService[Shema: BaseShema, CreateShema: BaseShema, UpdateShema: BaseS
             await self.session.commit()
 
 
-    async def update(self, ident: str | UUID, data: UpdateShema) -> None:
+    async def update[UpdateShema: BaseShema](self, ident: str | UUID, data: UpdateShema) -> None:
         async with self.session.begin():
             await self.__model__.update(self.session, ident, data.model_dump(exclude_unset=True))
             await self.session.commit()
@@ -62,26 +75,38 @@ class BaseDBService[Shema: BaseShema, CreateShema: BaseShema, UpdateShema: BaseS
             return await self.__model__.count(self.session)
 
 
-class WelderDBService(BaseDBService[WelderShema, CreateWelderShema, UpdateWelderShema]):
+class WelderDBService(BaseDBService[WelderShema, WelderModel]):
     __shema__ = WelderShema
     __model__ = WelderModel
 
 
-class WelderCertificationDBService(BaseDBService[WelderCertificationShema, CreateWelderCertificationShema, UpdateWelderCertificationShema]):
+class WelderCertificationDBService(BaseDBService[WelderCertificationShema, WelderCertificationModel]):
     __shema__ = WelderCertificationShema
     __model__ = WelderCertificationModel
 
 
-class NDTDBService(BaseDBService[NDTShema, CreateNDTShema, UpdateNDTShema]):
+class NDTDBService(BaseDBService[NDTShema, NDTModel]):
     __shema__ = NDTShema
     __model__ = NDTModel
 
 
-class UserDBService(BaseDBService[UserShema, CreateUserShema, UpdateUserShema]):
+class UserDBService(BaseDBService[UserShema, UserModel]):
     __shema__ = UserShema
     __model__ = UserModel
 
 
-class RefreshTokenDBService(BaseDBService[RefreshTokenShema, CreateRefreshTokenShema, UpdateRefreshTokenShema]):
+class RefreshTokenDBService(BaseDBService[RefreshTokenShema, RefreshTokenModel]):
     __shema__ = RefreshTokenShema
     __model__ = RefreshTokenModel
+
+    async def revoke_all_user_tokens(self, user_ident: str | UUID) -> None:
+        user_ident = to_uuid(user_ident)
+
+        async with self.session.begin():
+            stmt = update(self.__model__).where(
+                self.__model__.user_ident == user_ident
+            ).values(
+                revoked=True
+            )
+
+            await self.session.execute(stmt)

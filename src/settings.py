@@ -3,6 +3,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+
 if os.getenv("MODE") == "PROD":
     load_dotenv(f"{Path.cwd().parent}/.env")
 else:
@@ -43,4 +44,4 @@ class Settings:
 
     @classmethod
     def BASE_DIR(cls) -> Path:
-        return Path.cwd()
+        return Path(os.path.dirname(os.path.abspath(__file__))).parent

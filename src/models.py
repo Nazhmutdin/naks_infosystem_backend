@@ -4,8 +4,8 @@ import uuid
 
 from sqlalchemy.orm import Mapped, DeclarativeBase, attributes, relationship
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.schema import Constraint
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.schema import Constraint
 import sqlalchemy as sa
 
 from errors import CreateDBException, UpdateDBException, GetDBException, DeleteDBException
@@ -33,6 +33,18 @@ class Base(DeclarativeBase):
 
             return result
 
+        except IntegrityError as e:
+            raise GetDBException(e.args[0])
+        
+
+    @classmethod
+    async def get_many(cls, session: AsyncSession, expression: sa.ColumnExpressionArgument) -> list[sa.Row]:
+        try:
+            stmt = cls._dump_get_many_stmt(expression)
+            
+            response = await session.execute(stmt)
+            
+            return list(response.all())
         except IntegrityError as e:
             raise GetDBException(e.args[0])
         
@@ -95,6 +107,11 @@ class Base(DeclarativeBase):
         return sa.select(cls).where(
             cls._get_column(ident) == ident
         )
+
+
+    @classmethod
+    def _dump_get_many_stmt(cls, expression: sa.ColumnExpressionArgument) -> sa.Select:
+        return sa.select(cls).filter(expression)
     
 
     @classmethod
@@ -144,10 +161,22 @@ class RefreshTokenModel(Base):
 
     ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
     user_ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), sa.ForeignKey("user_table.ident", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    token: Mapped[str] = sa.Column(sa.String(), nullable=False)
+    token: Mapped[str] = sa.Column(sa.String(), nullable=False, unique=True)
     revoked: Mapped[bool] = sa.Column(sa.Boolean(), nullable=False)
     exp_dt: Mapped[datetime] = sa.Column(sa.DateTime(), nullable=False)
     gen_dt: Mapped[datetime] = sa.Column(sa.DateTime(), nullable=False)
+    
+
+    @classmethod
+    def _get_column(cls, ident: str | uuid.UUID) -> attributes.InstrumentedAttribute:
+        if isinstance(ident, uuid.UUID):
+            return RefreshTokenModel.ident
+        
+        try:
+            uuid.UUID(ident)
+            return RefreshTokenModel.ident
+        except:
+            return RefreshTokenModel.token
 
 
 class WelderModel(Base):
@@ -223,20 +252,10 @@ class NDTModel(Base):
     subcompany: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
     project: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
     welding_date: Mapped[date] = sa.Column(sa.Date(), nullable=False)
-    total_weld_1: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    total_ndt_1: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    total_accepted_1: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    total_repair_1: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    repair_status_1: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    total_weld_2: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    total_ndt_2: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    total_accepted_2: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    total_repair_2: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    repair_status_2: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    total_weld_3: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    total_ndt_3: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    total_accepted_3: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    total_repair_3: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    repair_status_3: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
+    ndt_type: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
+    total_welded: Mapped[float | None] = sa.Column(sa.Float(), nullable=False, default=0)
+    total_ndt: Mapped[float | None] = sa.Column(sa.Float(), nullable=False, default=0)
+    accepted: Mapped[float | None] = sa.Column(sa.Float(), nullable=False, default=0)
+    rejected: Mapped[float | None] = sa.Column(sa.Float(), nullable=False, default=0)
     
     welder: Mapped[WelderModel] = relationship("WelderModel", back_populates="ndts")

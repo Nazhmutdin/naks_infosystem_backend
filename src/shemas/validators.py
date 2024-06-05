@@ -27,7 +27,7 @@ def to_date_validator(v: str | date | datetime | None) -> date | None:
         return to_date(v)
 
 
-def to_datetime_validator(v: str | date | datetime | None) -> date | None:
+def to_datetime_validator(v: str | date | datetime | None) -> datetime | None:
 
     if isinstance(v, datetime):
         return v

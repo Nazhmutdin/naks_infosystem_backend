@@ -1,16 +1,16 @@
-import pytest
-import typing as t
 from datetime import date, datetime
 from uuid import UUID
 from time import time_ns
+import typing as t
 
 from sqlalchemy.ext.asyncio import AsyncSession
+import pytest
 
 from errors import CreateDBException
 from utils.funcs import to_date
+from database import engine
 from shemas import *
 from models import *
-from database import engine
 
 
 """
@@ -29,8 +29,6 @@ class BaseTestModel[Shema: BaseShema]:
 
 
     async def test_create(self, data: list[Shema]) -> None:
-        start = time_ns()
-
         async with self.session.begin():
 
             insert_data = [
@@ -52,11 +50,8 @@ class BaseTestModel[Shema: BaseShema]:
             await self.session.commit()
             await self.session.close()
 
-        print(f"\nExecution time: {(time_ns() - start) / 1_000_000_000} s")
-
 
     async def test_create_existing(self, data: Shema) -> None:
-        start = time_ns()
 
         async with self.session.begin():
 
@@ -69,11 +64,8 @@ class BaseTestModel[Shema: BaseShema]:
             await self.session.commit()
             await self.session.close()
 
-        print(f"\nExecution time: {(time_ns() - start) / 1_000_000_000} s")
 
-    
     async def test_get(self, attr: str, el: Shema) -> None:
-        start = time_ns()
 
         async with self.session.begin():
 
@@ -83,12 +75,22 @@ class BaseTestModel[Shema: BaseShema]:
 
             await self.session.close()
 
-        print(f"\nExecution time: {(time_ns() - start) / 1_000_000_000} s")
+    
+    async def test_get_many(self, k: int, request_shema: BaseRequestShema) -> None:
+
+        async with self.session.begin():
+
+            res = await self.__model__.get_many(
+                self.session,
+                request_shema.dump_expression()
+            )
+
+            assert len(res) == k
+
+            await self.session.close()
 
 
     async def test_update(self, ident: str, data: dict[str, t.Any]) -> None:
-        start = time_ns()
-
         async with self.session.begin():
 
             await self.__model__.update(self.session, ident, data)
@@ -107,12 +109,8 @@ class BaseTestModel[Shema: BaseShema]:
             await self.session.commit()
             await self.session.close()
 
-        print(f"\nExecution time: {(time_ns() - start) / 1_000_000_000} s")
 
-    
     async def test_delete(self, item: Shema) -> None:
-        start = time_ns()
-
         async with self.session.begin():
 
             await self.__model__.delete(self.session, item.ident)
@@ -123,8 +121,6 @@ class BaseTestModel[Shema: BaseShema]:
 
             await self.session.commit()
             await self.session.close()
-
-        print(f"\nExecution time: {(time_ns() - start) / 1_000_000_000} s")
 
 
 """
@@ -165,6 +161,9 @@ class TestWelderModel(BaseTestModel[WelderShema]):
     )
     async def test_get(self, attr: str, index: int, welders: list[WelderShema]) -> None:
         return await super().test_get(attr, welders[index])
+    
+
+    async def test_get_many(self) -> None: ...
     
 
     @pytest.mark.parametrize(
@@ -213,6 +212,9 @@ class TestWelderCertificationModel(BaseTestModel[WelderCertificationShema]):
     )
     async def test_get(self, index: int, welder_certifications: list[WelderCertificationShema]) -> None:
         await super().test_get("ident", welder_certifications[index])
+
+        
+    async def test_get_many(self) -> None: ...
 
 
     @pytest.mark.usefixtures('welder_certifications')
@@ -271,6 +273,9 @@ class TestNDTModel(BaseTestModel[NDTShema]):
     async def test_get(self, index: int, ndts: list[NDTShema]) -> None:
         await super().test_get("ident", ndts[index])
 
+        
+    async def test_get_many(self) -> None: ...
+
 
     @pytest.mark.usefixtures('ndts')
     @pytest.mark.parametrize(
@@ -284,9 +289,9 @@ class TestNDTModel(BaseTestModel[NDTShema]):
     @pytest.mark.parametrize(
         "ident, data",
         [
-            ("97c1a8b30a764bae84be20dab742644a", {"kleymo": "11F9", "company": "adsdsad"}),
-            ("0d92a1ae45f942a5bfba4d26b8a34cd7", {"subcompany": "ппмffфва", "welding_date": date(1968, 7, 11)}),
-            ("45c040e0a78e4a3994b6cc12d3ba3d81", {"total_weld_1": 0.5, "total_weld_2": 5.36}),
+            ("7253f55ada5748e2b9d8e486a1d9692d", {"kleymo": "11F9", "company": "adsdsad"}),
+            ("95b61f9d1b1c4dc2b79cce036d85f527", {"subcompany": "ппмffфва", "welding_date": date(2023, 7, 11)}),
+            ("b02dd9d6740b403b8853b2d50917a20f", {"total_welded": 0.5, "accepted": 5.36}),
         ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
@@ -322,8 +327,8 @@ class TestUserModel(BaseTestModel[UserShema]):
 
     @pytest.mark.usefixtures('users')
     @pytest.mark.parametrize(
-            "index",
-            [1, 2, 7]
+        "index",
+        [1, 2, 7]
     )
     async def test_create_existing(self, users: list[UserShema], index: int) -> None:
         await super().test_create_existing(users[index])
@@ -341,6 +346,9 @@ class TestUserModel(BaseTestModel[UserShema]):
     )
     async def test_get(self, users: list[UserShema], index: int, attr: str) -> None:
         await super().test_get(attr, users[index])
+
+        
+    async def test_get_many(self) -> None: ...
 
 
     @pytest.mark.parametrize(
@@ -401,13 +409,42 @@ class TestRefreshTokenModel(BaseTestModel[RefreshTokenShema]):
     async def test_get(self, refresh_tokens: list[RefreshTokenShema], index: int) -> None:
         await super().test_get("ident", refresh_tokens[index])
 
+    
+    @pytest.mark.parametrize(
+            "filters, k",
+            [
+                (
+                    {
+                        "revoked": True
+                    },
+                    16
+                ),
+                (
+                    {
+                        "user_idents": [
+                            "80943143bd4e4d42b86f98790eee534c",
+                            "c539524c795042b6b74c6a923ae3d978"
+                        ],
+                        "gen_dt_before": datetime(2024, 1, 1, 1, 1, 1)
+                    },
+                    6
+                )
+            ]
+    )
+    async def test_get_many(self, filters: dict, k: int) -> None:
+        request_shema = RefreshTokenRequestShema.model_validate(
+            filters
+        )
+
+        await super().test_get_many(k, request_shema)
+
 
     @pytest.mark.parametrize(
         "ident, data",
         [
-            ("60b5e81a6c2840648a0be60d294fbf63", {"revoked": True}),
-            ("cdf7987d87a649259a7cf937282216a4", {"user_ident": UUID("72e38f60a025499db25c74aac04ca19b")}),
-            ("a7088f670ef94b4f9ef75e3e7fdbfb8e", {"exp_dt": datetime(2024, 6, 1, 8, 38, 12, 906854)}),
+            ("f7e416d52ad542f38fb0e3947f673119", {"revoked": True}),
+            ("9bc43a9ac32d441bbb06b85768be362b", {"user_ident": UUID("72e38f60a025499db25c74aac04ca19b")}),
+            ("c4b256677aac45a994ef5ee414f44772", {"exp_dt": datetime(2024, 6, 1, 8, 38, 12, 906854)}),
         ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
