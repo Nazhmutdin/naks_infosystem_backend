@@ -4,10 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 
-if os.getenv("MODE") == "PROD":
-    load_dotenv(f"{Path.cwd().parent}/.env")
-else:
-    load_dotenv(f"{Path.cwd().parent}/.dev.env")
+load_dotenv(f"{Path.cwd().parent}/.env")
 
 
 class Settings:

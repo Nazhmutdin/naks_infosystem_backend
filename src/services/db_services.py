@@ -44,12 +44,12 @@ class BaseDBService[Shema: BaseShema, Model: Base, RequestShema: BaseRequestShem
 
             expression = request_shema.dump_expression()
 
-            res = await self.__model__.get_many(uow.conn, expression)
+            result, amount = await self.__model__.get_many(uow.conn, expression, request_shema.limit, request_shema.offset)
 
-            if res[0]:
-                res[0] = [self.__shema__.model_validate(el[0], from_attributes=True) for el in res[0]]
+            if result:
+                result = [self.__shema__.model_validate(el, from_attributes=True) for el in result]
             
-            return res
+            return (result, amount)
 
 
     async def add[CreateShema: BaseShema](self, *data: CreateShema) -> None:

@@ -3,7 +3,8 @@ from uuid import UUID
 import typing as t
 
 from pydantic_core import core_schema
-from sqlalchemy import BinaryExpression, ColumnClause, ColumnElement, any_, and_, or_
+from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy import BinaryExpression, ColumnElement, any_, and_, or_
 from pydantic import GetCoreSchemaHandler, ValidationInfo, Field, field_validator
 
 from shemas.base import BaseShema
@@ -37,7 +38,7 @@ class BaseFilter:
         self.arg = arg
 
         
-    def dump_expression(self, column: ColumnClause) -> BinaryExpression: ...
+    def dump_expression(self, column: InstrumentedAttribute) -> BinaryExpression: ...
 
 
     @classmethod
@@ -60,7 +61,7 @@ class BaseListFilter(BaseFilter): ...
 
 class ILikeAnyFilter(BaseListFilter):
 
-    def dump_expression(self, column: ColumnClause) -> BinaryExpression:
+    def dump_expression(self, column: InstrumentedAttribute) -> BinaryExpression:
 
         return column.ilike(any_(self.arg))
     
@@ -68,7 +69,7 @@ class ILikeAnyFilter(BaseListFilter):
 class InFilter(BaseListFilter):
 
 
-    def dump_expression(self, column: ColumnClause) -> BinaryExpression:
+    def dump_expression(self, column: InstrumentedAttribute) -> BinaryExpression:
 
         return column.in_(self.arg)
 
@@ -76,7 +77,7 @@ class InFilter(BaseListFilter):
 class EqualFilter(BaseFilter):
 
 
-    def dump_expression(self, column: ColumnClause) -> BinaryExpression:
+    def dump_expression(self, column: InstrumentedAttribute) -> BinaryExpression:
 
         return column == self.arg
 
@@ -84,7 +85,7 @@ class EqualFilter(BaseFilter):
 class FromFilter(BaseFilter):
 
 
-    def dump_expression(self, column: ColumnClause) -> BinaryExpression:
+    def dump_expression(self, column: InstrumentedAttribute) -> BinaryExpression:
 
         return column > self.arg
 
@@ -92,7 +93,7 @@ class FromFilter(BaseFilter):
 class BeforeFilter(BaseFilter):
         
 
-    def dump_expression(self, column: ColumnClause) -> BinaryExpression:
+    def dump_expression(self, column: InstrumentedAttribute) -> BinaryExpression:
 
         return column < self.arg
 
@@ -100,7 +101,10 @@ class BeforeFilter(BaseFilter):
 class BaseRequestShema(BaseShema):
     __and_model_columns__: list[str] = []
     __or_model_columns__: list[str] = []
-    __model__: type[Base]
+    __models__: list[type[Base]]
+
+    limit: int | None = Field(default=None, gt=0)
+    offset: int | None = Field(default=None, gt=0)
 
 
     def dump_expression(self) -> ColumnElement:
@@ -109,7 +113,7 @@ class BaseRequestShema(BaseShema):
 
         for key, info in self.model_fields.items():
             if info.serialization_alias:
-                model_field: ColumnClause | None = getattr(self.__model__, info.serialization_alias, None)
+                model_field: InstrumentedAttribute | None = self._get_model_field(info.serialization_alias)
 
                 if not model_field:
                     raise ValueError("serialization_alias must be one of model columns name")
@@ -131,9 +135,6 @@ class BaseRequestShema(BaseShema):
                 else:
                     continue
             
-            else:
-                raise ValueError("serialization_alias is required") 
-            
         if and_expressions and or_expressions:
             return and_(
                 or_(*or_expressions),
@@ -148,12 +149,25 @@ class BaseRequestShema(BaseShema):
         
         else:
             return True
+        
+
+    def _get_model_field(self, serialization_alias) -> InstrumentedAttribute | None:
+
+        for model in self.__models__:
+
+            model_field = getattr(model, serialization_alias, None)
+
+            if isinstance(model_field, InstrumentedAttribute):
+                return model_field
+        
+        return None
+
 
 
 class RefreshTokenRequestShema(BaseRequestShema):
     __and_model_columns__ = ["exp_dt", "gen_dt", "revoked"]
     __or_model_columns__ = ["token", "user_ident", "ident"]
-    __model__ = RefreshTokenModel
+    __models__ = [RefreshTokenModel]
 
     tokens: InFilter | None = Field(default=None, serialization_alias="token")
     idents: InFilter | None = Field(default=None, serialization_alias="ident")
@@ -238,7 +252,7 @@ class RefreshTokenRequestShema(BaseRequestShema):
 class WelderCertificationRequestShema(BaseRequestShema):
     __and_model_columns__ = ["insert", "method", "certification_date", "expiration_date", "expiration_date_fact"]
     __or_model_columns__ = ["ident", "kleymo", "certification_number"]
-    __model__ = WelderCertificationModel
+    __models__ = [WelderCertificationModel]
 
     idents: InFilter | None = Field(default=None, serialization_alias="ident")
     kleymos: InFilter | None = Field(default=None, serialization_alias="kleymo")
@@ -378,7 +392,7 @@ class WelderCertificationRequestShema(BaseRequestShema):
 class WelderRequestShema(WelderCertificationRequestShema):
     __and_model_columns__ = WelderCertificationRequestShema.__and_model_columns__ + ["name"]
     __or_model_columns__ = ["ident", "kleymo", "certification_number"]
-    __model__ = WelderModel
+    __models__ = [WelderModel, WelderCertificationModel]
 
     names: ILikeAnyFilter | None = Field(default=None, serialization_alias="expiration_date_fact")
     
@@ -405,7 +419,7 @@ class WelderRequestShema(WelderCertificationRequestShema):
 class NDTRequestShema(BaseRequestShema):
     __and_model_columns__ = ["welding_date", "total_welded", "total_ndt", "accepted", "rejected"]
     __or_model_columns__ = ["ident", "kleymo"]
-    __model__ = NDTModel
+    __models__ = [NDTModel]
 
     idents: InFilter | None = Field(default=None, serialization_alias="ident")
     kleymos: InFilter | None = Field(default=None, serialization_alias="kleymo")

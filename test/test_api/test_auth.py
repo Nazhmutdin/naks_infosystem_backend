@@ -23,10 +23,34 @@ class TestAuthEndpoints:
         assert res.text == '{"detail":"refresh token expired"}'
 
 
-    def test_failed_authenticate_by_revoted_refresh_token(self):
+    def test_failed_authenticate_by_revoked_refresh_token(self):
 
         res = client.post(
             "/auth/authenticatе",
+            cookies={
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJnZW5fZHQiOiIyMDI0LzA1LzI1LCAxMzozODoxMiIsImV4cF9kdCI6IjIwMjQvMDUvMjYsIDEzOjM4OjEyIiwiaWRlbnQiOiI1Zjc0MWYxNzBjODA0NTY0OGU3NjllNGZkNjNkYmE3ZSIsInVzZXJfaWRlbnQiOiJiN2I2Y2M4OTkzMWQ0NjBhOTJlNDAyNTczNGM5NjhlNCJ9.EZKAOi4Kp0mV3OJlBlclqdZ_YgPOhGfMfb2K-F9Zbbw"
+            }
+        )
+
+        assert res.status_code == 400
+        assert res.text == '{"detail":"revoked token"}'
+
+
+    def test_failed_update_tokens_wothout_refresh_token(self):
+
+        res = client.post(
+            "/auth/update-tokens",
+            cookies={}
+        )
+
+        assert res.status_code == 400
+        assert res.text == '{"detail":"refresh token required"}'
+
+
+    def test_failed_update_tokens_by_revoked_refresh_token(self):
+
+        res = client.post(
+            "/auth/update-tokens",
             cookies={
                 "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJnZW5fZHQiOiIyMDI0LzA1LzI1LCAxMzozODoxMiIsImV4cF9kdCI6IjIwMjQvMDUvMjYsIDEzOjM4OjEyIiwiaWRlbnQiOiI1Zjc0MWYxNzBjODA0NTY0OGU3NjllNGZkNjNkYmE3ZSIsInVzZXJfaWRlbnQiOiJiN2I2Y2M4OTkzMWQ0NjBhOTJlNDAyNTczNGM5NjhlNCJ9.EZKAOi4Kp0mV3OJlBlclqdZ_YgPOhGfMfb2K-F9Zbbw"
             }

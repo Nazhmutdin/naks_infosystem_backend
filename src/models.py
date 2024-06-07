@@ -38,15 +38,21 @@ class Base(DeclarativeBase):
         
 
     @classmethod
-    async def get_many(cls, conn: AsyncConnection, expression: sa.ColumnElement):
+    async def get_many(cls, conn: AsyncConnection, expression: sa.ColumnElement, limit: int, offset: int):
         try:
             stmt = cls._dump_get_many_stmt(expression)
+
+            amount = await cls.count(conn, stmt)
+
+            if limit:
+                stmt = stmt.limit(limit)
+
+            if offset:
+                stmt = stmt.offset(offset)
             
             response = await conn.execute(stmt)
 
             result = response.mappings().all()
-
-            amount = await cls.count(conn, expression)
             
             return (result, amount)
         except IntegrityError as e:
@@ -84,14 +90,14 @@ class Base(DeclarativeBase):
 
 
     @classmethod
-    async def count(cls, conn: AsyncConnection, expression: sa.ColumnElement | None = None):
-        if isinstance(expression, sa.ColumnElement):
-            stmt = sa.select(sa.func.count()).select_from(cls).where(expression)
+    async def count(cls, conn: AsyncConnection, stmt: sa.Select | None = None):
+        if isinstance(stmt, sa.ColumnElement):
+            stmt.select(sa.func.count())
 
             return (await conn.execute(stmt)).scalar_one()
 
         else:
-            return (await conn.execute(sa.select(sa.func.count()).select_from(cls))).scalar_one()
+            return (await conn.execute(sa.select(sa.func.count()).select_from(cls).distinct())).scalar_one()
 
 
     @classmethod
@@ -199,6 +205,13 @@ class WelderModel(Base):
 
 
     @classmethod
+    def _dump_get_many_stmt(cls, expression: sa.ColumnExpressionArgument):
+        return sa.select(cls).join(
+            WelderCertificationModel
+        ).filter(expression).distinct()
+
+
+    @classmethod
     def _get_column(cls, ident: str | uuid.UUID) -> attributes.InstrumentedAttribute:
         if isinstance(ident, str) and not is_kleymo(ident):
             ident = uuid.UUID(ident)
@@ -245,10 +258,6 @@ class WelderCertificationModel(Base):
     welder: Mapped[WelderModel] = relationship("WelderModel", back_populates="certifications")
 
     certification_id = Constraint(sa.UniqueConstraint("certification_number", "insert", "certification_date", "expiration_date_fact"))
-
-    @classmethod
-    def _dump_get_many_stmt(cls, expression: sa.ColumnExpressionArgument) -> sa.Select:
-        return sa.select(cls).join(WelderModel).filter(expression)
     
 
 class NDTModel(Base):
@@ -267,8 +276,3 @@ class NDTModel(Base):
     rejected: Mapped[float | None] = sa.Column(sa.Float(), nullable=False, default=0)
     
     welder: Mapped[WelderModel] = relationship("WelderModel", back_populates="ndts")
-
-    
-    @classmethod
-    def _dump_get_many_stmt(cls, expression: sa.ColumnExpressionArgument) -> sa.Select:
-        return sa.select(cls).join(WelderModel).filter(expression)
