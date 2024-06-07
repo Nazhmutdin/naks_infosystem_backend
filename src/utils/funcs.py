@@ -2,7 +2,7 @@ import typing as t
 from uuid import UUID
 from re import fullmatch
 
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, UTC
 from dateutil.parser import parser
 
 
@@ -21,8 +21,28 @@ def is_kleymo(v: str) -> True:
     return False
 
 
+def current_utc_datetime() -> datetime:
+    return datetime.now(UTC)
+
+
+def current_utc_datetime_without_timezone() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
+
+
 def refresh_token_expiration_dt() -> datetime:
-    return datetime.now() + timedelta(days=1)
+    return current_utc_datetime() + timedelta(days=1)
+
+
+def access_token_expiration_dt() -> datetime:
+    return current_utc_datetime() + timedelta(minutes=60)
+
+
+def refresh_token_expiration_dt_without_timezone() -> datetime:
+    return current_utc_datetime_without_timezone() + timedelta(days=1)
+
+
+def access_token_expiration_dt_without_timezone() -> datetime:
+    return current_utc_datetime_without_timezone() + timedelta(minutes=60)
     
 
 def to_uuid(v: str | UUID) -> UUID:

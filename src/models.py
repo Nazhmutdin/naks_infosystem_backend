@@ -3,7 +3,7 @@ import typing as t
 import uuid
 
 from sqlalchemy.orm import Mapped, DeclarativeBase, attributes, relationship
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.schema import Constraint
 import sqlalchemy as sa
@@ -25,11 +25,11 @@ __all__ = [
 class Base(DeclarativeBase): 
 
     @classmethod
-    async def get(cls, session: AsyncSession, ident: uuid.UUID | str) -> sa.Row | None:
+    async def get(cls, conn: AsyncConnection, ident: uuid.UUID | str):
         try:
             stmt = cls._dump_get_stmt(ident)
-            response = await session.execute(stmt)
-            result = response.one_or_none()
+            response = await conn.execute(stmt)
+            result = response.mappings().one_or_none()
 
             return result
 
@@ -38,84 +38,88 @@ class Base(DeclarativeBase):
         
 
     @classmethod
-    async def get_many(cls, session: AsyncSession, expression: sa.ColumnExpressionArgument) -> list[sa.Row]:
+    async def get_many(cls, conn: AsyncConnection, expression: sa.ColumnElement):
         try:
             stmt = cls._dump_get_many_stmt(expression)
             
-            response = await session.execute(stmt)
+            response = await conn.execute(stmt)
+
+            result = response.mappings().all()
+
+            amount = await cls.count(conn, expression)
             
-            return list(response.all())
+            return (result, amount)
         except IntegrityError as e:
             raise GetDBException(e.args[0])
         
 
     @classmethod
-    async def create(cls, *data: dict, session: AsyncSession):
+    async def create(cls, *data: dict, conn: AsyncConnection):
         try:
             stmt = cls._dump_create_stmt(
                 list(data)
             )
 
-            await session.execute(stmt)
+            await conn.execute(stmt)
         except IntegrityError as e:
             raise CreateDBException(e.args[0])
 
 
     @classmethod
-    async def update(cls, session: AsyncSession, ident: uuid.UUID | str, data: dict[str, t.Any]) -> None:
+    async def update(cls, conn: AsyncConnection, ident: uuid.UUID | str, data: dict[str, t.Any]):
         try:
             stmt = cls._dump_update_stmt(ident, data)
-            await session.execute(stmt)
+            await conn.execute(stmt)
         except IntegrityError as e:
             raise UpdateDBException(e.args[0])
 
 
     @classmethod
-    async def delete(cls, session: AsyncSession, ident: uuid.UUID | str) -> None:
+    async def delete(cls, conn: AsyncConnection, ident: uuid.UUID | str):
         try:
             stmt = cls._dump_delete_stmt(ident)
-            await session.execute(stmt)
+            await conn.execute(stmt)
         except IntegrityError as e:
             raise DeleteDBException(e.args[0])
 
 
     @classmethod
-    async def count(cls, session: AsyncSession, stmt: sa.Select | None = None) -> int:
-        if stmt:
-            stmt.select(sa.func.count()).select_from(cls)
+    async def count(cls, conn: AsyncConnection, expression: sa.ColumnElement | None = None):
+        if isinstance(expression, sa.ColumnElement):
+            stmt = sa.select(sa.func.count()).select_from(cls).where(expression)
 
-            return (await session.execute(stmt)).scalar_one()
+            return (await conn.execute(stmt)).scalar_one()
 
         else:
-            return (await session.execute(sa.select(sa.func.count()).select_from(cls))).scalar_one()
+            return (await conn.execute(sa.select(sa.func.count()).select_from(cls))).scalar_one()
 
 
     @classmethod
-    def _get_column(cls, ident: str | uuid.UUID) -> sa.Column:
+    def _get_column(cls, ident: str | uuid.UUID):
         return sa.inspect(cls).primary_key[0]
 
 
     @classmethod
-    def _dump_create_stmt(cls, data: list[dict[str, t.Any]]) -> sa.Insert:
+    def _dump_create_stmt(cls, data: list[dict[str, t.Any]]):
         return sa.insert(cls).values(
             data
         )
 
 
     @classmethod
-    def _dump_get_stmt(cls, ident: str | uuid.UUID) -> sa.Select:
+    def _dump_get_stmt(cls, ident: str | uuid.UUID):
         return sa.select(cls).where(
             cls._get_column(ident) == ident
         )
 
 
     @classmethod
-    def _dump_get_many_stmt(cls, expression: sa.ColumnExpressionArgument) -> sa.Select:
+    def _dump_get_many_stmt(cls, expression: sa.ColumnExpressionArgument):
         return sa.select(cls).filter(expression)
     
 
     @classmethod
-    def _dump_update_stmt(cls, ident: str | uuid.UUID, data: dict[str, t.Any]) -> sa.Update:
+    def _dump_update_stmt(cls, ident: str | uuid.UUID, data: dict[str, t.Any]):
         return sa.update(cls).where(
             cls._get_column(ident) == ident
         ).values(
@@ -124,7 +128,7 @@ class Base(DeclarativeBase):
 
 
     @classmethod
-    def _dump_delete_stmt(cls, ident: str | uuid.UUID) -> sa.Delete:
+    def _dump_delete_stmt(cls, ident: str | uuid.UUID):
         return sa.delete(cls).where(
             cls._get_column(ident) == ident
         )
@@ -242,6 +246,10 @@ class WelderCertificationModel(Base):
 
     certification_id = Constraint(sa.UniqueConstraint("certification_number", "insert", "certification_date", "expiration_date_fact"))
 
+    @classmethod
+    def _dump_get_many_stmt(cls, expression: sa.ColumnExpressionArgument) -> sa.Select:
+        return sa.select(cls).join(WelderModel).filter(expression)
+    
 
 class NDTModel(Base):
     __tablename__ = "ndt_table"
@@ -259,3 +267,8 @@ class NDTModel(Base):
     rejected: Mapped[float | None] = sa.Column(sa.Float(), nullable=False, default=0)
     
     welder: Mapped[WelderModel] = relationship("WelderModel", back_populates="ndts")
+
+    
+    @classmethod
+    def _dump_get_many_stmt(cls, expression: sa.ColumnExpressionArgument) -> sa.Select:
+        return sa.select(cls).join(WelderModel).filter(expression)

@@ -19,7 +19,10 @@ welder routes
 
 
 @v1_router.post("/welders")
-async def add_welder(data: CreateWelderShema, session: AsyncSession = Depends(get_session)) -> dict[str, str]:
+async def add_welder(
+    data: CreateWelderShema = Depends(InputValidationDependency(CreateWelderShema).execute), 
+    session: AsyncSession = Depends(get_session)
+    ) -> dict[str, str]:
     service = WelderDBService(session)
 
     try:
@@ -50,8 +53,30 @@ async def get_welder(ident: str = Depends(validate_welder_ident_dependency), ses
     return result
 
 
+@v1_router.post("/welders/select")
+async def select_welders(
+    filters: WelderRequestShema = Depends(InputValidationDependency(WelderRequestShema).execute),
+    session: AsyncSession = Depends(get_session)
+    ) -> dict[str, list[WelderShema] | int]:
+    service = WelderDBService(session)
+
+    try:
+        result = await service.get_many(filters)
+    except GetDBException as e:
+        raise HTTPException(400, e.args)
+
+    return {
+        "result": result[0],
+        "count": result[1]
+    }
+
+
 @v1_router.patch("/welders/{ident}")
-async def update_welder(data: UpdateWelderShema, ident: str = Depends(validate_welder_ident_dependency), session: AsyncSession = Depends(get_session)) -> dict[str, str]:
+async def update_welder(
+    ident: str = Depends(validate_welder_ident_dependency), 
+    data: UpdateWelderShema = Depends(InputValidationDependency(UpdateWelderShema).execute), 
+    session: AsyncSession = Depends(get_session)
+    ) -> dict[str, str]:
     service = WelderDBService(session)
 
     try:
@@ -86,7 +111,10 @@ welder certification routes
 
 
 @v1_router.post("/welder-certifications")
-async def add_welder_certification(data: CreateWelderCertificationShema, session: AsyncSession = Depends(get_session)) -> dict[str, str]:
+async def add_welder_certification(
+    data: CreateWelderCertificationShema = Depends(InputValidationDependency(CreateWelderCertificationShema).execute), 
+    session: AsyncSession = Depends(get_session)
+    ) -> dict[str, str]:
 
     service = WelderCertificationDBService(session)
 
@@ -118,8 +146,30 @@ async def get_welder_certification(ident: str = Depends(validate_ident_dependenc
     return result
 
 
+@v1_router.post("/welder-certifications/select")
+async def select_welder_certifications(
+    filters: WelderCertificationRequestShema = Depends(InputValidationDependency(WelderCertificationRequestShema).execute),
+    session: AsyncSession = Depends(get_session)
+    ) -> dict[str, list[WelderCertificationShema] | int]:
+    service = WelderCertificationDBService(session)
+
+    try:
+        result = await service.get_many(filters)
+    except GetDBException as e:
+        raise HTTPException(400, e.args)
+
+    return {
+        "result": result[0],
+        "count": result[1]
+    }
+
+
 @v1_router.patch("/welder-certifications/{ident}")
-async def update_welder_certification(data: UpdateWelderCertificationShema, ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):
+async def update_welder_certification( 
+    ident: str = Depends(validate_ident_dependency), 
+    data: UpdateWelderCertificationShema = Depends(InputValidationDependency(UpdateWelderCertificationShema).execute),
+    session: AsyncSession = Depends(get_session)
+    ):
     service = WelderCertificationDBService(session)
 
     try:
@@ -155,7 +205,10 @@ ndt routes
 
 
 @v1_router.post("/ndts")
-async def add_ndt(data: CreateNDTShema, session: AsyncSession = Depends(get_session)) -> dict[str, str]:
+async def add_ndt(
+    data: CreateNDTShema = Depends(InputValidationDependency(CreateNDTShema).execute), 
+    session: AsyncSession = Depends(get_session)
+    ) -> dict[str, str]:
     service = NDTDBService(session)
 
     try:
@@ -186,8 +239,30 @@ async def get_ndt(ident: str = Depends(validate_ident_dependency), session: Asyn
     return result
 
 
+@v1_router.post("/ndts/select")
+async def select_ndts(
+    filters: NDTRequestShema = Depends(InputValidationDependency(NDTRequestShema).execute),
+    session: AsyncSession = Depends(get_session)
+    ) -> dict[str, list[NDTShema] | int]:
+    service = NDTDBService(session)
+
+    try:
+        result = await service.get_many(filters)
+    except GetDBException as e:
+        raise HTTPException(400, e.args)
+
+    return {
+        "result": result[0],
+        "count": result[1]
+    }
+
+
 @v1_router.patch("/ndts/{ident}")
-async def update_ndt(data: UpdateNDTShema, ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):    
+async def update_ndt(
+    ident: str = Depends(validate_ident_dependency), 
+    data: UpdateNDTShema = Depends(InputValidationDependency(UpdateNDTShema).execute), 
+    session: AsyncSession = Depends(get_session)
+    ):    
     service = NDTDBService(session)
 
     try:

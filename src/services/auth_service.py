@@ -62,7 +62,7 @@ class AuthService:
 
     def read_token(self, token: str) -> dict[str, t.Any]:
         return jwt_decode(token, self.secret, algorithms=self.algorithms)
-    
+     
 
     def validate_access_token(self, token: str) -> bool: 
         payload = self._get_token_claims(token)
@@ -72,7 +72,7 @@ class AuthService:
         
         payload["gen_dt"] = str_to_datetime(payload["gen_dt"])
 
-        return self.create_access_token(**payload) == token and (payload["gen_dt"] + timedelta(minutes=60) > datetime.now(UTC).replace(tzinfo=None))
+        return self.create_access_token(**payload) == token
     
 
     def validate_refresh_token(self, token: str) -> bool:

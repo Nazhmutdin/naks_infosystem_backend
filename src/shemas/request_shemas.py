@@ -3,16 +3,30 @@ from uuid import UUID
 import typing as t
 
 from pydantic_core import core_schema
+from sqlalchemy import BinaryExpression, ColumnClause, ColumnElement, any_, and_, or_
+from pydantic import GetCoreSchemaHandler, ValidationInfo, Field, field_validator
 
-from sqlalchemy import BinaryExpression, ColumnClause, any_, and_, or_, ColumnExpressionArgument
-from pydantic import BaseModel, ConfigDict, GetCoreSchemaHandler, ValidationInfo, Field, field_validator
+from shemas.base import BaseShema
 
-from shemas.validators import to_datetime_validator, to_uuid_validator, validate_jwt_refresh_token
+from shemas.validators import (
+    to_datetime_validator, 
+    to_uuid_validator, 
+    validate_refresh_token, 
+    validate_kleymo, 
+    validate_insert, 
+    validate_method,
+    validate_certification_number,
+    validate_name,
+    is_float
+)
 from models import *
 
 
 __all__ = [
-    "RefreshTokenRequestShema"
+    "RefreshTokenRequestShema",
+    "WelderCertificationRequestShema",
+    "WelderRequestShema",
+    "NDTRequestShema"
 ]
 
 
@@ -67,7 +81,7 @@ class EqualFilter(BaseFilter):
         return column == self.arg
 
 
-class BaseFromFilter(BaseFilter):
+class FromFilter(BaseFilter):
 
 
     def dump_expression(self, column: ColumnClause) -> BinaryExpression:
@@ -75,7 +89,7 @@ class BaseFromFilter(BaseFilter):
         return column > self.arg
 
 
-class BaseBeforeFilter(BaseFilter):
+class BeforeFilter(BaseFilter):
         
 
     def dump_expression(self, column: ColumnClause) -> BinaryExpression:
@@ -83,18 +97,13 @@ class BaseBeforeFilter(BaseFilter):
         return column < self.arg
 
 
-class BaseRequestShema(BaseModel):
+class BaseRequestShema(BaseShema):
     __and_model_columns__: list[str] = []
     __or_model_columns__: list[str] = []
     __model__: type[Base]
 
-    model_config = ConfigDict(
-        arbitrary_types_allowed=True,
-        populate_by_name=True
-    )
 
-
-    def dump_expression(self) -> ColumnExpressionArgument:
+    def dump_expression(self) -> ColumnElement:
         and_expressions = []
         or_expressions = []
 
@@ -124,7 +133,7 @@ class BaseRequestShema(BaseModel):
             
             else:
                 raise ValueError("serialization_alias is required") 
-        
+            
         if and_expressions and or_expressions:
             return and_(
                 or_(*or_expressions),
@@ -150,10 +159,10 @@ class RefreshTokenRequestShema(BaseRequestShema):
     idents: InFilter | None = Field(default=None, serialization_alias="ident")
     user_idents: InFilter | None = Field(default=None, serialization_alias="user_ident", validation_alias="userIdents")
     revoked: EqualFilter | None = Field(default=None, serialization_alias="revoked")
-    gen_dt_from: BaseFromFilter | None = Field(default=None, serialization_alias="gen_dt", validation_alias="genDtFrom")
-    gen_dt_before: BaseBeforeFilter | None = Field(default=None, serialization_alias="gen_dt", validation_alias="genDtBefore")
-    exp_dt_from: BaseFromFilter | None = Field(default=None, serialization_alias="exp_dt", validation_alias="expDtFrom")
-    exp_dt_before: BaseBeforeFilter | None = Field(default=None, serialization_alias="exp_dt", validation_alias="expDtBefore")
+    gen_dt_from: FromFilter | None = Field(default=None, serialization_alias="gen_dt", validation_alias="genDtFrom")
+    gen_dt_before: BeforeFilter | None = Field(default=None, serialization_alias="gen_dt", validation_alias="genDtBefore")
+    exp_dt_from: FromFilter | None = Field(default=None, serialization_alias="exp_dt", validation_alias="expDtFrom")
+    exp_dt_before: BeforeFilter | None = Field(default=None, serialization_alias="exp_dt", validation_alias="expDtBefore")
 
 
     @field_validator("exp_dt_from", "exp_dt_before", "gen_dt_from", "gen_dt_before", mode="before")
@@ -186,8 +195,11 @@ class RefreshTokenRequestShema(BaseRequestShema):
             uuid_result = to_uuid_validator(el)
 
             if not uuid_result:
-                raise ValueError(f"invalid uuid string: {el}")
-            
+                v.remove(el)
+        
+        if not v:
+            return None
+        
         return v
     
 
@@ -201,9 +213,13 @@ class RefreshTokenRequestShema(BaseRequestShema):
             raise ValueError(f"value must be iterable")
         
         for el in v:
-            if not validate_jwt_refresh_token(el):
-                raise ValueError(f"invalid token: {el}")
-            
+            if not validate_refresh_token(el):
+                print(el)
+                v.remove(el)
+        
+        if not v:
+            return None
+        
         return v
     
 
@@ -215,5 +231,274 @@ class RefreshTokenRequestShema(BaseRequestShema):
         
         if not isinstance(v, bool):
             raise ValueError(f"revoked filter must be bool")
+        
+        return v
+
+
+class WelderCertificationRequestShema(BaseRequestShema):
+    __and_model_columns__ = ["insert", "method", "certification_date", "expiration_date", "expiration_date_fact"]
+    __or_model_columns__ = ["ident", "kleymo", "certification_number"]
+    __model__ = WelderCertificationModel
+
+    idents: InFilter | None = Field(default=None, serialization_alias="ident")
+    kleymos: InFilter | None = Field(default=None, serialization_alias="kleymo")
+    certification_numbers: InFilter | None = Field(default=None, serialization_alias="certification_number")
+    inserts: InFilter | None = Field(default=None, serialization_alias="insert")
+    methods: InFilter | None = Field(default=None, serialization_alias="method")
+    certification_date_from: FromFilter | None = Field(default=None, serialization_alias="certification_date")
+    certification_date_before: BeforeFilter | None = Field(default=None, serialization_alias="certification_date")
+    expiration_date_from: FromFilter | None = Field(default=None, serialization_alias="expiration_date")
+    expiration_date_before: BeforeFilter | None = Field(default=None, serialization_alias="expiration_date")
+    expiration_date_fact_from: FromFilter | None = Field(default=None, serialization_alias="expiration_date_fact")
+    expiration_date_fact_before: BeforeFilter | None = Field(default=None, serialization_alias="expiration_date_fact")
+
+
+    @field_validator(
+        "certification_date_from", 
+        "certification_date_before", 
+        "expiration_date_from", 
+        "expiration_date_before", 
+        "expiration_date_fact_from", 
+        "expiration_date_fact_before", 
+        mode="before"
+    )
+    @classmethod
+    def validate_datetime_filters(cls, v: datetime | date | str | None):
+        if v == None:
+            return None
+        
+        if isinstance(v, (datetime, date)):
+            return v
+        
+        date_result = to_datetime_validator(v)
+
+        if not date_result:
+            raise ValueError(f"invalid date string: {v}")
+        
+        return date_result
+    
+
+    @field_validator("inserts", mode="before")
+    @classmethod
+    def validate_inserts_filter(cls, v: list[str] | None):
+        if v == None:
+            return None
+        
+        if not isinstance(v, t.Iterable):
+            raise ValueError(f"value must be iterable")
+        
+        for el in v:
+            if not validate_insert(el):
+                v.remove(el)
+        
+        if not v:
+            return None
+        
+        return v
+    
+
+    @field_validator("kleymos", mode="before")
+    @classmethod
+    def validate_kleymos_filter(cls, v: list[str] | None):
+        if v == None:
+            return None
+        
+        if not isinstance(v, t.Iterable):
+            raise ValueError(f"value must be iterable")
+        
+        for el in v:
+            if not validate_kleymo(el):
+                v.remove(el)
+        
+        if not v:
+            return None
+        
+        return v
+    
+
+    @field_validator("methods", mode="before")
+    @classmethod
+    def validate_methods_filter(cls, v: list[str] | None):
+        if v == None:
+            return None
+        
+        if not isinstance(v, t.Iterable):
+            raise ValueError(f"value must be iterable")
+        
+        for el in v:
+            if not validate_method(el):
+                v.remove(el)
+        
+        if not v:
+            return None
+        
+        return v
+    
+
+    @field_validator("idents", mode="before")
+    @classmethod
+    def validate_idents_filter(cls, v: list[UUID | str] | None):
+        if v == None:
+            return None
+        
+        if not isinstance(v, t.Iterable):
+            raise ValueError(f"value must be iterable")
+        
+        for el in v:
+            uuid_result = to_uuid_validator(el)
+
+            if not uuid_result:
+                v.remove(el)
+        
+        if not v:
+            return None
+        
+        return v
+
+
+    @field_validator("certification_numbers", mode="before")
+    @classmethod
+    def validate_certification_numbers_filter(cls, v: list[str] | None):
+        if v == None:
+            return None
+        
+        if not isinstance(v, t.Iterable):
+            raise ValueError(f"value must be iterable")
+        
+        for el in v:
+            if not validate_certification_number(el):
+                v.remove(el)
+        
+        if not v:
+            return None
+        
+        return v
+
+
+class WelderRequestShema(WelderCertificationRequestShema):
+    __and_model_columns__ = WelderCertificationRequestShema.__and_model_columns__ + ["name"]
+    __or_model_columns__ = ["ident", "kleymo", "certification_number"]
+    __model__ = WelderModel
+
+    names: ILikeAnyFilter | None = Field(default=None, serialization_alias="expiration_date_fact")
+    
+
+    @field_validator("names", mode="before")
+    @classmethod
+    def validate_names_filter(cls, v: list[str] | None):
+        if v == None:
+            return None
+        
+        if not isinstance(v, t.Iterable):
+            raise ValueError(f"value must be iterable")
+        
+        for el in v:
+            if not validate_name(el):
+                v.remove(el)
+        
+        if not v:
+            return None
+        
+        return v
+
+
+class NDTRequestShema(BaseRequestShema):
+    __and_model_columns__ = ["welding_date", "total_welded", "total_ndt", "accepted", "rejected"]
+    __or_model_columns__ = ["ident", "kleymo"]
+    __model__ = NDTModel
+
+    idents: InFilter | None = Field(default=None, serialization_alias="ident")
+    kleymos: InFilter | None = Field(default=None, serialization_alias="kleymo")
+    welding_date_from: FromFilter | None = Field(default=None, serialization_alias="welding_date")
+    welding_date_before: BeforeFilter | None = Field(default=None, serialization_alias="welding_date")
+    total_welded_from: FromFilter | None = Field(default=None, serialization_alias="total_welded")
+    total_welded_before: BeforeFilter | None = Field(default=None, serialization_alias="total_welded")
+    total_ndt_from: FromFilter | None = Field(default=None, serialization_alias="total_ndt")
+    total_ndt_before: BeforeFilter | None = Field(default=None, serialization_alias="total_ndt")
+    accepted_from: FromFilter | None = Field(default=None, serialization_alias="accepted")
+    accepted_before: BeforeFilter | None = Field(default=None, serialization_alias="accepted")
+    rejected_from: FromFilter | None = Field(default=None, serialization_alias="rejected")
+    rejected_before: BeforeFilter | None = Field(default=None, serialization_alias="rejected")
+    
+
+    @field_validator("kleymos", mode="before")
+    @classmethod
+    def validate_kleymos_filter(cls, v: list[str] | None):
+        if v == None:
+            return None
+        
+        if not isinstance(v, t.Iterable):
+            raise ValueError(f"value must be iterable")
+        
+        for el in v:
+            if not validate_kleymo(el):
+                v.remove(el)
+        
+        if not v:
+            return None
+        
+        return v
+
+
+    @field_validator("idents", mode="before")
+    @classmethod
+    def validate_idents_filter(cls, v: list[UUID | str] | None):
+        if v == None:
+            return None
+        
+        if not isinstance(v, t.Iterable):
+            raise ValueError(f"value must be iterable")
+        
+        for el in v:
+            uuid_result = to_uuid_validator(el)
+
+            if not uuid_result:
+                v.remove(el)
+        
+        if not v:
+            return None
+        
+        return v
+    
+
+    @field_validator(
+        "welding_date_from", 
+        "welding_date_before",
+        mode="before"
+    )
+    @classmethod
+    def validate_datetime_filters(cls, v: datetime | date | str | None):
+        if v == None:
+            return None
+        
+        if isinstance(v, (datetime, date)):
+            return v
+        
+        date_result = to_datetime_validator(v)
+
+        if not date_result:
+            raise ValueError(f"invalid date string: {v}")
+        
+        return date_result
+    
+
+    @field_validator(
+        "total_welded_from",
+        "total_welded_before",
+        "total_ndt_from",
+        "total_ndt_before",
+        "accepted_from",
+        "accepted_before",
+        "rejected_from",
+        "rejected_before",
+        mode="before"
+    )
+    @classmethod
+    def validate_float_filters(cls, v: str | None, info: ValidationInfo):
+        if v == None:
+            return None
+        
+        if not is_float(v):
+            raise ValueError(f"Invalid {info.field_name} {v}")
         
         return v

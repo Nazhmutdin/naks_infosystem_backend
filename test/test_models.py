@@ -1,6 +1,5 @@
 from datetime import date, datetime
 from uuid import UUID
-from time import time_ns
 import typing as t
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +7,7 @@ import pytest
 
 from errors import CreateDBException
 from utils.funcs import to_date
+from utils.uows import UOW
 from database import engine
 from shemas import *
 from models import *
@@ -25,11 +25,10 @@ class BaseTestModel[Shema: BaseShema]:
     __shema__: type[BaseShema]
     __model__: type[Base]
 
-    session = AsyncSession(engine)
-
+    uow = UOW(AsyncSession(engine))
 
     async def test_create(self, data: list[Shema]) -> None:
-        async with self.session.begin():
+        async with self.uow as uow:
 
             insert_data = [
                 el.model_dump() for el in data
@@ -37,67 +36,61 @@ class BaseTestModel[Shema: BaseShema]:
             
             await self.__model__.create(
                 *insert_data,
-                session=self.session
+                conn=uow.conn
             )
 
             for el in data:
                 el = self.__shema__.model_validate(el, from_attributes=True)
-                result = self.__shema__.model_validate((await self.__model__.get(self.session, el.ident))[0], from_attributes=True)
+                result = self.__shema__.model_validate((await self.__model__.get(uow.conn, el.ident)), from_attributes=True)
                 assert result == el
 
-            assert await self.__model__.count(self.session) == len(data)
+            assert await self.__model__.count(uow.conn) == len(data)
 
-            await self.session.commit()
-            await self.session.close()
+            await uow.commit()
 
 
     async def test_create_existing(self, data: Shema) -> None:
 
-        async with self.session.begin():
+        async with self.uow as uow:
 
             with pytest.raises(CreateDBException):
                 await self.__model__.create(
                     data.model_dump(),
-                    session=self.session
+                    conn=uow.conn
                 )
 
-            await self.session.commit()
-            await self.session.close()
+            await uow.commit()
 
 
     async def test_get(self, attr: str, el: Shema) -> None:
 
-        async with self.session.begin():
+        async with self.uow as uow:
+            res = await self.__model__.get(uow.conn, getattr(el, attr))
 
-            res = await self.__model__.get(self.session, getattr(el, attr))
+            assert self.__shema__.model_validate(res, from_attributes=True) == el
 
-            assert self.__shema__.model_validate(res[0], from_attributes=True) == el
-
-            await self.session.close()
 
     
     async def test_get_many(self, k: int, request_shema: BaseRequestShema) -> None:
 
-        async with self.session.begin():
+        async with self.uow as uow:
 
             res = await self.__model__.get_many(
-                self.session,
+                uow.conn,
                 request_shema.dump_expression()
             )
 
-            assert len(res) == k
-
-            await self.session.close()
+            assert len(res[0]) == k
 
 
     async def test_update(self, ident: str, data: dict[str, t.Any]) -> None:
-        async with self.session.begin():
+        async with self.uow as uow:
 
-            await self.__model__.update(self.session, ident, data)
+            await self.__model__.update(uow.conn, ident, data)
 
-            res = await self.__model__.get(self.session, ident)
+            res = await self.__model__.get(uow.conn, ident)
 
-            el = self.__shema__.model_validate(res[0], from_attributes=True)
+            el = self.__shema__.model_validate(res, from_attributes=True)
 
             for key, value in data.items():
                 if isinstance(getattr(el, key), date):
@@ -106,21 +99,19 @@ class BaseTestModel[Shema: BaseShema]:
 
                 assert getattr(el, key) == value
 
-            await self.session.commit()
-            await self.session.close()
+            await uow.commit()
 
 
     async def test_delete(self, item: Shema) -> None:
-        async with self.session.begin():
+        async with self.uow as uow:
 
-            await self.__model__.delete(self.session, item.ident)
+            await self.__model__.delete(uow.conn, item.ident)
 
-            assert not await self.__model__.get(self.session, item.ident)
+            assert not await self.__model__.get(uow.conn, item.ident)
 
-            await self.__model__.create(item.model_dump(), session=self.session)
+            await self.__model__.create(item.model_dump(), conn=uow.conn)
 
-            await self.session.commit()
-            await self.session.close()
+            await uow.commit()
 
 
 """

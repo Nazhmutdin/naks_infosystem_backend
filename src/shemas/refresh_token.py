@@ -5,8 +5,8 @@ from datetime import datetime, UTC
 from pydantic import Field, field_validator, computed_field
 
 from shemas.base import BaseShema
-from shemas.validators import to_datetime_validator, validate_jwt_refresh_token
-from utils.funcs import refresh_token_expiration_dt
+from shemas.validators import to_datetime_validator, validate_refresh_token
+from utils.funcs import refresh_token_expiration_dt_without_timezone, current_utc_datetime_without_timezone
 
 
 class BaseRefreshTokenShema(BaseShema):
@@ -37,7 +37,7 @@ class BaseRefreshTokenShema(BaseShema):
         if v == None:
             return None
         
-        if validate_jwt_refresh_token(v):
+        if validate_refresh_token(v):
             return v
         
         raise ValueError("invalid token")
@@ -48,8 +48,8 @@ class RefreshTokenShema(BaseRefreshTokenShema):
     user_ident: UUID
     token: str
     revoked: bool = Field(default=False)
-    gen_dt: datetime = Field(default_factory=datetime.now)
-    exp_dt: datetime = Field(default_factory=refresh_token_expiration_dt)
+    gen_dt: datetime = Field(default_factory=current_utc_datetime_without_timezone)
+    exp_dt: datetime = Field(default_factory=refresh_token_expiration_dt_without_timezone)
 
 
     @field_validator("token")
@@ -57,7 +57,7 @@ class RefreshTokenShema(BaseRefreshTokenShema):
         if v == None:
             raise ValueError("token cannot be None")
         
-        if validate_jwt_refresh_token(v):
+        if validate_refresh_token(v):
             return v
         else:
             raise ValueError(f"invalid token {v}")

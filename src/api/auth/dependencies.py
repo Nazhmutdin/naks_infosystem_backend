@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta, UTC
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
@@ -7,7 +6,8 @@ from fastapi import HTTPException, Request, Depends
 from shemas import *
 from database import get_session
 from services.auth_service import AuthService
-from services.db_services import *
+from services.db_services import UserDBService, RefreshTokenDBService
+from utils.funcs import current_utc_datetime, current_utc_datetime_without_timezone, refresh_token_expiration_dt_without_timezone
 
 
 class AuthData(BaseModel):
@@ -60,16 +60,11 @@ async def validate_refresh_token(request: Request, session = Depends(get_session
         )
     
     if refresh_token.revoked:
+        await service.revoke_all_user_tokens(refresh_token.user_ident)
+
         raise HTTPException(
             400,
             "revoked token"
-        )
-    
-
-    if refresh_token.expired:
-        raise HTTPException(
-            400,
-            "refresh token expired"
         )
     
     return refresh_token
@@ -78,7 +73,7 @@ async def validate_refresh_token(request: Request, session = Depends(get_session
 async def create_access_token(user_ident: str | UUID) -> AccessToken:
     
     auth_service = AuthService()
-    gen_dt = datetime.now(UTC)
+    gen_dt = current_utc_datetime()
 
     token = auth_service.create_access_token(
         user_ident=user_ident.hex,
@@ -92,8 +87,8 @@ async def create_refresh_token(user_ident: str | UUID) -> CreateRefreshTokenShem
     
     auth_service = AuthService()
 
-    gen_dt = datetime.now(UTC).replace(tzinfo=None)
-    exp_dt = gen_dt + timedelta(days=1)
+    gen_dt = current_utc_datetime_without_timezone()
+    exp_dt = refresh_token_expiration_dt_without_timezone()
 
     token_ident = uuid4()
 
@@ -133,6 +128,12 @@ async def authenticatе_dependency(
     session = Depends(get_session)
     ) -> AccessToken:
 
+    if refresh_token.expired:
+        raise HTTPException(
+            400,
+            "refresh token expired"
+        )
+
     service = UserDBService(session)
     auth_service = AuthService()
 
@@ -152,33 +153,11 @@ async def authenticatе_dependency(
 
 
 async def update_tokens_dependency(
-    request: Request,
+    refresh_token: RefreshTokenShema = Depends(validate_refresh_token),
     session = Depends(get_session)
     ) -> tuple[RefreshToken, AccessToken]:
     
     service = RefreshTokenDBService(session)
-
-    refresh_token = request.cookies.get("refresh_token")
-
-    if not refresh_token:
-        raise HTTPException(
-            400,
-            "refresh token required"
-        )
-
-    refresh_token = await service.get(refresh_token)
-
-    if not refresh_token:
-        raise HTTPException(
-            400,
-            "refresh token not found"
-        )
-    
-    if refresh_token.revoked:
-        raise HTTPException(
-            400,
-            "refresh token revoked"
-        )
     
     await service.revoke_all_user_tokens(
         refresh_token.user_ident
