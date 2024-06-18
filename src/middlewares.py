@@ -19,17 +19,17 @@ class CheckAccessTokenMiddleware(BaseHTTPMiddleware):
             token = request.cookies.get("access_token")
 
             if not token:
-                raise HTTPException(
-                    400,
-                    "access token required"
+                return Response(
+                    "access token required",
+                    400
                 )
             
             is_valid_token = service.validate_access_token(token)
             
             if not is_valid_token:
-                raise HTTPException(
-                    400,
-                    "invalid access token"
+                return Response(
+                    "invalid access token",
+                    400
                 )
 
         res = await call_next(request)
