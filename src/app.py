@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
-from api.v1.routes import v1_router
-from api.auth.routes import auth_router
-from middlewares import CheckAccessTokenMiddleware
+from src.api.v1.routes import v1_router
+from src.api.auth.routes import auth_router
+from src.middlewares import CheckAccessTokenMiddleware
 
 
 app = FastAPI()

@@ -3,8 +3,8 @@ from datetime import datetime
 
 from pydantic import ValidationInfo, EmailStr, Field, field_validator
 
-from shemas.base import BaseShema
-from shemas.validators import to_datetime_validator
+from src.shemas.base import BaseShema
+from src.shemas.validators import to_datetime_validator
 
 
 class BaseUserShema(BaseShema):

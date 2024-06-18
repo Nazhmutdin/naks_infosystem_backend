@@ -3,8 +3,8 @@ from uuid import UUID, uuid4
 
 from pydantic import Field, field_validator
 
-from shemas.base import BaseShema
-from shemas.validators import validate_kleymo, to_date_validator
+from src.shemas.base import BaseShema
+from src.shemas.validators import validate_kleymo, to_date_validator
 
 
 class BaseWelderShema(BaseShema):

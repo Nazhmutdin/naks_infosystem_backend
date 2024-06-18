@@ -4,7 +4,7 @@ from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from services.auth_service import AuthService
+from src.services.auth_service import AuthService
 
 
 class CheckAccessTokenMiddleware(BaseHTTPMiddleware):

@@ -2,8 +2,8 @@ from re import fullmatch
 from datetime import date, datetime
 from uuid import UUID
 
-from utils.funcs import to_date, str_to_datetime
-from services.auth_service import AuthService
+from src.utils.funcs import to_date, str_to_datetime
+from src.services.auth_service import AuthService
 
 
 def validate_kleymo(v: str) -> bool:

@@ -4,9 +4,9 @@ from datetime import datetime, UTC
 
 from pydantic import Field, field_validator, computed_field
 
-from shemas.base import BaseShema
-from shemas.validators import to_datetime_validator, validate_refresh_token
-from utils.funcs import refresh_token_expiration_dt_without_timezone, current_utc_datetime_without_timezone
+from src.shemas.base import BaseShema
+from src.shemas.validators import to_datetime_validator, validate_refresh_token
+from src.utils.funcs import refresh_token_expiration_dt_without_timezone, current_utc_datetime_without_timezone
 
 
 class BaseRefreshTokenShema(BaseShema):

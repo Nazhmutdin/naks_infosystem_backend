@@ -5,11 +5,11 @@ import uuid
 from sqlalchemy.orm import Mapped, DeclarativeBase, attributes, relationship
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.schema import Constraint
+from sqlalchemy.schema import UniqueConstraint, Index
 import sqlalchemy as sa
 
-from errors import CreateDBException, UpdateDBException, GetDBException, DeleteDBException
-from utils.funcs import is_kleymo
+from src.errors import CreateDBException, UpdateDBException, GetDBException, DeleteDBException
+from src.utils.funcs import is_kleymo
 
 
 __all__ = [
@@ -20,7 +20,6 @@ __all__ = [
     "WelderCertificationModel",
     "NDTModel"
 ]
-
 
 class Base(DeclarativeBase): 
 
@@ -152,6 +151,10 @@ class UserModel(Base):
     update_date: Mapped[datetime] = sa.Column(sa.DateTime(), nullable=False)
     login_date: Mapped[datetime] = sa.Column(sa.DateTime(), nullable=False)
     is_superuser: Mapped[bool] = sa.Column(sa.Boolean(), nullable=False)
+
+    __table_args__ = (
+        Index("user_ident_idx", ident),
+    )
     
 
     @classmethod
@@ -175,6 +178,12 @@ class RefreshTokenModel(Base):
     revoked: Mapped[bool] = sa.Column(sa.Boolean(), nullable=False)
     exp_dt: Mapped[datetime] = sa.Column(sa.DateTime(), nullable=False)
     gen_dt: Mapped[datetime] = sa.Column(sa.DateTime(), nullable=False)
+
+    __table_args__ = (
+        Index("refresh_token_ident_idx", ident),
+        Index("token_idx", token),
+        Index("revoked_idx", revoked),
+    )
     
 
     @classmethod
@@ -202,6 +211,12 @@ class WelderModel(Base):
     status: Mapped[str] = sa.Column(sa.SMALLINT, default=0)
     certifications: Mapped[list["WelderCertificationModel"]] = relationship("WelderCertificationModel", back_populates="welder")
     ndts: Mapped[list["NDTModel"]] = relationship("NDTModel", back_populates="welder")
+
+    __table_args__ = (
+        Index("welder_ident_idx", ident),
+        Index("welder_kleymo_idx", kleymo),
+        Index("name_idx", name),
+    )
 
 
     @classmethod
@@ -257,8 +272,27 @@ class WelderCertificationModel(Base):
 
     welder: Mapped[WelderModel] = relationship("WelderModel", back_populates="certifications")
 
-    certification_id = Constraint(sa.UniqueConstraint("certification_number", "insert", "certification_date", "expiration_date_fact"))
-    
+    __table_args__ = (
+        UniqueConstraint(
+            "kleymo", 
+            "certification_number", 
+            "certification_date", 
+            "expiration_date_fact", 
+            "insert"
+        ),
+        Index("welder_certification_ident_idx", ident),
+        Index("welder_certification_kleymo_idx", kleymo),
+        Index("certification_idx", certification_number, certification_date, expiration_date_fact),
+        Index("method_idx", method),
+        Index("gtd_idx", gtd),
+        Index("details_thikness_from_idx", details_thikness_from),
+        Index("details_thikness_before_idx", details_thikness_before),
+        Index("outer_diameter_from_idx", outer_diameter_from),
+        Index("outer_diameter_before_idx", outer_diameter_before),
+        Index("rod_diameter_from_idx", rod_diameter_from),
+        Index("rod_diameter_before_idx", rod_diameter_before),
+    )
+  
 
 class NDTModel(Base):
     __tablename__ = "ndt_table"
@@ -276,3 +310,14 @@ class NDTModel(Base):
     rejected: Mapped[float | None] = sa.Column(sa.Float(), nullable=False, default=0)
     
     welder: Mapped[WelderModel] = relationship("WelderModel", back_populates="ndts")
+
+
+    __table_args__ = (
+        UniqueConstraint("kleymo", "company", "subcompany", "project", "welding_date", "ndt_type"),
+        Index("ndt_ident_idx", ident),
+        Index("ndt_idx", kleymo, company, subcompany, project),
+        Index("total_welded_idx", total_welded),
+        Index("total_ndt_idx", total_ndt),
+        Index("accepted_idx", accepted),
+        Index("rejected_idx", rejected)
+    )

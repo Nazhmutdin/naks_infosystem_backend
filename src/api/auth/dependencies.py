@@ -3,11 +3,11 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel
 from fastapi import HTTPException, Request, Depends
 
-from shemas import *
-from database import get_session
-from services.auth_service import AuthService
-from services.db_services import UserDBService, RefreshTokenDBService
-from utils.funcs import current_utc_datetime, current_utc_datetime_without_timezone, refresh_token_expiration_dt_without_timezone
+from src.shemas import *
+from src.database import get_session
+from src.services.auth_service import AuthService
+from src.services.db_services import UserDBService, RefreshTokenDBService
+from src.utils.funcs import current_utc_datetime, current_utc_datetime_without_timezone, refresh_token_expiration_dt_without_timezone
 
 
 class AuthData(BaseModel):

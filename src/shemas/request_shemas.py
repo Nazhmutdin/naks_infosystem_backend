@@ -7,9 +7,9 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy import BinaryExpression, ColumnElement, any_, and_, or_
 from pydantic import GetCoreSchemaHandler, ValidationInfo, Field, field_validator
 
-from shemas.base import BaseShema
+from src.shemas.base import BaseShema
 
-from shemas.validators import (
+from src.shemas.validators import (
     to_datetime_validator, 
     to_uuid_validator, 
     validate_refresh_token, 
@@ -20,7 +20,7 @@ from shemas.validators import (
     validate_name,
     is_float
 )
-from models import *
+from src.models import *
 
 
 __all__ = [
@@ -103,8 +103,8 @@ class BaseRequestShema(BaseShema):
     __or_model_columns__: list[str] = []
     __models__: list[type[Base]]
 
-    limit: int | None = Field(default=None, gt=0)
-    offset: int | None = Field(default=None, gt=0)
+    limit: int = Field(default=100, gt=-1)
+    offset: int = Field(default=0, gt=-1)
 
 
     def dump_expression(self) -> ColumnElement:

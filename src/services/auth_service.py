@@ -1,12 +1,12 @@
 import typing as t
 from uuid import UUID
-from datetime import datetime, timedelta, UTC
+from datetime import datetime
 from hashlib import sha256
 
 from jose.jwt import encode as jwt_encode, decode as jwt_decode, get_unverified_claims
 
-from settings import Settings
-from utils.funcs import is_uuid, to_uuid, str_to_datetime
+from src.settings import Settings
+from src.utils.funcs import is_uuid, to_uuid, str_to_datetime
 
 
 class AccessTokenPayloadData(t.TypedDict):

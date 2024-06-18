@@ -4,7 +4,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 
-load_dotenv(f"{Path.cwd().parent}/.env")
+if not os.getenv("MODE"):
+    load_dotenv(f"{Path(os.path.dirname(os.path.abspath(__file__))).parent}/.dev.env")
 
 
 class Settings:

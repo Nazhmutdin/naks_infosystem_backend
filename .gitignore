@@ -1,8 +1,8 @@
-
 .env
 .test.env
 .dev.env
 venv
+winvenv
 __pycache__/
 .vscode
 .pytest_cache

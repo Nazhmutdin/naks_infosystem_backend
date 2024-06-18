@@ -3,7 +3,7 @@ from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import NullPool
 
-from settings import Settings
+from src.settings import Settings
 
 
 DB_URL = "postgresql+asyncpg://{0}:{1}@{2}:{3}/{4}".format(

@@ -5,12 +5,12 @@ import typing as t
 from sqlalchemy.ext.asyncio import AsyncSession
 import pytest
 
-from errors import CreateDBException
-from utils.funcs import to_date
-from utils.uows import UOW
-from database import engine
-from shemas import *
-from models import *
+from src.errors import CreateDBException
+from src.utils.funcs import to_date
+from src.utils.uows import UOW
+from src.database import engine
+from src.shemas import *
+from src.models import *
 
 
 """
@@ -77,7 +77,9 @@ class BaseTestModel[Shema: BaseShema]:
 
             res = await self.__model__.get_many(
                 uow.conn,
-                request_shema.dump_expression()
+                request_shema.dump_expression(),
+                limit=request_shema.limit,
+                offset=request_shema.offset
             )
 
             assert len(res[0]) == k
@@ -128,7 +130,7 @@ class TestWelderModel(BaseTestModel[WelderShema]):
 
     @pytest.mark.usefixtures('welders')
     async def test_create(self, welders: list[WelderShema]) -> None:
-        return await super().test_create(welders)
+        await super().test_create(welders)
     
 
     @pytest.mark.usefixtures('welders')
@@ -137,7 +139,7 @@ class TestWelderModel(BaseTestModel[WelderShema]):
         [1, 2, 63, 4, 5, 11]
     )
     async def test_create_existing(self, welders: list[WelderShema], index: int) -> None:
-        return await super().test_create_existing(welders[index])
+        await super().test_create_existing(welders[index])
     
 
     @pytest.mark.usefixtures('welders')
@@ -151,7 +153,7 @@ class TestWelderModel(BaseTestModel[WelderShema]):
         ]
     )
     async def test_get(self, attr: str, index: int, welders: list[WelderShema]) -> None:
-        return await super().test_get(attr, welders[index])
+        await super().test_get(attr, welders[index])
     
 
     async def test_get_many(self) -> None: ...
@@ -166,7 +168,7 @@ class TestWelderModel(BaseTestModel[WelderShema]):
         ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
-        return await super().test_update(ident, data)
+        await super().test_update(ident, data)
     
 
     @pytest.mark.usefixtures('welders')
@@ -175,7 +177,7 @@ class TestWelderModel(BaseTestModel[WelderShema]):
             [0, 34, 65, 1, 88, 90]
     )
     async def test_delete(self, welders: list[WelderShema], index: int) -> None:
-        return await super().test_delete(welders[index])
+        await super().test_delete(welders[index])
 
     
 """

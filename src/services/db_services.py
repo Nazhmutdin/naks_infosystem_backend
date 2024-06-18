@@ -3,10 +3,10 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update, select, and_
 
-from models import *
-from shemas import *
-from utils.funcs import to_uuid
-from utils.uows import UOW
+from src.models import *
+from src.shemas import *
+from src.utils.funcs import to_uuid
+from src.utils.uows import UOW
 
 
 __all__: list[str] = [

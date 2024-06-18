@@ -5,7 +5,7 @@ import typing as t
 from pydantic import ValidationError, BaseModel
 from fastapi import HTTPException, Request
 
-from shemas import *
+from src.shemas import *
 
 
 __all__ = [

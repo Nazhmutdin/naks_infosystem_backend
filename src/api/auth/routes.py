@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Response, Depends
 
-from api.auth.dependencies import authorize_dependency, authenticatе_dependency, update_tokens_dependency, AccessToken, RefreshToken
-from utils.funcs import refresh_token_expiration_dt, access_token_expiration_dt
+from src.api.auth.dependencies import authorize_dependency, authenticatе_dependency, update_tokens_dependency, AccessToken, RefreshToken
+from src.utils.funcs import refresh_token_expiration_dt, access_token_expiration_dt
 
 
 auth_router = APIRouter()
