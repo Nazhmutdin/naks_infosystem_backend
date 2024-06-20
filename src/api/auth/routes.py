@@ -7,7 +7,7 @@ from src.utils.funcs import refresh_token_expiration_dt, access_token_expiration
 auth_router = APIRouter()
 
 
-@auth_router.post("/authorizatе")
+@auth_router.post("/authorizate")
 async def authorizatе(
     tokens: tuple[RefreshToken, AccessToken] = Depends(authorize_dependency)
     ) -> Response: 
@@ -20,7 +20,7 @@ async def authorizatе(
     return response
 
 
-@auth_router.post("/authenticatе")
+@auth_router.post("/authenticate")
 async def authenticatе(access_token: AccessToken = Depends(authenticatе_dependency)) -> Response:
     
     response = Response()
