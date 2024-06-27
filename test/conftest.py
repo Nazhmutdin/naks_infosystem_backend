@@ -7,7 +7,7 @@ from database import engine
 from settings import Settings
 from models import Base
 
-from funcs import get_welders, get_welder_certifications, get_ndts, get_refresh_tokens, get_users, get_request_refresh_tokens
+from funcs import get_welders, get_welder_certifications, get_ndts
 
 
 @pytest.fixture(scope="module")
@@ -35,18 +35,3 @@ def welder_certifications() -> list[WelderCertificationShema]:
 @pytest.fixture
 def ndts() -> list[NDTShema]:
     return get_ndts()
-
-
-@pytest.fixture
-def users() -> list[UserShema]:
-    return get_users()
-
-
-@pytest.fixture
-def refresh_tokens() -> list[RefreshTokenShema]:
-    return get_refresh_tokens()
-
-
-@pytest.fixture
-def request_refresh_tokens() -> list[RefreshTokenShema]:
-    return get_request_refresh_tokens()

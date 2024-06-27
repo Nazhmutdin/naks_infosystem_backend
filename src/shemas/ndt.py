@@ -2,12 +2,12 @@ from uuid import UUID, uuid4
 from datetime import date
 
 from pydantic import Field, field_validator
-
-from src.shemas.base import BaseShema
-from src.shemas.validators import validate_kleymo, to_date_validator
+from naks_library import BaseShema, to_date, is_kleymo
 
 
 class BaseNDTShema(BaseShema):
+    __fields_ignore__ = ["ident"]
+    
     kleymo: str | None = Field(default=None)
     company: str | None = Field(default=None)
     subcompany: str | None = Field(default=None)
@@ -25,7 +25,7 @@ class BaseNDTShema(BaseShema):
         if v == None:
             return None
         
-        return to_date_validator(v)
+        return to_date(v)
         
 
     @field_validator("kleymo")
@@ -34,7 +34,7 @@ class BaseNDTShema(BaseShema):
         if v == None:
             return None
         
-        if validate_kleymo(v):
+        if is_kleymo(v):
             return v
         
         raise ValueError(f"Invalid kleymo: {v}")
@@ -48,13 +48,13 @@ class NDTShema(BaseNDTShema):
 
     @field_validator("welding_date", mode="before")
     def validate_welding_date(cls, v: str | date | None):
-        return to_date_validator(v)
+        return to_date(v)
 
 
     @field_validator("kleymo")
     @classmethod
     def validate_kleymo(cls, v: str | None):
-        if validate_kleymo(v):
+        if is_kleymo(v):
             return v
         
         raise ValueError(f"Invalid kleymo: {v}")

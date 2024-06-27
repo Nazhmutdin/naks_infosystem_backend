@@ -2,12 +2,14 @@ import typing as t
 import json
 
 import pytest
+from naks_library import BaseShema
 
 from services.db_services import *
 from client import client
 from shemas import *
 
 
+@pytest.mark.usefixtures("prepare_db")
 class BaseTestCRUDEndpoints[Shema: BaseShema]:
     __shema__: type[Shema]
 

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.dependencies import *
-from src.shemas import *
 from src.services.db_services import *
+from src.api.v1.dependencies import *
 from src.database import get_session
+from src.shemas import *
 from src.errors import *
 
 
@@ -27,8 +27,8 @@ async def add_welder(
 
     try:
         await service.add(data)
-    except UpdateDBException as e:
-        raise HTTPException(400, e.args)
+    except CreateDBException as e:
+        raise HTTPException(400, e.message)
 
     return {
         "detail": "welder added"
@@ -121,7 +121,7 @@ async def add_welder_certification(
     try:
         await service.add(data)
     except CreateDBException as e:
-        raise HTTPException(400, e.args)
+        raise HTTPException(400, e.message)
     
     return {
         "detail": "welder certification added"
@@ -213,8 +213,8 @@ async def add_ndt(
 
     try:
         await service.add(data)
-    except UpdateDBException as e:
-        raise HTTPException(400, e.args)
+    except CreateDBException as e:
+        raise HTTPException(400, e.message)
 
     return {
         "detail": f"ndt added"

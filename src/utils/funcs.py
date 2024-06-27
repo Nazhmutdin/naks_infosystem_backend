@@ -1,80 +1,29 @@
-import typing as t
-from uuid import UUID
 from re import fullmatch
 
-from datetime import datetime, date, timedelta, UTC
-from dateutil.parser import parser
 
-
-def is_uuid(uuid: str | UUID) -> True:
-    try:
-        UUID(uuid)
-        return True
-    except:
-        return False
-    
-
-def is_kleymo(v: str) -> True:
-    if fullmatch(r"[A-Z0-9]{4}", v):
+def validate_insert(v: str) -> bool:
+    if fullmatch(r"В[0-9]", v):
         return True
     
     return False
 
 
-def current_utc_datetime() -> datetime:
-    return datetime.now(UTC)
-
-
-def current_utc_datetime_without_timezone() -> datetime:
-    return datetime.now(UTC).replace(tzinfo=None)
-
-
-def refresh_token_expiration_dt() -> datetime:
-    return current_utc_datetime() + timedelta(days=1)
-
-
-def access_token_expiration_dt() -> datetime:
-    return current_utc_datetime() + timedelta(minutes=60)
-
-
-def refresh_token_expiration_dt_without_timezone() -> datetime:
-    return current_utc_datetime_without_timezone() + timedelta(days=1)
-
-
-def access_token_expiration_dt_without_timezone() -> datetime:
-    return current_utc_datetime_without_timezone() + timedelta(minutes=60)
+def validate_method(v: str) -> bool:
+    if fullmatch(r"[A-Яа-я]+", v):
+        return True
     
+    return False
 
-def to_uuid(v: str | UUID) -> UUID:
-    if isinstance(v, UUID):
-        return v
+
+def validate_certification_number(v: str) -> bool:
+    if fullmatch(r"[A-Я]+-[0-9A-Я]+-[IV]+-[0-9]{5}", v):
+        return True
     
-    return UUID(v)
+    return False
 
 
-def str_to_datetime(date_string, dayfirst: bool = False) -> datetime | None:
-    try:
-        return parser().parse(date_string, dayfirst=dayfirst)
-    except:
-        return None
-
-
-def to_date(date_data: str | date | t.Iterable[int] | None, dayfirst: bool = False) -> date:
-    if not date_data:
-        raise ValueError(f"NoneType cannot be converted to date'")
+def validate_name(v: str) -> bool:
+    if fullmatch(r"[A-ЯA-Za-zа-я ]+", v):
+        return True
     
-    if isinstance(date_data, date):
-        return date_data
-    
-    if isinstance(date_data, str):
-        _datetime = str_to_datetime(date_data, dayfirst)
-
-        if not _datetime:
-            raise ValueError(f"Invalid date data '{date_data}'")
-
-        return _datetime.date()
-    
-    if isinstance(date_data, t.Iterable) and len(date_data) == 3:
-        return date(*date_data)
-    
-    raise ValueError(f"Invalid date data '{date_data}'")
+    return False

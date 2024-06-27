@@ -21,11 +21,13 @@ httpx==0.27.0
 idna==3.7
 iniconfig==2.0.0
 Jinja2==3.1.4
+jose==1.0.0
 Mako==1.3.5
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
 mypy-extensions==1.0.0
+naks_library @ https://github.com/Nazhmutdin/naks_library/archive/master.zip#sha256=840d0b9a6c63ebc1a92c8a99f17cd2ce53f8dd4dc06eaca57a559795b43f5cf5
 orjson==3.10.3
 packaging==24.0
 pathspec==0.12.1
@@ -47,6 +49,7 @@ pytz==2024.1
 PyYAML==6.0.1
 rich==13.7.1
 rsa==4.9
+setuptools==70.1.1
 shellingham==1.5.4
 six==1.16.0
 sniffio==1.3.1
@@ -58,3 +61,4 @@ ujson==5.10.0
 uvicorn==0.30.1
 watchfiles==0.22.0
 websockets==12.0
+wheel==0.43.0

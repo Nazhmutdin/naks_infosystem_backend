@@ -4,18 +4,13 @@ import uuid
 
 from sqlalchemy.orm import Mapped, DeclarativeBase, attributes, relationship
 from sqlalchemy.ext.asyncio import AsyncConnection
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.schema import UniqueConstraint, Index
 import sqlalchemy as sa
-
-from src.errors import CreateDBException, UpdateDBException, GetDBException, DeleteDBException
-from src.utils.funcs import is_kleymo
+from naks_library import is_kleymo
 
 
 __all__ = [
     "Base",
-    "UserModel",
-    "RefreshTokenModel",
     "WelderModel",
     "WelderCertificationModel",
     "NDTModel"
@@ -25,67 +20,51 @@ class Base(DeclarativeBase):
 
     @classmethod
     async def get(cls, conn: AsyncConnection, ident: uuid.UUID | str):
-        try:
-            stmt = cls._dump_get_stmt(ident)
-            response = await conn.execute(stmt)
-            result = response.mappings().one_or_none()
+        stmt = cls._dump_get_stmt(ident)
+        response = await conn.execute(stmt)
+        result = response.mappings().one_or_none()
 
-            return result
-
-        except IntegrityError as e:
-            raise GetDBException(e.args[0])
+        return result
         
 
     @classmethod
     async def get_many(cls, conn: AsyncConnection, expression: sa.ColumnElement, limit: int, offset: int):
-        try:
-            stmt = cls._dump_get_many_stmt(expression)
+        stmt = cls._dump_get_many_stmt(expression)
 
-            amount = await cls.count(conn, stmt)
+        amount = await cls.count(conn, stmt)
 
-            if limit:
-                stmt = stmt.limit(limit)
+        if limit:
+            stmt = stmt.limit(limit)
 
-            if offset:
-                stmt = stmt.offset(offset)
-            
-            response = await conn.execute(stmt)
+        if offset:
+            stmt = stmt.offset(offset)
+        
+        response = await conn.execute(stmt)
 
-            result = response.mappings().all()
-            
-            return (result, amount)
-        except IntegrityError as e:
-            raise GetDBException(e.args[0])
+        result = response.mappings().all()
+        
+        return (result, amount)
         
 
     @classmethod
-    async def create(cls, *data: dict, conn: AsyncConnection):
-        try:
-            stmt = cls._dump_create_stmt(
-                list(data)
-            )
+    async def create(cls, data: list[dict], conn: AsyncConnection):
+        stmt = cls._dump_create_stmt(
+            data
+        )
 
-            await conn.execute(stmt)
-        except IntegrityError as e:
-            raise CreateDBException(e.args[0])
+        await conn.execute(stmt)
 
 
     @classmethod
     async def update(cls, conn: AsyncConnection, ident: uuid.UUID | str, data: dict[str, t.Any]):
-        try:
-            stmt = cls._dump_update_stmt(ident, data)
-            await conn.execute(stmt)
-        except IntegrityError as e:
-            raise UpdateDBException(e.args[0])
+        stmt = cls._dump_update_stmt(ident, data)
+        await conn.execute(stmt)
 
 
     @classmethod
     async def delete(cls, conn: AsyncConnection, ident: uuid.UUID | str):
-        try:
-            stmt = cls._dump_delete_stmt(ident)
-            await conn.execute(stmt)
-        except IntegrityError as e:
-            raise DeleteDBException(e.args[0])
+        stmt = cls._dump_delete_stmt(ident)
+        await conn.execute(stmt)
 
 
     @classmethod
@@ -137,65 +116,6 @@ class Base(DeclarativeBase):
         return sa.delete(cls).where(
             cls._get_column(ident) == ident
         )
-
-
-class UserModel(Base):
-    __tablename__ = "user_table"
-
-    ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
-    name: Mapped[str] = sa.Column(sa.String(), nullable=False)
-    login: Mapped[str] = sa.Column(sa.String(), unique=True, nullable=False)
-    hashed_password: Mapped[str] = sa.Column(sa.String(), nullable=False)
-    email: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
-    sign_date: Mapped[datetime] = sa.Column(sa.DateTime(), nullable=False)
-    update_date: Mapped[datetime] = sa.Column(sa.DateTime(), nullable=False)
-    login_date: Mapped[datetime] = sa.Column(sa.DateTime(), nullable=False)
-    is_superuser: Mapped[bool] = sa.Column(sa.Boolean(), nullable=False)
-
-    __table_args__ = (
-        Index("user_ident_idx", ident),
-    )
-    
-
-    @classmethod
-    def _get_column(cls, ident: str | uuid.UUID) -> attributes.InstrumentedAttribute:
-        if isinstance(ident, uuid.UUID):
-            return UserModel.ident
-        
-        try:
-            uuid.UUID(ident)
-            return UserModel.ident
-        except:
-            return UserModel.login
-
-
-class RefreshTokenModel(Base):
-    __tablename__ = "refresh_token_table"
-
-    ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
-    user_ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), sa.ForeignKey("user_table.ident", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    token: Mapped[str] = sa.Column(sa.String(), nullable=False, unique=True)
-    revoked: Mapped[bool] = sa.Column(sa.Boolean(), nullable=False)
-    exp_dt: Mapped[datetime] = sa.Column(sa.DateTime(), nullable=False)
-    gen_dt: Mapped[datetime] = sa.Column(sa.DateTime(), nullable=False)
-
-    __table_args__ = (
-        Index("refresh_token_ident_idx", ident),
-        Index("token_idx", token),
-        Index("revoked_idx", revoked),
-    )
-    
-
-    @classmethod
-    def _get_column(cls, ident: str | uuid.UUID) -> attributes.InstrumentedAttribute:
-        if isinstance(ident, uuid.UUID):
-            return RefreshTokenModel.ident
-        
-        try:
-            uuid.UUID(ident)
-            return RefreshTokenModel.ident
-        except:
-            return RefreshTokenModel.token
 
 
 class WelderModel(Base):
