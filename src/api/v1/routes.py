@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from naks_library.exc import *
 
 from src.services.db_services import *
 from src.api.v1.dependencies import *
 from src.database import get_session
 from src.shemas import *
-from src.errors import *
 
 
 v1_router = APIRouter()

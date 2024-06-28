@@ -10,7 +10,7 @@ from models import Base
 from funcs import get_welders, get_welder_certifications, get_ndts
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="module", autouse=True)
 def prepare_db():
     assert Settings.DB_NAME() == "rhi_test"
 

@@ -9,7 +9,6 @@ from client import client
 from shemas import *
 
 
-@pytest.mark.usefixtures("prepare_db")
 class BaseTestCRUDEndpoints[Shema: BaseShema]:
     __shema__: type[Shema]
 
