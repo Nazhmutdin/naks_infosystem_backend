@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, DeclarativeBase, attributes, relationship
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.schema import UniqueConstraint, Index
 import sqlalchemy as sa
-from naks_library import is_kleymo
+from naks_library import is_uuid
 
 
 __all__ = [
@@ -148,10 +148,10 @@ class WelderModel(Base):
 
     @classmethod
     def _get_column(cls, ident: str | uuid.UUID) -> attributes.InstrumentedAttribute:
-        if isinstance(ident, str) and not is_kleymo(ident):
-            ident = uuid.UUID(ident)
-
-        return WelderModel.ident if isinstance(ident, uuid.UUID) else WelderModel.kleymo
+        if is_uuid(ident):
+            return WelderModel.ident
+        
+        return WelderModel.kleymo
 
 
 class WelderCertificationModel(Base):
