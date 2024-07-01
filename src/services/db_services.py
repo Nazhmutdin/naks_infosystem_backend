@@ -2,7 +2,7 @@ from sqlalchemy import select
 from naks_library.base_db_service import BaseDBService
 
 from src.models import WelderModel, WelderCertificationModel, NDTModel
-from shemas import *
+from src.shemas import *
 
 
 __all__: list[str] = [

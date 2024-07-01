@@ -6,7 +6,7 @@ from naks_library.base_request_shema import *
 from naks_library import to_date, to_datetime, is_kleymo, is_uuid, is_float
 from pydantic import ValidationInfo, Field, field_validator
 
-from utils.funcs import (
+from src.utils.funcs import (
     validate_insert, 
     validate_method,
     validate_certification_number,
