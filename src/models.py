@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import date
 import typing as t
 import uuid
 
@@ -28,10 +28,10 @@ class Base(DeclarativeBase):
         
 
     @classmethod
-    async def get_many(cls, conn: AsyncConnection, expression: sa.ColumnElement, limit: int, offset: int):
+    async def get_many(cls, conn: AsyncConnection, expression: sa.ColumnExpressionArgument, limit: int, offset: int):
         stmt = cls._dump_get_many_stmt(expression)
 
-        amount = await cls.count(conn, stmt)
+        amount = await cls.count(conn, expression)
 
         if limit:
             stmt = stmt.limit(limit)
@@ -68,9 +68,10 @@ class Base(DeclarativeBase):
 
 
     @classmethod
-    async def count(cls, conn: AsyncConnection, stmt: sa.Select | None = None):
-        if isinstance(stmt, sa.ColumnElement):
-            stmt.select(sa.func.count())
+    async def count(cls, conn: AsyncConnection, expression: sa.ColumnExpressionArgument | None = None):
+        if isinstance(expression, sa.ColumnElement):
+
+            stmt = sa.select(sa.func.count()).select_from(cls).where(expression)
 
             return (await conn.execute(stmt)).scalar_one()
 
@@ -129,6 +130,7 @@ class WelderModel(Base):
     passport_number: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
     nation: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
     status: Mapped[str] = sa.Column(sa.SMALLINT, default=0)
+    
     certifications: Mapped[list["WelderCertificationModel"]] = relationship("WelderCertificationModel", back_populates="welder")
     ndts: Mapped[list["NDTModel"]] = relationship("NDTModel", back_populates="welder")
 
