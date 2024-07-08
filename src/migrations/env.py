@@ -9,9 +9,6 @@ from alembic import context
 from database import DB_URL
 from models import Base
 
-
-print(DB_URL)
-
 target_metadata = Base.metadata
 
 config = context.config
