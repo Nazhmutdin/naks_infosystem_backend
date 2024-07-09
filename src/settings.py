@@ -21,13 +21,13 @@ class Settings:
     
 
     @classmethod
-    def HOST(cls) -> str:
-        return os.getenv("HOST")
-    
-
-    @classmethod
     def USER(cls) -> str:
         return os.getenv("USER")
+
+
+    @classmethod
+    def HOST(cls) -> str:
+        return os.getenv("HOST")
     
 
     @classmethod
