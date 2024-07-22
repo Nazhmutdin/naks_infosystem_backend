@@ -13,17 +13,17 @@ v1_router = APIRouter()
 
 """
 =========================================================================================
-welder routes
+personal routes
 =========================================================================================
 """
 
 
-@v1_router.post("/welders")
-async def add_welder(
-    data: CreateWelderShema = Depends(InputValidationDependency(CreateWelderShema).execute), 
+@v1_router.post("/personals")
+async def add_personal(
+    data: CreatePersonalShema = Depends(InputValidationDependency(CreatePersonalShema).execute), 
     session: AsyncSession = Depends(get_session)
     ) -> dict[str, str]:
-    service = WelderDBService(session)
+    service = PersonalDBService(session)
 
     try:
         await service.add(data)
@@ -31,13 +31,13 @@ async def add_welder(
         raise HTTPException(400, e.message)
 
     return {
-        "detail": "welder added"
+        "detail": "personal added"
     }
 
 
-@v1_router.get("/welders/{ident}")
-async def get_welder(ident: str = Depends(validate_welder_ident_dependency), session: AsyncSession = Depends(get_session)) -> WelderShema:
-    service = WelderDBService(session)
+@v1_router.get("/personals/{ident}")
+async def get_personal(ident: str = Depends(validate_personal_ident_dependency), session: AsyncSession = Depends(get_session)) -> PersonalShema:
+    service = PersonalDBService(session)
 
     try:
         result = await service.get(ident)
@@ -46,19 +46,19 @@ async def get_welder(ident: str = Depends(validate_welder_ident_dependency), ses
 
     if not result:
         raise HTTPException(
-            detail=f"welder ({ident}) not found",
+            detail=f"personal ({ident}) not found",
             status_code=400
         )
 
     return result
 
 
-@v1_router.post("/welders/select")
-async def select_welders(
-    filters: WelderRequestShema = Depends(InputValidationDependency(WelderRequestShema).execute),
+@v1_router.post("/personals/select")
+async def select_personal(
+    filters: PersonalRequestShema = Depends(InputValidationDependency(PersonalRequestShema).execute),
     session: AsyncSession = Depends(get_session)
-    ) -> dict[str, list[WelderShema] | int]:
-    service = WelderDBService(session)
+    ) -> dict[str, list[PersonalShema] | int]:
+    service = PersonalDBService(session)
 
     try:
         result = await service.get_many(filters)
@@ -71,13 +71,13 @@ async def select_welders(
     }
 
 
-@v1_router.patch("/welders/{ident}")
-async def update_welder(
-    ident: str = Depends(validate_welder_ident_dependency), 
-    data: UpdateWelderShema = Depends(InputValidationDependency(UpdateWelderShema).execute), 
+@v1_router.patch("/personals/{ident}")
+async def update_personal(
+    ident: str = Depends(validate_personal_ident_dependency), 
+    data: UpdatePersonalShema = Depends(InputValidationDependency(UpdatePersonalShema).execute), 
     session: AsyncSession = Depends(get_session)
     ) -> dict[str, str]:
-    service = WelderDBService(session)
+    service = PersonalDBService(session)
 
     try:
         await service.update(ident, data)
@@ -85,13 +85,13 @@ async def update_welder(
         raise HTTPException(400, e.args)
 
     return {
-        "detail": f"welder ({ident}) updated"
+        "detail": f"personal ({ident}) updated"
     }
 
 
-@v1_router.delete("/welders/{ident}")
-async def delete_welder(ident: str = Depends(validate_welder_ident_dependency), session: AsyncSession = Depends(get_session)):
-    service = WelderDBService(session)
+@v1_router.delete("/personals/{ident}")
+async def delete_personal(ident: str = Depends(validate_personal_ident_dependency), session: AsyncSession = Depends(get_session)):
+    service = PersonalDBService(session)
 
     try:
         await service.delete(ident)
@@ -99,24 +99,24 @@ async def delete_welder(ident: str = Depends(validate_welder_ident_dependency), 
         raise HTTPException(400, e.args)
 
     return {
-        "detail": f"welder ({ident}) removed"
+        "detail": f"personal ({ident}) removed"
     }
 
 
 """
 =========================================================================================
-welder certification routes
+personal certification routes
 =========================================================================================
 """
 
 
-@v1_router.post("/welder-certifications")
-async def add_welder_certification(
-    data: CreateWelderCertificationShema = Depends(InputValidationDependency(CreateWelderCertificationShema).execute), 
+@v1_router.post("/personal-certifications")
+async def add_personal_certification(
+    data: CreatePersonalCertificationShema = Depends(InputValidationDependency(CreatePersonalCertificationShema).execute), 
     session: AsyncSession = Depends(get_session)
     ) -> dict[str, str]:
 
-    service = WelderCertificationDBService(session)
+    service = PersonalCertificationDBService(session)
 
     try:
         await service.add(data)
@@ -124,13 +124,13 @@ async def add_welder_certification(
         raise HTTPException(400, e.message)
     
     return {
-        "detail": "welder certification added"
+        "detail": "personal certification added"
     }
 
 
-@v1_router.get("/welder-certifications/{ident}")
-async def get_welder_certification(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> WelderCertificationShema:
-    service = WelderCertificationDBService(session)
+@v1_router.get("/personal-certifications/{ident}")
+async def get_personal_certification(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> PersonalCertificationShema:
+    service = PersonalCertificationDBService(session)
 
     try:
         result = await service.get(ident)
@@ -139,19 +139,19 @@ async def get_welder_certification(ident: str = Depends(validate_ident_dependenc
 
     if not result:
         raise HTTPException(
-            detail=f"welder certification ({ident}) not found",
+            detail=f"personal certification ({ident}) not found",
             status_code=400
         )
 
     return result
 
 
-@v1_router.post("/welder-certifications/select")
-async def select_welder_certifications(
-    filters: WelderCertificationRequestShema = Depends(InputValidationDependency(WelderCertificationRequestShema).execute),
+@v1_router.post("/personal-certifications/select")
+async def select_personal_certifications(
+    filters: PersonalCertificationRequestShema = Depends(InputValidationDependency(PersonalCertificationRequestShema).execute),
     session: AsyncSession = Depends(get_session)
-    ) -> dict[str, list[WelderCertificationShema] | int]:
-    service = WelderCertificationDBService(session)
+    ) -> dict[str, list[PersonalCertificationShema] | int]:
+    service = PersonalCertificationDBService(session)
 
     try:
         result = await service.get_many(filters)
@@ -164,13 +164,13 @@ async def select_welder_certifications(
     }
 
 
-@v1_router.patch("/welder-certifications/{ident}")
-async def update_welder_certification( 
+@v1_router.patch("/personal-certifications/{ident}")
+async def update_personal_certification( 
     ident: str = Depends(validate_ident_dependency), 
-    data: UpdateWelderCertificationShema = Depends(InputValidationDependency(UpdateWelderCertificationShema).execute),
+    data: UpdatePersonalCertificationShema = Depends(InputValidationDependency(UpdatePersonalCertificationShema).execute),
     session: AsyncSession = Depends(get_session)
     ):
-    service = WelderCertificationDBService(session)
+    service = PersonalCertificationDBService(session)
 
     try:
         await service.update(ident, data)
@@ -178,14 +178,14 @@ async def update_welder_certification(
         raise HTTPException(400, e.args)
     
     return {
-        "detail": f"welder certification ({ident}) updated"
+        "detail": f"personal certification ({ident}) updated"
     }
 
 
-@v1_router.delete("/welder-certifications/{ident}")
-async def delete_welder_certification(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):
+@v1_router.delete("/personal-certifications/{ident}")
+async def delete_personal_certification(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):
     
-    service = WelderCertificationDBService(session)
+    service = PersonalCertificationDBService(session)
 
     try:
         await service.delete(ident)
@@ -193,7 +193,7 @@ async def delete_welder_certification(ident: str = Depends(validate_ident_depend
         raise HTTPException(400, e.args)
     
     return {
-        "detail": f"welder certification ({ident}) removed"
+        "detail": f"personal certification ({ident}) removed"
     }
 
 

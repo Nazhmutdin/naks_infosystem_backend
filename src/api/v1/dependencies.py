@@ -10,7 +10,7 @@ from src.shemas import *
 
 __all__ = [
     "validate_ident_dependency",
-    "validate_welder_ident_dependency",
+    "validate_personal_ident_dependency",
     "InputValidationDependency"
 ]
 
@@ -28,7 +28,7 @@ def validate_ident_dependency(ident: str) -> str:
     return ident
 
 
-def validate_welder_ident_dependency(ident: str) -> str:
+def validate_personal_ident_dependency(ident: str) -> str:
     if not fullmatch(r"[A-Z0-9]{4}", ident):
         try:
             UUID(ident)

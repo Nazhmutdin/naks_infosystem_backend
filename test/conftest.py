@@ -7,12 +7,12 @@ from database import engine
 from settings import Settings
 from models import Base
 
-from funcs import get_welders, get_welder_certifications, get_ndts
+from funcs import get_personals, get_personal_certifications, get_ndts
 
 
 @pytest.fixture(scope="module", autouse=True)
 def prepare_db():
-    assert Settings.DB_NAME() == "rhi_test"
+    assert Settings.DB_NAME() == "rhi_test_db"
 
     async def start_db():
         async with engine.begin() as conn:
@@ -23,13 +23,13 @@ def prepare_db():
 
 
 @pytest.fixture
-def welders() -> list[WelderShema]:
-    return get_welders()
+def personals() -> list[PersonalShema]:
+    return get_personals()
 
 
 @pytest.fixture
-def welder_certifications() -> list[WelderCertificationShema]:
-    return get_welder_certifications()
+def personal_certifications() -> list[PersonalCertificationShema]:
+    return get_personal_certifications()
 
 
 @pytest.fixture

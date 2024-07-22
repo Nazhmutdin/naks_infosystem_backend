@@ -116,31 +116,31 @@ class BaseTestModel[Shema: BaseShema]:
 
 """
 ===================================================================================================================
-Welder repository test
+Personal repository test
 ===================================================================================================================
 """
 
 
 @pytest.mark.asyncio
-class TestWelderModel(BaseTestModel[WelderShema]):
-    __shema__ = WelderShema
-    __model__ = WelderModel
+class TestPersonalModel(BaseTestModel[PersonalShema]):
+    __shema__ = PersonalShema
+    __model__ = PersonalModel
 
-    @pytest.mark.usefixtures('welders')
-    async def test_create(self, welders: list[WelderShema]) -> None:
-        await super().test_create(welders)
+    @pytest.mark.usefixtures('personals')
+    async def test_create(self, personals: list[PersonalShema]) -> None:
+        await super().test_create(personals)
     
 
-    @pytest.mark.usefixtures('welders')
+    @pytest.mark.usefixtures('personals')
     @pytest.mark.parametrize(
         "index",
         [1, 2, 63, 4, 5, 11]
     )
-    async def test_create_existing(self, welders: list[WelderShema], index: int) -> None:
-        await super().test_create_existing(welders[index])
+    async def test_create_existing(self, personals: list[PersonalShema], index: int) -> None:
+        await super().test_create_existing(personals[index])
     
 
-    @pytest.mark.usefixtures('welders')
+    @pytest.mark.usefixtures('personals')
     @pytest.mark.parametrize(
         "attr, index",
         [
@@ -150,8 +150,8 @@ class TestWelderModel(BaseTestModel[WelderShema]):
             ("ident", 80)
         ]
     )
-    async def test_get(self, attr: str, index: int, welders: list[WelderShema]) -> None:
-        await super().test_get(attr, welders[index])
+    async def test_get(self, attr: str, index: int, personals: list[PersonalShema]) -> None:
+        await super().test_get(attr, personals[index])
     
 
     async def test_get_many(self) -> None: ...
@@ -169,52 +169,52 @@ class TestWelderModel(BaseTestModel[WelderShema]):
         await super().test_update(ident, data)
     
 
-    @pytest.mark.usefixtures('welders')
+    @pytest.mark.usefixtures('personals')
     @pytest.mark.parametrize(
             "index",
             [0, 34, 65, 1, 88, 90]
     )
-    async def test_delete(self, welders: list[WelderShema], index: int) -> None:
-        await super().test_delete(welders[index])
+    async def test_delete(self, personals: list[PersonalShema], index: int) -> None:
+        await super().test_delete(personals[index])
 
     
 """
 ===================================================================================================================
-Welder certification repository test
+personals certification repository test
 ===================================================================================================================
 """
 
 
 @pytest.mark.asyncio
-class TestWelderCertificationModel(BaseTestModel[WelderCertificationShema]):
-    __shema__ = WelderCertificationShema
-    __model__ = WelderCertificationModel
+class TestPersonalCertificationModel(BaseTestModel[PersonalCertificationShema]):
+    __shema__ = PersonalCertificationShema
+    __model__ = PersonalCertificationModel
 
 
-    @pytest.mark.usefixtures('welder_certifications')
-    async def test_create(self, welder_certifications: list[WelderCertificationShema]) -> None:
-        await super().test_create(welder_certifications)
+    @pytest.mark.usefixtures('personal_certifications')
+    async def test_create(self, personal_certifications: list[PersonalCertificationShema]) -> None:
+        await super().test_create(personal_certifications)
 
 
-    @pytest.mark.usefixtures('welder_certifications')
+    @pytest.mark.usefixtures('personal_certifications')
     @pytest.mark.parametrize(
         "index",
         [1, 2, 3, 4, 5, 6]
     )
-    async def test_get(self, index: int, welder_certifications: list[WelderCertificationShema]) -> None:
-        await super().test_get("ident", welder_certifications[index])
+    async def test_get(self, index: int, personal_certifications: list[PersonalCertificationShema]) -> None:
+        await super().test_get("ident", personal_certifications[index])
 
         
     async def test_get_many(self) -> None: ...
 
 
-    @pytest.mark.usefixtures('welder_certifications')
+    @pytest.mark.usefixtures('personal_certifications')
     @pytest.mark.parametrize(
             "index",
             [1, 13, 63, 31, 75, 89]
     )
-    async def test_create_existing(self, welder_certifications: list[WelderCertificationShema], index: int) -> None:
-        await super().test_create_existing(welder_certifications[index])
+    async def test_create_existing(self, personal_certifications: list[PersonalCertificationShema], index: int) -> None:
+        await super().test_create_existing(personal_certifications[index])
 
 
     @pytest.mark.parametrize(
@@ -230,13 +230,13 @@ class TestWelderCertificationModel(BaseTestModel[WelderCertificationShema]):
         await super().test_update(ident, data)
 
 
-    @pytest.mark.usefixtures('welder_certifications')
+    @pytest.mark.usefixtures('personal_certifications')
     @pytest.mark.parametrize(
         "index",
         [0, 34, 65, 1, 88, 90]
     )
-    async def test_delete(self, welder_certifications: list[WelderCertificationShema], index: int) -> None:
-        await super().test_delete(welder_certifications[index])
+    async def test_delete(self, personal_certifications: list[PersonalCertificationShema], index: int) -> None:
+        await super().test_delete(personal_certifications[index])
 
 
 """

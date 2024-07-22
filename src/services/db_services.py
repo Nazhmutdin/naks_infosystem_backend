@@ -1,28 +1,28 @@
 from sqlalchemy import select
 from naks_library.base_db_service import BaseDBService
 
-from src.models import WelderModel, WelderCertificationModel, NDTModel
+from src.models import PersonalModel, PersonalCertificationModel, NDTModel
 from src.shemas import *
 
 
 __all__: list[str] = [
-    "WelderDBService",
-    "WelderCertificationDBService",
+    "PersonalDBService",
+    "PersonalCertificationDBService",
     "NDTDBService"
 ]
 
 
-class WelderDBService(BaseDBService[WelderShema, WelderModel, WelderRequestShema]):
-    __shema__ = WelderShema
-    __model__ = WelderModel
+class PersonalDBService(BaseDBService[PersonalShema, PersonalModel, PersonalRequestShema]):
+    __shema__ = PersonalShema
+    __model__ = PersonalModel
 
 
-class WelderCertificationDBService(BaseDBService[WelderCertificationShema, WelderCertificationModel, WelderCertificationRequestShema]):
-    __shema__ = WelderCertificationShema
-    __model__ = WelderCertificationModel
+class PersonalCertificationDBService(BaseDBService[PersonalCertificationShema, PersonalCertificationModel, PersonalCertificationRequestShema]):
+    __shema__ = PersonalCertificationShema
+    __model__ = PersonalCertificationModel
 
 
-    async def select_by_kleymo(self, kleymo: str) -> list[WelderCertificationShema] | None:
+    async def select_by_kleymo(self, kleymo: str) -> list[PersonalCertificationShema] | None:
         async with self.uow as uow:
             stmt = select(self.__model__).where(
                 self.__model__.kleymo == kleymo

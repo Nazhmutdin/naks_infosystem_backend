@@ -1,142 +1,38 @@
 from datetime import date
-import typing as t
 import uuid
 
-from sqlalchemy.orm import Mapped, DeclarativeBase, attributes, relationship
-from sqlalchemy.ext.asyncio import AsyncConnection
+from sqlalchemy.orm import Mapped, attributes, DeclarativeBase
 from sqlalchemy.schema import UniqueConstraint, Index
 import sqlalchemy as sa
-from naks_library import is_uuid
+from naks_library import is_uuid, CRUDMixin
 
 
 __all__ = [
     "Base",
-    "WelderModel",
-    "WelderCertificationModel",
+    "PersonalModel",
+    "PersonalCertificationModel",
     "NDTModel"
 ]
 
-class Base(DeclarativeBase): 
 
-    @classmethod
-    async def get(cls, conn: AsyncConnection, ident: uuid.UUID | str):
-        stmt = cls._dump_get_stmt(ident)
-        response = await conn.execute(stmt)
-        result = response.mappings().one_or_none()
-
-        return result
-        
-
-    @classmethod
-    async def get_many(cls, conn: AsyncConnection, expression: sa.ColumnExpressionArgument, limit: int, offset: int):
-        stmt = cls._dump_get_many_stmt(expression)
-
-        amount = await cls.count(conn, expression)
-
-        if limit:
-            stmt = stmt.limit(limit)
-
-        if offset:
-            stmt = stmt.offset(offset)
-        
-        response = await conn.execute(stmt)
-
-        result = response.mappings().all()
-        
-        return (result, amount)
-        
-
-    @classmethod
-    async def create(cls, data: list[dict], conn: AsyncConnection):
-        stmt = cls._dump_create_stmt(
-            data
-        )
-
-        await conn.execute(stmt)
+class Base(DeclarativeBase, CRUDMixin): ...
 
 
-    @classmethod
-    async def update(cls, conn: AsyncConnection, ident: uuid.UUID | str, data: dict[str, t.Any]):
-        stmt = cls._dump_update_stmt(ident, data)
-        await conn.execute(stmt)
-
-
-    @classmethod
-    async def delete(cls, conn: AsyncConnection, ident: uuid.UUID | str):
-        stmt = cls._dump_delete_stmt(ident)
-        await conn.execute(stmt)
-
-
-    @classmethod
-    async def count(cls, conn: AsyncConnection, expression: sa.ColumnExpressionArgument | None = None):
-        if isinstance(expression, sa.ColumnElement):
-
-            stmt = sa.select(sa.func.count()).select_from(cls).where(expression)
-
-            return (await conn.execute(stmt)).scalar_one()
-
-        else:
-            return (await conn.execute(sa.select(sa.func.count()).select_from(cls).distinct())).scalar_one()
-
-
-    @classmethod
-    def _get_column(cls, ident: str | uuid.UUID):
-        return sa.inspect(cls).primary_key[0]
-
-
-    @classmethod
-    def _dump_create_stmt(cls, data: list[dict[str, t.Any]]):
-        return sa.insert(cls).values(
-            data
-        )
-
-
-    @classmethod
-    def _dump_get_stmt(cls, ident: str | uuid.UUID):
-        return sa.select(cls).where(
-            cls._get_column(ident) == ident
-        )
-
-
-    @classmethod
-    def _dump_get_many_stmt(cls, expression: sa.ColumnExpressionArgument):
-        return sa.select(cls).filter(expression)
-    
-
-    @classmethod
-    def _dump_update_stmt(cls, ident: str | uuid.UUID, data: dict[str, t.Any]):
-        return sa.update(cls).where(
-            cls._get_column(ident) == ident
-        ).values(
-            **data
-        )
-
-
-    @classmethod
-    def _dump_delete_stmt(cls, ident: str | uuid.UUID):
-        return sa.delete(cls).where(
-            cls._get_column(ident) == ident
-        )
-
-
-class WelderModel(Base):
-    __tablename__ = "welder_table"
+class PersonalModel(Base):
+    __tablename__ = "personal_table"
 
     ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
-    kleymo: Mapped[str] = sa.Column(sa.String(4), unique=True)
-    name: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
+    kleymo: Mapped[str | None] = sa.Column(sa.String(4), unique=True, nullable=True)
+    name: Mapped[str] = sa.Column(sa.String())
     birthday: Mapped[str | None] = sa.Column(sa.Date(), nullable=True)
     sicil: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
     passport_number: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
     nation: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
     status: Mapped[str] = sa.Column(sa.SMALLINT, default=0)
-    
-    certifications: Mapped[list["WelderCertificationModel"]] = relationship("WelderCertificationModel", back_populates="welder")
-    ndts: Mapped[list["NDTModel"]] = relationship("NDTModel", back_populates="welder")
 
     __table_args__ = (
-        Index("welder_ident_idx", ident),
-        Index("welder_kleymo_idx", kleymo),
+        Index("personal_ident_idx", ident),
+        Index("personal_kleymo_idx", kleymo),
         Index("name_idx", name),
     )
 
@@ -144,23 +40,23 @@ class WelderModel(Base):
     @classmethod
     def _dump_get_many_stmt(cls, expression: sa.ColumnExpressionArgument):
         return sa.select(cls).join(
-            WelderCertificationModel
+            PersonalCertificationModel
         ).filter(expression).distinct()
 
 
     @classmethod
     def _get_column(cls, ident: str | uuid.UUID) -> attributes.InstrumentedAttribute:
         if is_uuid(ident):
-            return WelderModel.ident
+            return PersonalModel.ident
         
-        return WelderModel.kleymo
+        return PersonalModel.kleymo
 
 
-class WelderCertificationModel(Base):
-    __tablename__ = "welder_certification_table"
+class PersonalCertificationModel(Base):
+    __tablename__ = "personal_certification_table"
 
     ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
-    kleymo: Mapped[str] = sa.Column(sa.String(4), sa.ForeignKey("welder_table.kleymo", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    kleymo: Mapped[str] = sa.Column(sa.String(4), sa.ForeignKey("personal_table.kleymo", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     job_title: Mapped[str] = sa.Column(sa.String(), nullable=True)
     certification_number: Mapped[str] = sa.Column(sa.String(), nullable=False)
     certification_date: Mapped[date] = sa.Column(sa.Date(), nullable=False)
@@ -192,7 +88,6 @@ class WelderCertificationModel(Base):
     details_diameter_before: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
     welding_equipment: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
 
-    welder: Mapped[WelderModel] = relationship("WelderModel", back_populates="certifications")
 
     __table_args__ = (
         UniqueConstraint(
@@ -202,8 +97,8 @@ class WelderCertificationModel(Base):
             "expiration_date_fact", 
             "insert"
         ),
-        Index("welder_certification_ident_idx", ident),
-        Index("welder_certification_kleymo_idx", kleymo),
+        Index("personal_certification_ident_idx", ident),
+        Index("personal_certification_kleymo_idx", kleymo),
         Index("certification_idx", certification_number, certification_date, expiration_date_fact),
         Index("method_idx", method),
         Index("gtd_idx", gtd),
@@ -220,7 +115,7 @@ class NDTModel(Base):
     __tablename__ = "ndt_table"
     
     ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
-    kleymo: Mapped[str] = sa.Column(sa.String(4), sa.ForeignKey("welder_table.kleymo", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    kleymo: Mapped[str] = sa.Column(sa.String(4), sa.ForeignKey("personal_table.kleymo", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     company: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
     subcompany: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
     project: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
@@ -230,8 +125,6 @@ class NDTModel(Base):
     total_ndt: Mapped[float | None] = sa.Column(sa.Float(), nullable=False, default=0)
     accepted: Mapped[float | None] = sa.Column(sa.Float(), nullable=False, default=0)
     rejected: Mapped[float | None] = sa.Column(sa.Float(), nullable=False, default=0)
-    
-    welder: Mapped[WelderModel] = relationship("WelderModel", back_populates="ndts")
 
 
     __table_args__ = (

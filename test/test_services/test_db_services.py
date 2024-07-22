@@ -9,18 +9,18 @@ from shemas import *
 
 
 @pytest.mark.asyncio
-class TestWelderDBService(BaseTestDBService):
-    service = WelderDBService(AsyncSession(engine))
-    __create_shema__ = CreateWelderShema
-    __update_shema__ = UpdateWelderShema
+class TestPersonalDBService(BaseTestDBService):
+    service = PersonalDBService(AsyncSession(engine))
+    __create_shema__ = CreatePersonalShema
+    __update_shema__ = UpdatePersonalShema
 
 
-    @pytest.mark.usefixtures('welders')
-    async def test_add(self, welders: list[WelderShema]) -> None:
-        await super().test_add(welders)
+    @pytest.mark.usefixtures('personals')
+    async def test_add(self, personals: list[PersonalShema]) -> None:
+        await super().test_add(personals)
 
 
-    @pytest.mark.usefixtures('welders')
+    @pytest.mark.usefixtures('personals')
     @pytest.mark.parametrize(
             "attr, index",
             [
@@ -30,8 +30,8 @@ class TestWelderDBService(BaseTestDBService):
                 ("ident", 80)
             ]
     )
-    async def test_get(self, attr: str, index: int, welders: list[WelderShema]) -> None:
-        await super().test_get(attr, welders[index])
+    async def test_get(self, attr: str, index: int, personals: list[PersonalShema]) -> None:
+        await super().test_get(attr, personals[index])
 
     
     @pytest.mark.parametrize(
@@ -57,34 +57,34 @@ class TestWelderDBService(BaseTestDBService):
         await super().test_fail_update(ident, data, ValidationError)
 
 
-    @pytest.mark.usefixtures('welders')
+    @pytest.mark.usefixtures('personals')
     @pytest.mark.parametrize(
             "index",
             [0, 34, 65, 1, 88, 90]
     )
-    async def test_delete(self, welders: list[WelderShema], index: int) -> None:
-        await super().test_delete(welders[index])
+    async def test_delete(self, personals: list[PersonalShema], index: int) -> None:
+        await super().test_delete(personals[index])
 
 
 @pytest.mark.asyncio
-class TestWelderCertificationDBService(BaseTestDBService):
-    service = WelderCertificationDBService(AsyncSession(engine))
-    __create_shema__ = CreateWelderCertificationShema
-    __update_shema__ = UpdateWelderCertificationShema
+class TestPersonalCertificationDBService(BaseTestDBService):
+    service = PersonalCertificationDBService(AsyncSession(engine))
+    __create_shema__ = CreatePersonalCertificationShema
+    __update_shema__ = UpdatePersonalCertificationShema
 
 
-    @pytest.mark.usefixtures('welder_certifications')
-    async def test_add(self, welder_certifications: list[WelderCertificationShema]) -> None:
-        await super().test_add(welder_certifications)
+    @pytest.mark.usefixtures('personal_certifications')
+    async def test_add(self, personal_certifications: list[PersonalCertificationShema]) -> None:
+        await super().test_add(personal_certifications)
 
 
-    @pytest.mark.usefixtures('welder_certifications')
+    @pytest.mark.usefixtures('personal_certifications')
     @pytest.mark.parametrize(
             "index",
             [1, 7, 31, 80]
     )
-    async def test_get(self, index: int, welder_certifications: list[WelderCertificationShema]) -> None:
-        await super().test_get("ident", welder_certifications[index])
+    async def test_get(self, index: int, personal_certifications: list[PersonalCertificationShema]) -> None:
+        await super().test_get("ident", personal_certifications[index])
 
 
     @pytest.mark.parametrize(
@@ -113,13 +113,13 @@ class TestWelderCertificationDBService(BaseTestDBService):
         await super().test_fail_update(ident, data, exception)
 
 
-    @pytest.mark.usefixtures('welder_certifications')
+    @pytest.mark.usefixtures('personal_certifications')
     @pytest.mark.parametrize(
             "index",
             [0, 34, 65, 1, 88, 90]
     )
-    async def test_delete(self, welder_certifications: list[WelderCertificationShema], index: int) -> None:
-        await super().test_delete(welder_certifications[index])
+    async def test_delete(self, personal_certifications: list[PersonalCertificationShema], index: int) -> None:
+        await super().test_delete(personal_certifications[index])
 
 
 @pytest.mark.asyncio

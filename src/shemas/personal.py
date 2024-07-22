@@ -5,7 +5,7 @@ from pydantic import Field, field_validator
 from naks_library import BaseShema, to_date, is_kleymo
 
 
-class BaseWelderShema(BaseShema):
+class BasePersonalShema(BaseShema):
     __fields_ignore__ = ["ident"]
     
     kleymo: str | None = Field(default=None)
@@ -54,7 +54,7 @@ class BaseWelderShema(BaseShema):
         return v
 
 
-class WelderShema(BaseWelderShema):
+class PersonalShema(BasePersonalShema):
     ident: UUID
     kleymo: str
     name: str
@@ -70,8 +70,8 @@ class WelderShema(BaseWelderShema):
         raise ValueError(f"Invalid kleymo: {v}")
 
 
-class CreateWelderShema(WelderShema):
+class CreatePersonalShema(PersonalShema):
     ident: UUID = Field(default_factory=uuid4)
 
 
-class UpdateWelderShema(BaseWelderShema): ...
+class UpdatePersonalShema(BasePersonalShema): ...

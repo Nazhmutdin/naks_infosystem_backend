@@ -1,21 +1,21 @@
-from src.shemas.welder import WelderShema, CreateWelderShema, UpdateWelderShema
-from src.shemas.welder_certification import WelderCertificationShema, CreateWelderCertificationShema, UpdateWelderCertificationShema
+from src.shemas.personal import PersonalShema, CreatePersonalShema, UpdatePersonalShema
+from src.shemas.personal_certification import PersonalCertificationShema, CreatePersonalCertificationShema, UpdatePersonalCertificationShema
 from src.shemas.ndt import NDTShema, CreateNDTShema, UpdateNDTShema
-from src.shemas.request_shemas import BaseRequestShema, WelderCertificationRequestShema, WelderRequestShema, NDTRequestShema
+from src.shemas.request_shemas import BaseRequestShema, PersonalCertificationRequestShema, PersonalRequestShema, NDTRequestShema
 
 
 __all__: list[str] = [
-    "WelderShema",
-    "CreateWelderShema",
-    "UpdateWelderShema",
-    "WelderCertificationShema",
-    "CreateWelderCertificationShema",
-    "UpdateWelderCertificationShema",
+    "PersonalShema",
+    "CreatePersonalShema",
+    "UpdatePersonalShema",
+    "PersonalCertificationShema",
+    "CreatePersonalCertificationShema",
+    "UpdatePersonalCertificationShema",
     "NDTShema",
     "CreateNDTShema",
     "UpdateNDTShema",
     "BaseRequestShema",
-    "WelderCertificationRequestShema",
-    "WelderRequestShema",
+    "PersonalCertificationRequestShema",
+    "PersonalRequestShema",
     "NDTRequestShema",
 ]

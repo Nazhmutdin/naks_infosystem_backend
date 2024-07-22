@@ -19,10 +19,10 @@ __all__ = [
 ]
 
 
-class WelderCertificationRequestShema(BaseRequestShema):
+class PersonalCertificationRequestShema(BaseRequestShema):
     __and_model_columns__ = ["insert", "method", "certification_date", "expiration_date", "expiration_date_fact"]
     __or_model_columns__ = ["ident", "kleymo", "certification_number"]
-    __models__ = [WelderCertificationModel]
+    __models__ = [PersonalCertificationModel]
 
     idents: InFilter | None = Field(default=None, serialization_alias="ident")
     kleymos: InFilter | None = Field(default=None, serialization_alias="kleymo")
@@ -152,10 +152,10 @@ class WelderCertificationRequestShema(BaseRequestShema):
         return v
 
 
-class WelderRequestShema(WelderCertificationRequestShema):
-    __and_model_columns__ = WelderCertificationRequestShema.__and_model_columns__ + ["name"]
+class PersonalRequestShema(PersonalCertificationRequestShema):
+    __and_model_columns__ = PersonalCertificationRequestShema.__and_model_columns__ + ["name"]
     __or_model_columns__ = ["ident", "kleymo", "certification_number"]
-    __models__ = [WelderModel, WelderCertificationModel]
+    __models__ = [PersonalModel, PersonalCertificationModel]
 
     names: ILikeAnyFilter | None = Field(default=None, serialization_alias="expiration_date_fact")
     
