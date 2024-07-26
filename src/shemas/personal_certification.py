@@ -2,27 +2,23 @@ from uuid import UUID, uuid4
 from datetime import date
 
 from pydantic import Field, field_validator
-from naks_library import BaseShema, to_date, is_kleymo
+from naks_library import BaseShema, to_date
 
 
 class BasePersonalCertificationShema(BaseShema):
-    __fields_ignore__ = ["ident"]
-    
-    kleymo: str | None = Field(default=None)
+    personal_ident: UUID | None = Field(default=None)
     job_title: str | None = Field(default=None)
     certification_number: str | None = Field(default=None)
     certification_date: date | None = Field(default=None)
     expiration_date: date | None = Field(default=None)
     expiration_date_fact: date | None = Field(default=None)
     insert: str | None = Field(default=None)
-    certification_type: str | None = Field(default=None)
     company: str | None = Field(default=None)
     gtd: list[str] | None = Field(default=None)
     method: str | None = Field(default=None)
     details_type: list[str] | None = Field(default=None)
     joint_type: list[str] | None = Field(default=None)
     welding_materials_groups: list[str] | None = Field(default=None)
-    welding_materials: str | None = Field(default=None)
     details_thikness_from: float | None = Field(default=None)
     details_thikness_before: float | None = Field(default=None)
     outer_diameter_from: float | None = Field(default=None)
@@ -32,25 +28,8 @@ class BasePersonalCertificationShema(BaseShema):
     rod_diameter_from: float | None = Field(default=None)
     rod_diameter_before: float | None = Field(default=None)
     rod_axis_position: str | None = Field(default=None)
-    weld_type: str | None = Field(default=None)
-    joint_layer: str | None = Field(default=None)
-    sdr: str | None = Field(default=None)
-    automation_level: str | None = Field(default=None)
     details_diameter_from: float | None = Field(default=None)
     details_diameter_before: float | None = Field(default=None)
-    welding_equipment: str | None = Field(default=None)
-
-
-    @field_validator("kleymo")
-    @classmethod
-    def validate_kleymo(cls, v: str | None):
-        if v == None:
-            return None
-        
-        if is_kleymo(v):
-            return v
-        
-        raise ValueError(f"Invalid kleymo: {v}")
     
     
     @field_validator("certification_date", "expiration_date", "expiration_date_fact", mode="before")
@@ -64,21 +43,14 @@ class BasePersonalCertificationShema(BaseShema):
 
 class PersonalCertificationShema(BasePersonalCertificationShema):
     ident: UUID
-    kleymo: str
+    personal_ident: UUID
+    job_title: str
     certification_number: str
     certification_date: date
     expiration_date: date
     expiration_date_fact: date
-
-
-    @field_validator("kleymo")
-    @classmethod
-    def validate_kleymo(cls, v: str | None):
-        
-        if is_kleymo(v):
-            return v
-        
-        raise ValueError(f"Invalid kleymo: {v}")
+    company: str
+    gtd: list[str]
     
     
     @field_validator("certification_date", "expiration_date", "expiration_date_fact", mode="before")

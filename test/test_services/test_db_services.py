@@ -4,6 +4,7 @@ from pydantic import ValidationError
 import pytest
 
 from services.db_services import *
+from src.utils.DTOs import *
 from database import engine
 from shemas import *
 
@@ -11,6 +12,7 @@ from shemas import *
 @pytest.mark.asyncio
 class TestPersonalDBService(BaseTestDBService):
     service = PersonalDBService(AsyncSession(engine))
+    __dto__ = PersonalData
     __create_shema__ = CreatePersonalShema
     __update_shema__ = UpdatePersonalShema
 
@@ -38,8 +40,8 @@ class TestPersonalDBService(BaseTestDBService):
         "ident, data",
         [
             ("b322c9931e85407d8aa4a7463cf78d79", {"name": "dsdsds", "birthday": "15.12.1995"}),
-            ("dc20817ed3844660a69b5c89d7df15ac", {"passport_number": "T15563212", "sicil": "1585254"}),
-            ("d00b26c65fdf4a819c5065e301dd81dd", {"nation": "RUS", "status": 1}),
+            ("dc20817ed3844660a69b5c89d7df15ac", {"passport_number": "T15563212"}),
+            ("d00b26c65fdf4a819c5065e301dd81dd", {"nation": "RUS"}),
         ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
@@ -69,6 +71,7 @@ class TestPersonalDBService(BaseTestDBService):
 @pytest.mark.asyncio
 class TestPersonalCertificationDBService(BaseTestDBService):
     service = PersonalCertificationDBService(AsyncSession(engine))
+    __dto__ = PersonalCertificationData
     __create_shema__ = CreatePersonalCertificationShema
     __update_shema__ = UpdatePersonalCertificationShema
 
@@ -91,7 +94,7 @@ class TestPersonalCertificationDBService(BaseTestDBService):
         "ident, data",
         [
             ("cccba2a0ea9047c8837691a740513f6d", {"welding_materials_groups": ["dsdsds"], "certification_date": "15.12.1995"}),
-            ("422786ffabd54d74867a8f34950ee0b5", {"job_title": "ппмфва", "kleymo": "11F9", "expiration_date": "1990-05-15"}),
+            ("422786ffabd54d74867a8f34950ee0b5", {"job_title": "ппмфва", "expiration_date": "1990-05-15"}),
             ("71c20a79706d4fb28f7b84e94881565c", {"insert": "В1", "company": "asasas", "expiration_date_fact": "2025-10-20"}),
             ("435a9de3ade64c38b316dd08c3c7bc7c", {"connection_type": "gggg", "outer_diameter_from": 11.65, "details_type": ["2025-10-20", "ffff"]}),
         ]
@@ -106,7 +109,6 @@ class TestPersonalCertificationDBService(BaseTestDBService):
             ("65ea5301573b4e8e8c114c4385a2a5a8", {"certification_date": "dsdsds"}, ValidationError),
             ("1840a50837784bf9bbf1b282c1fcfb49", {"expiration_date": "T15563212"}, ValidationError),
             ("06beeb64be754167a251e7f756a1d2be", {"expiration_date_fact": "RUS"}, ValidationError),
-            ("435a9de3ade64c38b316dd08c3c7bc7c", {"kleymo": "RUS"}, ValidationError),
         ]
     )
     async def test_fail_update(self, ident: str, data: dict, exception) -> None:
@@ -125,6 +127,7 @@ class TestPersonalCertificationDBService(BaseTestDBService):
 @pytest.mark.asyncio
 class TestNDTDBService(BaseTestDBService):
     service = NDTDBService(AsyncSession(engine))
+    __dto__ = NDTData
     __create_shema__ = CreateNDTShema
     __update_shema__ = UpdateNDTShema
 
@@ -146,9 +149,9 @@ class TestNDTDBService(BaseTestDBService):
     @pytest.mark.parametrize(
         "ident, data",
         [
-            ("b02dd9d6740b403b8853b2d50917a20f", {"kleymo": "11F9", "company": "adsdsad"}),
+            ("b02dd9d6740b403b8853b2d50917a20f", {"company": "adsdsad"}),
             ("0164e678f8ae4acaa3a9921f25edf797", {"subcompany": "ппмffфва", "welding_date": "1990-05-15"}),
-            ("4a71c969b3e1464b8951ed987a55ed90", {"total_welded": 0.5, "accepted": 5.36}),
+            ("4a71c969b3e1464b8951ed987a55ed90", {"total_welded": 0.5, "total_accepted": 5.36}),
         ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
@@ -159,7 +162,6 @@ class TestNDTDBService(BaseTestDBService):
         "ident, data, exception",
         [
             ("4a71c969b3e1464b8951ed987a55ed90", {"welding_date": "dsdsds"}, ValidationError),
-            ("14130c3550454d0faad45f15bd88993f", {"kleymo": "asdd"}, ValidationError)
         ]
     )
     async def test_fail_update(self, ident: str, data: dict, exception) -> None:

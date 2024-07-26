@@ -1,8 +1,8 @@
 """init migration
 
-Revision ID: c904bb51a304
+Revision ID: 9285e030bb0f
 Revises: 
-Create Date: 2024-07-22 14:41:25.695002
+Create Date: 2024-07-26 15:27:38.719241
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "c904bb51a304"
+revision: str = "9285e030bb0f"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,10 +27,9 @@ def upgrade() -> None:
         sa.Column("kleymo", sa.String(length=4), nullable=True),
         sa.Column("name", sa.String(), nullable=True),
         sa.Column("birthday", sa.Date(), nullable=True),
-        sa.Column("sicil", sa.String(), nullable=True),
         sa.Column("passport_number", sa.String(), nullable=True),
+        sa.Column("exp_age", sa.Integer(), nullable=True),
         sa.Column("nation", sa.String(), nullable=True),
-        sa.Column("status", sa.SMALLINT(), nullable=True),
         sa.PrimaryKeyConstraint("ident"),
         sa.UniqueConstraint("kleymo"),
     )
@@ -44,7 +43,7 @@ def upgrade() -> None:
     op.create_table(
         "ndt_table",
         sa.Column("ident", sa.UUID(), nullable=False),
-        sa.Column("kleymo", sa.String(length=4), nullable=False),
+        sa.Column("personal_ident", sa.UUID(), nullable=False),
         sa.Column("company", sa.String(), nullable=True),
         sa.Column("subcompany", sa.String(), nullable=True),
         sa.Column("project", sa.String(), nullable=True),
@@ -52,17 +51,17 @@ def upgrade() -> None:
         sa.Column("ndt_type", sa.String(), nullable=True),
         sa.Column("total_welded", sa.Float(), nullable=False),
         sa.Column("total_ndt", sa.Float(), nullable=False),
-        sa.Column("accepted", sa.Float(), nullable=False),
-        sa.Column("rejected", sa.Float(), nullable=False),
+        sa.Column("total_accepted", sa.Float(), nullable=False),
+        sa.Column("total_rejected", sa.Float(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["kleymo"],
-            ["personal_table.kleymo"],
+            ["personal_ident"],
+            ["personal_table.ident"],
             onupdate="CASCADE",
             ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("ident"),
         sa.UniqueConstraint(
-            "kleymo",
+            "personal_ident",
             "company",
             "subcompany",
             "project",
@@ -70,39 +69,38 @@ def upgrade() -> None:
             "ndt_type",
         ),
     )
-    op.create_index("accepted_idx", "ndt_table", ["accepted"], unique=False)
     op.create_index("ndt_ident_idx", "ndt_table", ["ident"], unique=False)
     op.create_index(
-        "ndt_idx",
-        "ndt_table",
-        ["kleymo", "company", "subcompany", "project"],
-        unique=False,
+        "ndt_welding_date_idx", "ndt_table", ["welding_date"], unique=False
     )
-    op.create_index("rejected_idx", "ndt_table", ["rejected"], unique=False)
+    op.create_index(
+        "total_accepted_idx", "ndt_table", ["total_accepted"], unique=False
+    )
     op.create_index("total_ndt_idx", "ndt_table", ["total_ndt"], unique=False)
+    op.create_index(
+        "total_rejectedidx", "ndt_table", ["total_rejected"], unique=False
+    )
     op.create_index(
         "total_welded_idx", "ndt_table", ["total_welded"], unique=False
     )
     op.create_table(
         "personal_certification_table",
         sa.Column("ident", sa.UUID(), nullable=False),
-        sa.Column("kleymo", sa.String(length=4), nullable=False),
+        sa.Column("personal_ident", sa.UUID(), nullable=False),
         sa.Column("job_title", sa.String(), nullable=True),
         sa.Column("certification_number", sa.String(), nullable=False),
         sa.Column("certification_date", sa.Date(), nullable=False),
         sa.Column("expiration_date", sa.Date(), nullable=False),
         sa.Column("expiration_date_fact", sa.Date(), nullable=False),
         sa.Column("insert", sa.String(), nullable=True),
-        sa.Column("certification_type", sa.String(), nullable=True),
-        sa.Column("company", sa.String(), nullable=True),
-        sa.Column("gtd", sa.ARRAY(sa.String()), nullable=True),
+        sa.Column("company", sa.String(), nullable=False),
+        sa.Column("gtd", sa.ARRAY(sa.String()), nullable=False),
         sa.Column("method", sa.String(), nullable=True),
         sa.Column("details_type", sa.ARRAY(sa.String()), nullable=True),
         sa.Column("joint_type", sa.ARRAY(sa.String()), nullable=True),
         sa.Column(
             "welding_materials_groups", sa.ARRAY(sa.String()), nullable=True
         ),
-        sa.Column("welding_materials", sa.String(), nullable=True),
         sa.Column("details_thikness_from", sa.Float(), nullable=True),
         sa.Column("details_thikness_before", sa.Float(), nullable=True),
         sa.Column("outer_diameter_from", sa.Float(), nullable=True),
@@ -112,22 +110,16 @@ def upgrade() -> None:
         sa.Column("rod_diameter_from", sa.Float(), nullable=True),
         sa.Column("rod_diameter_before", sa.Float(), nullable=True),
         sa.Column("rod_axis_position", sa.String(), nullable=True),
-        sa.Column("weld_type", sa.String(), nullable=True),
-        sa.Column("joint_layer", sa.String(), nullable=True),
-        sa.Column("sdr", sa.String(), nullable=True),
-        sa.Column("automation_level", sa.String(), nullable=True),
         sa.Column("details_diameter_from", sa.Float(), nullable=True),
         sa.Column("details_diameter_before", sa.Float(), nullable=True),
-        sa.Column("welding_equipment", sa.String(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["kleymo"],
-            ["personal_table.kleymo"],
+            ["personal_ident"],
+            ["personal_table.ident"],
             onupdate="CASCADE",
             ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("ident"),
         sa.UniqueConstraint(
-            "kleymo",
             "certification_number",
             "certification_date",
             "expiration_date_fact",
@@ -138,6 +130,12 @@ def upgrade() -> None:
         "certification_idx",
         "personal_certification_table",
         ["certification_number", "certification_date", "expiration_date_fact"],
+        unique=False,
+    )
+    op.create_index(
+        "certification_personal_ident_idx",
+        "personal_certification_table",
+        ["personal_ident"],
         unique=False,
     )
     op.create_index(
@@ -177,12 +175,6 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        "personal_certification_kleymo_idx",
-        "personal_certification_table",
-        ["kleymo"],
-        unique=False,
-    )
-    op.create_index(
         "rod_diameter_before_idx",
         "personal_certification_table",
         ["rod_diameter_before"],
@@ -206,10 +198,6 @@ def downgrade() -> None:
         "rod_diameter_before_idx", table_name="personal_certification_table"
     )
     op.drop_index(
-        "personal_certification_kleymo_idx",
-        table_name="personal_certification_table",
-    )
-    op.drop_index(
         "personal_certification_ident_idx",
         table_name="personal_certification_table",
     )
@@ -229,15 +217,19 @@ def downgrade() -> None:
         table_name="personal_certification_table",
     )
     op.drop_index(
+        "certification_personal_ident_idx",
+        table_name="personal_certification_table",
+    )
+    op.drop_index(
         "certification_idx", table_name="personal_certification_table"
     )
     op.drop_table("personal_certification_table")
     op.drop_index("total_welded_idx", table_name="ndt_table")
+    op.drop_index("total_rejectedidx", table_name="ndt_table")
     op.drop_index("total_ndt_idx", table_name="ndt_table")
-    op.drop_index("rejected_idx", table_name="ndt_table")
-    op.drop_index("ndt_idx", table_name="ndt_table")
+    op.drop_index("total_accepted_idx", table_name="ndt_table")
+    op.drop_index("ndt_welding_date_idx", table_name="ndt_table")
     op.drop_index("ndt_ident_idx", table_name="ndt_table")
-    op.drop_index("accepted_idx", table_name="ndt_table")
     op.drop_table("ndt_table")
     op.drop_index("personal_kleymo_idx", table_name="personal_table")
     op.drop_index("personal_ident_idx", table_name="personal_table")

@@ -27,7 +27,7 @@ markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
 mypy-extensions==1.0.0
-naks_library @ https://github.com/Nazhmutdin/naks_library/archive/master.zip#sha256=c0e526870202e0143deaefe7ea6d765a87bfadf15799f51564ee9fe990ed1b62
+naks_library @ https://github.com/Nazhmutdin/naks_library/archive/master.zip
 orjson==3.10.3
 packaging==24.0
 pathspec==0.12.1

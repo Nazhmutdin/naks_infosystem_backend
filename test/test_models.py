@@ -30,20 +30,21 @@ class BaseTestModel[Shema: BaseShema]:
         async with self.uow as uow:
 
             insert_data = [
-                el.model_dump() for el in data
+                el.__dict__ for el in data
             ]
             
             await self.__model__.create(
                 insert_data,
-                conn=uow.conn
+                conn=uow.session
             )
 
             for el in data:
                 el = self.__shema__.model_validate(el, from_attributes=True)
-                result = self.__shema__.model_validate((await self.__model__.get(uow.conn, el.ident)), from_attributes=True)
+                res = await self.__model__.get(uow.session, el.ident)
+                result = self.__shema__.model_validate(res, from_attributes=True)
                 assert result == el
 
-            assert await self.__model__.count(uow.conn) == len(data)
+            assert await self.__model__.count(uow.session) == len(data)
 
             await uow.commit()
 
@@ -64,7 +65,7 @@ class BaseTestModel[Shema: BaseShema]:
     async def test_get(self, attr: str, el: Shema) -> None:
 
         async with self.uow as uow:
-            res = await self.__model__.get(uow.conn, getattr(el, attr))
+            res = await self.__model__.get(uow.session, getattr(el, attr))
 
             assert self.__shema__.model_validate(res, from_attributes=True) == el
 
@@ -74,7 +75,7 @@ class BaseTestModel[Shema: BaseShema]:
         async with self.uow as uow:
 
             res = await self.__model__.get_many(
-                uow.conn,
+                uow.session,
                 request_shema.dump_expression(),
                 limit=request_shema.limit,
                 offset=request_shema.offset
@@ -86,9 +87,9 @@ class BaseTestModel[Shema: BaseShema]:
     async def test_update(self, ident: str, data: dict[str, t.Any]) -> None:
         async with self.uow as uow:
 
-            await self.__model__.update(uow.conn, ident, data)
+            await self.__model__.update(uow.session, ident, data)
 
-            res = await self.__model__.get(uow.conn, ident)
+            res = await self.__model__.get(uow.session, ident)
 
             el = self.__shema__.model_validate(res, from_attributes=True)
 
@@ -105,11 +106,11 @@ class BaseTestModel[Shema: BaseShema]:
     async def test_delete(self, item: Shema) -> None:
         async with self.uow as uow:
 
-            await self.__model__.delete(uow.conn, item.ident)
+            await self.__model__.delete(uow.session, item.ident)
 
-            assert not await self.__model__.get(uow.conn, item.ident)
+            assert not await self.__model__.get(uow.session, item.ident)
 
-            await self.__model__.create(item.model_dump(), conn=uow.conn)
+            await self.__model__.create(item.model_dump(), conn=uow.session)
 
             await uow.commit()
 
@@ -161,8 +162,8 @@ class TestPersonalModel(BaseTestModel[PersonalShema]):
         "ident, data",
         [
             ("d6f81d0030a44b21afc6d6cc8d99e13b", {"name": "dsdsds", "birthday": date(1995, 2, 2)}),
-            ("dc20817ed3844660a69b5c89d7df15ac", {"passport_number": "T15563212", "sicil": "1585254"}),
-            ("d00b26c65fdf4a819c5065e301dd81dd", {"nation": "RUS", "status": 1}),
+            ("dc20817ed3844660a69b5c89d7df15ac", {"passport_number": "T15563212", "exp_age": 11}),
+            ("d00b26c65fdf4a819c5065e301dd81dd", {"nation": "RUS", "kleymo": "4G5K"}),
         ]
     )
     async def test_update(self, ident: str, data: dict) -> None:
@@ -221,7 +222,7 @@ class TestPersonalCertificationModel(BaseTestModel[PersonalCertificationShema]):
         "ident, data",
         [
             ("cccba2a0ea9047c8837691a740513f6d", {"welding_materials_groups": ["dsdsds"], "certification_date": date(1984, 1, 7)}),
-            ("422786ffabd54d74867a8f34950ee0b5", {"job_title": "ппмфва", "kleymo": "11F9", "expiration_date": date(1990, 3, 17)}),
+            ("422786ffabd54d74867a8f34950ee0b5", {"job_title": "ппмфва", "expiration_date": date(1990, 3, 17)}),
             ("71c20a79706d4fb28f7b84e94881565c", {"insert": "В1", "company": "asasas", "expiration_date_fact": date(2000, 1, 1)}),
             ("435a9de3ade64c38b316dd08c3c7bc7c", {"connection_type": "gggg", "outer_diameter_from": 11.65, "details_type": ["2025-10-20", "ffff"]}),
         ]
@@ -280,9 +281,9 @@ class TestNDTModel(BaseTestModel[NDTShema]):
     @pytest.mark.parametrize(
         "ident, data",
         [
-            ("7253f55ada5748e2b9d8e486a1d9692d", {"kleymo": "11F9", "company": "adsdsad"}),
+            ("7253f55ada5748e2b9d8e486a1d9692d", {"total_rejected": 11.75, "company": "adsdsad"}),
             ("95b61f9d1b1c4dc2b79cce036d85f527", {"subcompany": "ппмffфва", "welding_date": date(2023, 7, 11)}),
-            ("b02dd9d6740b403b8853b2d50917a20f", {"total_welded": 0.5, "accepted": 5.36}),
+            ("b02dd9d6740b403b8853b2d50917a20f", {"total_welded": 0.5, "total_accepted": 5.36}),
         ]
     )
     async def test_update(self, ident: str, data: dict) -> None:

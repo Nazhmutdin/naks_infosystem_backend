@@ -18,7 +18,7 @@ personal routes
 """
 
 
-@v1_router.post("/personals")
+@v1_router.post("/personal")
 async def add_personal(
     data: CreatePersonalShema = Depends(InputValidationDependency(CreatePersonalShema).execute), 
     session: AsyncSession = Depends(get_session)
@@ -35,7 +35,7 @@ async def add_personal(
     }
 
 
-@v1_router.get("/personals/{ident}")
+@v1_router.get("/personal/{ident}")
 async def get_personal(ident: str = Depends(validate_personal_ident_dependency), session: AsyncSession = Depends(get_session)) -> PersonalShema:
     service = PersonalDBService(session)
 
@@ -53,7 +53,7 @@ async def get_personal(ident: str = Depends(validate_personal_ident_dependency),
     return result
 
 
-@v1_router.post("/personals/select")
+@v1_router.post("/personal/select")
 async def select_personal(
     filters: PersonalRequestShema = Depends(InputValidationDependency(PersonalRequestShema).execute),
     session: AsyncSession = Depends(get_session)
@@ -71,7 +71,7 @@ async def select_personal(
     }
 
 
-@v1_router.patch("/personals/{ident}")
+@v1_router.patch("/personal/{ident}")
 async def update_personal(
     ident: str = Depends(validate_personal_ident_dependency), 
     data: UpdatePersonalShema = Depends(InputValidationDependency(UpdatePersonalShema).execute), 
@@ -89,7 +89,7 @@ async def update_personal(
     }
 
 
-@v1_router.delete("/personals/{ident}")
+@v1_router.delete("/personal/{ident}")
 async def delete_personal(ident: str = Depends(validate_personal_ident_dependency), session: AsyncSession = Depends(get_session)):
     service = PersonalDBService(session)
 
@@ -110,7 +110,7 @@ personal certification routes
 """
 
 
-@v1_router.post("/personal-certifications")
+@v1_router.post("/personal-certification")
 async def add_personal_certification(
     data: CreatePersonalCertificationShema = Depends(InputValidationDependency(CreatePersonalCertificationShema).execute), 
     session: AsyncSession = Depends(get_session)
@@ -128,7 +128,7 @@ async def add_personal_certification(
     }
 
 
-@v1_router.get("/personal-certifications/{ident}")
+@v1_router.get("/personal-certification/{ident}")
 async def get_personal_certification(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> PersonalCertificationShema:
     service = PersonalCertificationDBService(session)
 
@@ -146,7 +146,7 @@ async def get_personal_certification(ident: str = Depends(validate_ident_depende
     return result
 
 
-@v1_router.post("/personal-certifications/select")
+@v1_router.post("/personal-certification/select")
 async def select_personal_certifications(
     filters: PersonalCertificationRequestShema = Depends(InputValidationDependency(PersonalCertificationRequestShema).execute),
     session: AsyncSession = Depends(get_session)
@@ -164,7 +164,7 @@ async def select_personal_certifications(
     }
 
 
-@v1_router.patch("/personal-certifications/{ident}")
+@v1_router.patch("/personal-certification/{ident}")
 async def update_personal_certification( 
     ident: str = Depends(validate_ident_dependency), 
     data: UpdatePersonalCertificationShema = Depends(InputValidationDependency(UpdatePersonalCertificationShema).execute),
@@ -182,7 +182,7 @@ async def update_personal_certification(
     }
 
 
-@v1_router.delete("/personal-certifications/{ident}")
+@v1_router.delete("/personal-certification/{ident}")
 async def delete_personal_certification(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):
     
     service = PersonalCertificationDBService(session)
@@ -204,7 +204,7 @@ ndt routes
 """
 
 
-@v1_router.post("/ndts")
+@v1_router.post("/ndt")
 async def add_ndt(
     data: CreateNDTShema = Depends(InputValidationDependency(CreateNDTShema).execute), 
     session: AsyncSession = Depends(get_session)
@@ -221,7 +221,7 @@ async def add_ndt(
     }
 
 
-@v1_router.get("/ndts/{ident}")
+@v1_router.get("/ndt/{ident}")
 async def get_ndt(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> NDTShema:
     service = NDTDBService(session)
 
@@ -239,7 +239,7 @@ async def get_ndt(ident: str = Depends(validate_ident_dependency), session: Asyn
     return result
 
 
-@v1_router.post("/ndts/select")
+@v1_router.post("/ndt/select")
 async def select_ndts(
     filters: NDTRequestShema = Depends(InputValidationDependency(NDTRequestShema).execute),
     session: AsyncSession = Depends(get_session)
@@ -257,7 +257,7 @@ async def select_ndts(
     }
 
 
-@v1_router.patch("/ndts/{ident}")
+@v1_router.patch("/ndt/{ident}")
 async def update_ndt(
     ident: str = Depends(validate_ident_dependency), 
     data: UpdateNDTShema = Depends(InputValidationDependency(UpdateNDTShema).execute), 
@@ -275,7 +275,7 @@ async def update_ndt(
     }
 
 
-@v1_router.delete("/ndts/{ident}")
+@v1_router.delete("/ndt/{ident}")
 async def delete_ndt(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):    
     service = NDTDBService(session)
 

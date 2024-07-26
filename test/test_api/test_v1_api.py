@@ -65,7 +65,7 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalShema]):
         personal = personals[index]
 
         return super().test_add(
-            f"/v1/personals",
+            f"/v1/personal",
             personal
         )
 
@@ -79,7 +79,7 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalShema]):
         personal = personals[index]
 
         return super().test_get(
-            f"/v1/personals/{personal.ident.hex}",
+            f"/v1/personal/{personal.ident.hex}",
             personal
         )
 
@@ -93,7 +93,7 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalShema]):
         personal = personals[index]
 
         return super().test_get(
-            f"/v1/personals/{personal.kleymo}",
+            f"/v1/personal/{personal.kleymo}",
             personal
         )
     
@@ -122,7 +122,7 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalShema]):
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
-            f"v1/personals/{ident}",
+            f"v1/personal/{ident}",
             UpdatePersonalShema.model_validate(data)
         )
 
@@ -136,7 +136,7 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalShema]):
         personal = personals[index]
 
         return super().test_delete(
-            f"/v1/personals",
+            f"/v1/personal",
             personal
         )
 
@@ -153,7 +153,7 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalCerti
         certification = personal_certifications[index]
 
         return super().test_add(
-            f"/v1/personal-certifications",
+            f"/v1/personal-certification",
             certification
         )
 
@@ -167,7 +167,7 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalCerti
         certification = personal_certifications[index]
 
         return super().test_get(
-            f"/v1/personal-certifications/{certification.ident.hex}",
+            f"/v1/personal-certification/{certification.ident.hex}",
             certification
         )
     
@@ -202,7 +202,7 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalCerti
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
-            f"/v1/personal-certifications/{ident}",
+            f"/v1/personal-certification/{ident}",
             UpdatePersonalCertificationShema.model_validate(data)
         )
 
@@ -216,7 +216,7 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalCerti
         certification = personal_certifications[index]
 
         return super().test_delete(
-            f"/v1/personal-certifications",
+            f"/v1/personal-certification",
             certification
         )
 
@@ -233,7 +233,7 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
         ndt = ndts[index]
 
         return super().test_add(
-            f"/v1/ndts",
+            f"/v1/ndt",
             ndt
         )
 
@@ -247,7 +247,7 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
         ndt = ndts[index]
 
         return super().test_get(
-            f"/v1/ndts/{ndt.ident.hex}",
+            f"/v1/ndt/{ndt.ident.hex}",
             ndt
         )
     
@@ -276,7 +276,7 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
-            f"/v1/ndts/{ident}",
+            f"/v1/ndt/{ident}",
             UpdateNDTShema.model_validate(data)
         )
 
@@ -290,6 +290,6 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
         ndt = ndts[index]
 
         return super().test_delete(
-            f"/v1/ndts",
+            f"/v1/ndt",
             ndt
         )
