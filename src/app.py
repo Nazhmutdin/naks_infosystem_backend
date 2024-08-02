@@ -8,10 +8,12 @@ app = FastAPI()
 
 
 origins = [
-    "http://localhost:8000",
-    "https://localhost:8000",
-    "https://api.rhi-qa-infosystem.ru:443",
-    "http://api.rhi-qa-infosystem.ru:80"
+    "http://localhost:5173",
+    "https://localhost:5173",
+    "http://rhi-qa-infosystem.ru",
+    "https://rhi-qa-infosystem.ru",
+    "http://api.rhi-qa-infosystem.ru",
+    "https://api.rhi-qa-infosystem.ru"
 ]
 
 app.add_middleware(
