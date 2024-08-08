@@ -1,118 +1,12 @@
-from datetime import date
-import typing as t
-
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
-from naks_library import BaseShema, to_date
+from naks_library.testing.base_test_model import BaseTestModel
 import pytest
 
 from src.utils.uows import UOW
+from src.utils.DTOs import *
 from src.database import engine
-from src.shemas import *
 from src.models import *
-
-
-"""
-===================================================================================================================
-repository base test
-===================================================================================================================
-"""
-
-
-@pytest.mark.usefixtures("prepare_db")
-class BaseTestModel[Shema: BaseShema]:
-    __shema__: type[BaseShema]
-    __model__: type[Base]
-
-    uow = UOW(AsyncSession(engine))
-
-    async def test_create(self, data: list[Shema]) -> None:
-        async with self.uow as uow:
-
-            insert_data = [
-                el.__dict__ for el in data
-            ]
-            
-            await self.__model__.create(
-                insert_data,
-                conn=uow.session
-            )
-
-            for el in data:
-                el = self.__shema__.model_validate(el, from_attributes=True)
-                res = await self.__model__.get(uow.session, el.ident)
-                result = self.__shema__.model_validate(res, from_attributes=True)
-                assert result == el
-
-            assert await self.__model__.count(uow.session) == len(data)
-
-            await uow.commit()
-
-
-    async def test_create_existing(self, data: Shema) -> None:
-
-        async with self.uow as uow:
-
-            with pytest.raises(IntegrityError):
-                await self.__model__.create(
-                    data.model_dump(),
-                    conn=uow.conn
-                )
-
-            await uow.commit()
-
-
-    async def test_get(self, attr: str, el: Shema) -> None:
-
-        async with self.uow as uow:
-            res = await self.__model__.get(uow.session, getattr(el, attr))
-
-            assert self.__shema__.model_validate(res, from_attributes=True) == el
-
-    
-    async def test_get_many(self, k: int, request_shema: BaseRequestShema) -> None:
-
-        async with self.uow as uow:
-
-            res = await self.__model__.get_many(
-                uow.session,
-                request_shema.dump_expression(),
-                limit=request_shema.limit,
-                offset=request_shema.offset
-            )
-
-            assert len(res[0]) == k
-
-
-    async def test_update(self, ident: str, data: dict[str, t.Any]) -> None:
-        async with self.uow as uow:
-
-            await self.__model__.update(uow.session, ident, data)
-
-            res = await self.__model__.get(uow.session, ident)
-
-            el = self.__shema__.model_validate(res, from_attributes=True)
-
-            for key, value in data.items():
-                if isinstance(getattr(el, key), date):
-                    assert getattr(el, key) == to_date(value, False)
-                    continue
-
-                assert getattr(el, key) == value
-
-            await uow.commit()
-
-
-    async def test_delete(self, item: Shema) -> None:
-        async with self.uow as uow:
-
-            await self.__model__.delete(uow.session, item.ident)
-
-            assert not await self.__model__.get(uow.session, item.ident)
-
-            await self.__model__.create(item.model_dump(), conn=uow.session)
-
-            await uow.commit()
+from funcs import test_data
 
 
 """
@@ -123,21 +17,23 @@ Personal repository test
 
 
 @pytest.mark.asyncio
-class TestPersonalModel(BaseTestModel[PersonalShema]):
-    __shema__ = PersonalShema
+class TestPersonalModel(BaseTestModel[PersonalData]):
+    __dto__ = PersonalData
     __model__ = PersonalModel
 
+    uow = UOW(AsyncSession(engine))
+
     @pytest.mark.usefixtures('personals')
-    async def test_create(self, personals: list[PersonalShema]) -> None:
+    async def test_create(self, personals: list[PersonalData]) -> None:
         await super().test_create(personals)
     
 
     @pytest.mark.usefixtures('personals')
     @pytest.mark.parametrize(
         "index",
-        [1, 2, 63, 4, 5, 11]
+        [1, 2, 4, 5, 7]
     )
-    async def test_create_existing(self, personals: list[PersonalShema], index: int) -> None:
+    async def test_create_existing(self, personals: list[PersonalData], index: int) -> None:
         await super().test_create_existing(personals[index])
     
 
@@ -147,12 +43,14 @@ class TestPersonalModel(BaseTestModel[PersonalShema]):
         [
             ("kleymo", 1), 
             ("ident", 7), 
-            ("kleymo", 31), 
-            ("ident", 80)
+            ("kleymo", 3), 
+            ("ident", 4)
         ]
     )
-    async def test_get(self, attr: str, index: int, personals: list[PersonalShema]) -> None:
-        await super().test_get(attr, personals[index])
+    async def test_get(self, attr: str, index: int, personals: list[PersonalData]) -> None:
+        ident = getattr(personals[index], attr)
+
+        await super().test_get(ident, personals[index])
     
 
     async def test_get_many(self) -> None: ...
@@ -160,11 +58,7 @@ class TestPersonalModel(BaseTestModel[PersonalShema]):
 
     @pytest.mark.parametrize(
         "ident, data",
-        [
-            ("d6f81d0030a44b21afc6d6cc8d99e13b", {"name": "dsdsds", "birthday": date(1995, 2, 2)}),
-            ("dc20817ed3844660a69b5c89d7df15ac", {"passport_number": "T15563212", "exp_age": 11}),
-            ("d00b26c65fdf4a819c5065e301dd81dd", {"nation": "RUS", "kleymo": "4G5K"}),
-        ]
+        [(personal.ident, new_personal_data) for personal, new_personal_data in zip(test_data.fake_personals[:5], test_data.fake_personal_generator.generate(5))]
     )
     async def test_update(self, ident: str, data: dict) -> None:
         await super().test_update(ident, data)
@@ -173,10 +67,12 @@ class TestPersonalModel(BaseTestModel[PersonalShema]):
     @pytest.mark.usefixtures('personals')
     @pytest.mark.parametrize(
             "index",
-            [0, 34, 65, 1, 88, 90]
+            [0, 5, 7]
     )
-    async def test_delete(self, personals: list[PersonalShema], index: int) -> None:
-        await super().test_delete(personals[index])
+    async def test_delete(self, personals: list[PersonalData], index: int) -> None:
+        ident = getattr(personals[index], "ident")
+
+        await super().test_delete(ident, personals[index])
 
     
 """
@@ -187,13 +83,14 @@ personals certification repository test
 
 
 @pytest.mark.asyncio
-class TestPersonalCertificationModel(BaseTestModel[PersonalCertificationShema]):
-    __shema__ = PersonalCertificationShema
+class TestPersonalCertificationModel(BaseTestModel[PersonalCertificationData]):
+    __dto__ = PersonalCertificationData
     __model__ = PersonalCertificationModel
 
+    uow = UOW(AsyncSession(engine))
 
     @pytest.mark.usefixtures('personal_certifications')
-    async def test_create(self, personal_certifications: list[PersonalCertificationShema]) -> None:
+    async def test_create(self, personal_certifications: list[PersonalCertificationData]) -> None:
         await super().test_create(personal_certifications)
 
 
@@ -202,8 +99,10 @@ class TestPersonalCertificationModel(BaseTestModel[PersonalCertificationShema]):
         "index",
         [1, 2, 3, 4, 5, 6]
     )
-    async def test_get(self, index: int, personal_certifications: list[PersonalCertificationShema]) -> None:
-        await super().test_get("ident", personal_certifications[index])
+    async def test_get(self, index: int, personal_certifications: list[PersonalCertificationData]) -> None:
+        ident = getattr(personal_certifications[index], "ident")
+
+        await super().test_get(ident, personal_certifications[index])
 
         
     async def test_get_many(self) -> None: ...
@@ -211,21 +110,16 @@ class TestPersonalCertificationModel(BaseTestModel[PersonalCertificationShema]):
 
     @pytest.mark.usefixtures('personal_certifications')
     @pytest.mark.parametrize(
-            "index",
-            [1, 13, 63, 31, 75, 89]
+        "index",
+        [0, 15, 18, 1, 4, 7]
     )
-    async def test_create_existing(self, personal_certifications: list[PersonalCertificationShema], index: int) -> None:
+    async def test_create_existing(self, personal_certifications: list[PersonalCertificationData], index: int) -> None:
         await super().test_create_existing(personal_certifications[index])
 
 
     @pytest.mark.parametrize(
         "ident, data",
-        [
-            ("cccba2a0ea9047c8837691a740513f6d", {"welding_materials_groups": ["dsdsds"], "certification_date": date(1984, 1, 7)}),
-            ("422786ffabd54d74867a8f34950ee0b5", {"job_title": "ппмфва", "expiration_date": date(1990, 3, 17)}),
-            ("71c20a79706d4fb28f7b84e94881565c", {"insert": "В1", "company": "asasas", "expiration_date_fact": date(2000, 1, 1)}),
-            ("435a9de3ade64c38b316dd08c3c7bc7c", {"connection_type": "gggg", "outer_diameter_from": 11.65, "details_type": ["2025-10-20", "ffff"]}),
-        ]
+        [(personal_certification.ident, new_personal_certification_data) for personal_certification, new_personal_certification_data in zip(test_data.fake_personal_certifications[:5], test_data.fake_personal_certification_generator.generate(5))]
     )
     async def test_update(self, ident: str, data: dict) -> None:
         await super().test_update(ident, data)
@@ -234,10 +128,12 @@ class TestPersonalCertificationModel(BaseTestModel[PersonalCertificationShema]):
     @pytest.mark.usefixtures('personal_certifications')
     @pytest.mark.parametrize(
         "index",
-        [0, 34, 65, 1, 88, 90]
+        [0, 15, 18, 1, 4, 7]
     )
-    async def test_delete(self, personal_certifications: list[PersonalCertificationShema], index: int) -> None:
-        await super().test_delete(personal_certifications[index])
+    async def test_delete(self, personal_certifications: list[PersonalCertificationData], index: int) -> None:
+        ident = getattr(personal_certifications[index], "ident")
+
+        await super().test_delete(ident, personal_certifications[index])
 
 
 """
@@ -248,22 +144,25 @@ NDT repository test
 
 
 @pytest.mark.asyncio
-class TestNDTModel(BaseTestModel[NDTShema]):
-    __shema__ = NDTShema
+class TestNDTModel(BaseTestModel[NDTData]):
+    __dto__ = NDTData
     __model__ = NDTModel
 
+    uow = UOW(AsyncSession(engine))
 
     @pytest.mark.usefixtures('ndts')
-    async def test_create(self, ndts: list[NDTShema]) -> None:
+    async def test_create(self, ndts: list[NDTData]) -> None:
         await super().test_create(ndts)
 
 
     @pytest.mark.usefixtures('ndts')
     @pytest.mark.parametrize(
-        "index", [1, 7, 31, 80]
+        "index", [1, 7, 18, 11]
     )
-    async def test_get(self, index: int, ndts: list[NDTShema]) -> None:
-        await super().test_get("ident", ndts[index])
+    async def test_get(self, index: int, ndts: list[NDTData]) -> None:
+        ident = getattr(ndts[index], "ident")
+
+        await super().test_get(ident, ndts[index])
 
         
     async def test_get_many(self) -> None: ...
@@ -272,19 +171,15 @@ class TestNDTModel(BaseTestModel[NDTShema]):
     @pytest.mark.usefixtures('ndts')
     @pytest.mark.parametrize(
         "index",
-        [1, 2, 63, 4, 5, 11]
+        [1, 2, 4, 5, 11]
     )
-    async def test_create_existing(self, ndts: list[NDTShema], index: int) -> None:
+    async def test_create_existing(self, ndts: list[NDTData], index: int) -> None:
         await super().test_create_existing(ndts[index])
 
     
     @pytest.mark.parametrize(
         "ident, data",
-        [
-            ("7253f55ada5748e2b9d8e486a1d9692d", {"total_rejected": 11.75, "company": "adsdsad"}),
-            ("95b61f9d1b1c4dc2b79cce036d85f527", {"subcompany": "ппмffфва", "welding_date": date(2023, 7, 11)}),
-            ("b02dd9d6740b403b8853b2d50917a20f", {"total_welded": 0.5, "total_accepted": 5.36}),
-        ]
+        [(ndt.ident, new_ndt_data) for ndt, new_ndt_data in zip(test_data.fake_ndts[:5], test_data.fake_ndt_generator.generate(5))]
     )
     async def test_update(self, ident: str, data: dict) -> None:
         await super().test_update(ident, data)
@@ -293,7 +188,9 @@ class TestNDTModel(BaseTestModel[NDTShema]):
     @pytest.mark.usefixtures('ndts')
     @pytest.mark.parametrize(
             "index",
-            [0, 34, 65, 1, 88, 90]
+            [0, 4, 3, 1, 17, 11]
     )
-    async def test_delete(self, ndts: list[NDTShema], index: int) -> None:
-        await super().test_delete(ndts[index])
+    async def test_delete(self, ndts: list[NDTData], index: int) -> None:
+        ident = getattr(ndts[index], "ident")
+
+        await super().test_delete(ident, ndts[index])

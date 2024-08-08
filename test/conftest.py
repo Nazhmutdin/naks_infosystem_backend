@@ -6,8 +6,9 @@ from shemas import *
 from database import engine
 from settings import Settings
 from models import Base
+from utils.DTOs import *
 
-from funcs import get_personals, get_personal_certifications, get_ndts
+from funcs import test_data
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -23,15 +24,29 @@ def prepare_db():
 
 
 @pytest.fixture
-def personals() -> list[PersonalShema]:
-    return get_personals()
+def personals() -> list[PersonalData]:
+    return test_data.fake_personals
 
 
 @pytest.fixture
-def personal_certifications() -> list[PersonalCertificationShema]:
-    return get_personal_certifications()
+def personal_dicts() -> list[dict]:
+    return test_data.fake_personals_dicts
 
 
 @pytest.fixture
-def ndts() -> list[NDTShema]:
-    return get_ndts()
+def personal_certifications() -> list[PersonalCertificationData]:
+    return test_data.fake_personal_certifications
+
+
+@pytest.fixture
+def personal_certification_dicts() -> list[dict]:
+    return test_data.fake_personal_certifications_dicts
+
+
+@pytest.fixture
+def ndts() -> list[NDTData]:
+    return test_data.fake_ndts
+
+@pytest.fixture
+def ndt_dicts() -> list[dict]:
+    return test_data.fake_ndts_dicts

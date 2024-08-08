@@ -1,5 +1,6 @@
 from uuid import UUID
 from datetime import date
+from typing import Self
 
 from pydantic.dataclasses import dataclass
 
@@ -10,7 +11,7 @@ __all__ = [
     "NDTData"
 ]
 
-@dataclass
+@dataclass(eq=False)
 class PersonalData:
     ident: UUID
     kleymo: str | None
@@ -21,7 +22,17 @@ class PersonalData:
     nation: str | None
 
 
-@dataclass
+    def __eq__(self, other: Self) -> bool:
+        self_dict = self.__dict__
+
+        for key, value in other.__dict__.items():
+            if self_dict[key] != value:
+                return False
+            
+        return True
+
+
+@dataclass(eq=False)
 class PersonalCertificationData:
     ident: UUID
     personal_ident: UUID
@@ -50,7 +61,17 @@ class PersonalCertificationData:
     details_diameter_before: float | None
 
 
-@dataclass
+    def __eq__(self, other: Self) -> bool:
+        self_dict = self.__dict__
+
+        for key, value in other.__dict__.items():
+            if self_dict[key] != value:
+                return False
+            
+        return True
+
+
+@dataclass(eq=False)
 class NDTData:
     ident: UUID
     personal_ident: UUID
@@ -63,3 +84,13 @@ class NDTData:
     total_ndt: float | None
     total_accepted: float | None
     total_rejected: float | None
+
+
+    def __eq__(self, other: Self) -> bool:
+        self_dict = self.__dict__
+
+        for key, value in other.__dict__.items():
+            if self_dict[key] != value:
+                return False
+            
+        return True

@@ -6,22 +6,25 @@ from naks_library import BaseShema
 
 from services.db_services import *
 from client import client
+from utils.DTOs import *
 from shemas import *
+from funcs import test_data
 
 
-class BaseTestCRUDEndpoints[Shema: BaseShema]:
+class BaseTestCRUDEndpoints[DTO, Shema: BaseShema]:
+    __dto__: type[DTO]
     __shema__: type[Shema]
 
-    def test_add(self, api_path, shema: Shema):
-        res = client.post(api_path, json=shema.model_dump(mode="json"))
+    def test_add(self, api_path, item: Shema):
+        res = client.post(api_path, json=item.model_dump(mode="json"))
 
         assert res.status_code == 200
 
 
-    def test_get(self, api_path: str, shema: Shema): 
+    def test_get(self, api_path: str, item: DTO): 
         res = client.get(api_path)
 
-        assert shema == type(shema).model_validate(json.loads(res.text)) 
+        assert item == self.__dto__(**json.loads(res.text)) 
 
     
     def test_update(self, api_path: str, data: Shema):
@@ -29,45 +32,43 @@ class BaseTestCRUDEndpoints[Shema: BaseShema]:
 
         assert res.status_code == 200
 
-        shema = client.get(api_path)
-
-        assert shema.status_code == 200
-
-        shema = self.__shema__.model_validate(json.loads(shema.text)).model_dump()
-
-        for key, value in data.model_dump(exclude_unset=True).items():
-            assert shema[key] == value
-
-
-    def test_delete(self, api_path: str, shema: Shema): 
-        res = client.delete(f"{api_path}/{shema.ident.hex}")
+        res = client.get(api_path)
 
         assert res.status_code == 200
 
-        res = client.get(f"{api_path}/{shema.ident.hex}")
+        result = self.__shema__.model_validate(json.loads(res.text))
+
+        for key, value in data.__dict__.items():
+            assert getattr(result, key) == value
+
+
+    def test_delete(self, api_path: str, item: DTO): 
+        res = client.delete(f"{api_path}/{item.ident}")
+
+        assert res.status_code == 200
+
+        res = client.get(f"{api_path}/{item.ident.hex}")
 
         assert "not found" in json.loads(res.text)["detail"]
         
-        res = client.post(api_path, json=shema.model_dump(mode="json"))
+        res = client.post(api_path, json=json.loads(json.dumps(item.__dict__, default=str)))
 
         assert res.status_code == 200
 
 
-class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalShema]):
+class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints):
     __shema__ = PersonalShema
+    __dto__ = PersonalData
 
-    @pytest.mark.parametrize(
-            "index",
-            [0, 1, 2, 3, 4]
-    )
+
     @pytest.mark.usefixtures("personals")
-    def test_add(self, index: int, personals: list[PersonalShema]):
-        personal = personals[index]
+    def test_add(self, personals: list[PersonalData]):
+        for personal in personals:
 
-        return super().test_add(
-            f"/v1/personal",
-            personal
-        )
+            super().test_add(
+                f"/v1/personal",
+                CreatePersonalShema.model_validate(personal.__dict__)
+            )
 
 
     @pytest.mark.parametrize(
@@ -75,7 +76,7 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalShema]):
             [0, 1, 2, 3]
     )
     @pytest.mark.usefixtures("personals")
-    def test_get(self, index: int, personals: list[PersonalShema]):
+    def test_get(self, index: int, personals: list[PersonalData]):
         personal = personals[index]
 
         return super().test_get(
@@ -89,7 +90,7 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalShema]):
             [0, 1, 2, 3]
     )
     @pytest.mark.usefixtures("personals")
-    def test_get_by_kleymo(self, index: int, personals: list[PersonalShema]):
+    def test_get_by_kleymo(self, index: int, personals: list[PersonalData]):
         personal = personals[index]
 
         return super().test_get(
@@ -100,25 +101,7 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalShema]):
 
     @pytest.mark.parametrize(
         "ident, data",
-        [
-            (
-                "095898d1419641b3adf45af287aad3e7", 
-                {
-                    "kleymo": "8M8S",
-                    "name": "Йадав Аджай",
-                    "birthday": "2000.01.01",
-                    "passport_number": "55442233",
-                }
-            ),
-            (
-                "01ES", 
-                {
-                    "name": "Моханан Сануп",
-                    "sicil": "126542",
-                    "nation": "RUS",
-                }
-            )
-        ]
+        [(personal.ident, new_personal_data) for personal, new_personal_data in zip(test_data.fake_personals[:5], test_data.fake_personal_generator.generate(5))]
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
@@ -132,38 +115,35 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalShema]):
             [0, 1, 2, 3]
     )
     @pytest.mark.usefixtures("personals")
-    def test_delete(self, index: int, personals: list[PersonalShema]):
+    def test_delete(self, index: int, personals: list[PersonalData]):
         personal = personals[index]
 
         return super().test_delete(
             f"/v1/personal",
-            personal
+            CreatePersonalShema.model_validate(personal.__dict__)
         )
 
 
-class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalCertificationShema]):
+class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints):
     __shema__ = PersonalCertificationShema
+    __dto__ = PersonalCertificationData
+
+    
+    @pytest.mark.usefixtures("personal_certifications")
+    def test_add(self, personal_certifications: list[PersonalCertificationData]): 
+        for certification in personal_certifications[:5]:
+            super().test_add(
+                f"/v1/personal-certification",
+                CreatePersonalCertificationShema.model_validate(certification.__dict__)
+            )
+
 
     @pytest.mark.parametrize(
             "index",
             [0, 1, 2, 3]
     )
     @pytest.mark.usefixtures("personal_certifications")
-    def test_add(self, index: int, personal_certifications: list[PersonalCertificationShema]): 
-        certification = personal_certifications[index]
-
-        return super().test_add(
-            f"/v1/personal-certification",
-            certification
-        )
-
-
-    @pytest.mark.parametrize(
-            "index",
-            [0, 1, 2, 3]
-    )
-    @pytest.mark.usefixtures("personal_certifications")
-    def test_get(self, index: int, personal_certifications: list[PersonalCertificationShema]):
+    def test_get(self, index: int, personal_certifications: list[PersonalCertificationData]):
         certification = personal_certifications[index]
 
         return super().test_get(
@@ -173,32 +153,8 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalCerti
     
 
     @pytest.mark.parametrize(
-            "ident, data",
-            [
-                (
-                    "dc628e8a800b47aeb8701b4994b5de20", 
-                    {
-                        "details_thikness_from": 2,
-                        "joint_type": [
-                            "УШ",
-                            "СШ"
-                        ],
-                        "kleymo": "01E0",
-                    }
-                ),
-                (
-                    "46a9381ae8cb4143958152bf25c30fbe", 
-                    {
-                        "welding_materials_groups": [
-                            "M01",
-                            "M03+M011",
-                            "M03"
-                        ],
-                        "outer_diameter_from": 157.0,
-                        "expiration_date_fact": "2022-04-05",
-                    }
-                )
-            ]
+        "ident, data",
+        [(personal_certification.ident, new_personal_certification_data) for personal_certification, new_personal_certification_data in zip(test_data.fake_personal_certifications[:5], test_data.fake_personal_certification_generator.generate(5))]
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
@@ -212,30 +168,29 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalCerti
             [0, 1, 2, 3]
     )
     @pytest.mark.usefixtures("personal_certifications")
-    def test_delete(self, index: int, personal_certifications: list[PersonalCertificationShema]):
+    def test_delete(self, index: int, personal_certifications: list[PersonalCertificationData]):
         certification = personal_certifications[index]
 
         return super().test_delete(
             f"/v1/personal-certification",
-            certification
+            CreatePersonalCertificationShema.model_validate(certification.__dict__)
         )
 
 
-class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
+class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints):
     __shema__ = NDTShema
+    __dto__ = NDTData
 
-    @pytest.mark.parametrize(
-            "index",
-            [0, 1, 2, 3, 4]
-    )
+
     @pytest.mark.usefixtures("ndts")
-    def test_add(self, index: int, ndts: list[NDTShema]):
-        ndt = ndts[index]
+    def test_add(self, ndts: list[NDTData]):
 
-        return super().test_add(
-            f"/v1/ndt",
-            ndt
-        )
+        for ndt in ndts[:5]:
+
+            super().test_add(
+                f"/v1/ndt",
+                CreateNDTShema.model_validate(ndt.__dict__)
+            )
 
 
     @pytest.mark.parametrize(
@@ -243,7 +198,7 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
             [0, 1, 2, 3]
     )
     @pytest.mark.usefixtures("ndts")
-    def test_get(self, index: int, ndts: list[NDTShema]):
+    def test_get(self, index: int, ndts: list[NDTData]):
         ndt = ndts[index]
 
         return super().test_get(
@@ -253,26 +208,8 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
     
 
     @pytest.mark.parametrize(
-            "ident, data",
-            [
-                (
-                    "6aaadee3fd7a45b4b26477f7ce573ff6", 
-                    {
-                        "total_welded": 4255.0,
-                        "total_ndt": 306.0,
-                        "accepted": 30118.0,
-                    }
-                ),
-                (
-                    "95b61f9d1b1c4dc2b79cce036d85f527", 
-                    {
-                        "company": "PIRAM",
-                        "subcompany": "PIRAMITd122",
-                        "project": "AWP1Bdwe",
-                        "welding_date": "2022-05-17"
-                    }
-                )
-            ]
+        "ident, data",
+        [(ndt.ident, new_ndt_data) for ndt, new_ndt_data in zip(test_data.fake_ndts[:5], test_data.fake_ndt_generator.generate(5))]
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
@@ -286,10 +223,10 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NDTShema]):
             [0, 1, 2, 3]
     )
     @pytest.mark.usefixtures("ndts")
-    def test_delete(self, index: int, ndts: list[NDTShema]):
+    def test_delete(self, index: int, ndts: list[NDTData]):
         ndt = ndts[index]
 
         return super().test_delete(
             f"/v1/ndt",
-            ndt
+            CreateNDTShema.model_validate(ndt.__dict__)
         )
