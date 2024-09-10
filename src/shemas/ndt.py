@@ -1,16 +1,18 @@
 from uuid import UUID, uuid4
 from datetime import date
+import typing as t
 
-from pydantic import Field, field_validator
-from naks_library import BaseShema, to_date
+from pydantic import Field
+from naks_library import BaseShema
+from naks_library.validators import *
 
 
 class BaseNDTShema(BaseShema):
-    personal_ident: UUID | None = Field(default=None)
+    personal_ident: t.Annotated[UUID | None, plain_optional_uuid_serializer] = Field(default=None)
     company: str | None = Field(default=None)
     subcompany: str | None = Field(default=None)
     project: str | None = Field(default=None)
-    welding_date: date | None = Field(default=None)
+    welding_date: t.Annotated[date | None, before_optional_date_validator, plain_optional_date_serializer] = Field(default=None)
     ndt_type: str | None = Field(default=None)
     total_welded: float | None = Field(default=None)
     total_ndt: float | None = Field(default=None)
@@ -18,27 +20,14 @@ class BaseNDTShema(BaseShema):
     total_rejected: float | None = Field(default=None)
 
 
-    @field_validator("welding_date", mode="before")
-    def validate_welding_date(cls, v: str | tuple[int, int, int] | None):
-        if v == None:
-            return None
-        
-        return to_date(v)
-
-
 class NDTShema(BaseNDTShema):
-    ident: UUID
-    personal_ident: UUID
-    welding_date: date
+    ident: t.Annotated[UUID, plain_uuid_serializer]
+    personal_ident: t.Annotated[UUID, plain_uuid_serializer]
+    welding_date: t.Annotated[date, before_date_validator, plain_date_serializer]
 
 
 class CreateNDTShema(NDTShema):
-    ident: UUID = Field(default_factory=uuid4)
-
-
-    @field_validator("welding_date", mode="before")
-    def validate_welding_date(cls, v: str | date | None):
-        return to_date(v)
+    ident: t.Annotated[UUID, plain_uuid_serializer] = Field(default_factory=uuid4)
 
 
 class UpdateNDTShema(BaseNDTShema): ...

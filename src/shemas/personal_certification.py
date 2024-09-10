@@ -1,17 +1,19 @@
 from uuid import UUID, uuid4
 from datetime import date
+import typing  as t
 
-from pydantic import Field, field_validator
-from naks_library import BaseShema, to_date
+from pydantic import Field
+from naks_library import BaseShema
+from naks_library.validators import *
 
 
 class BasePersonalCertificationShema(BaseShema):
-    personal_ident: UUID | None = Field(default=None)
+    personal_ident: t.Annotated[UUID | None, plain_optional_uuid_serializer] = Field(default=None)
     job_title: str | None = Field(default=None)
     certification_number: str | None = Field(default=None)
-    certification_date: date | None = Field(default=None)
-    expiration_date: date | None = Field(default=None)
-    expiration_date_fact: date | None = Field(default=None)
+    certification_date: t.Annotated[date | None, before_optional_date_validator, plain_optional_date_serializer] = Field(default=None)
+    expiration_date: t.Annotated[date | None, before_optional_date_validator, plain_optional_date_serializer] = Field(default=None)
+    expiration_date_fact: t.Annotated[date | None, before_optional_date_validator, plain_optional_date_serializer] = Field(default=None)
     insert: str | None = Field(default=None)
     company: str | None = Field(default=None)
     gtd: list[str] | None = Field(default=None)
@@ -30,37 +32,22 @@ class BasePersonalCertificationShema(BaseShema):
     rod_axis_position: str | None = Field(default=None)
     details_diameter_from: float | None = Field(default=None)
     details_diameter_before: float | None = Field(default=None)
-    
-    
-    @field_validator("certification_date", "expiration_date", "expiration_date_fact", mode="before")
-    @classmethod
-    def validate_date(cls, v: str | date | None):
-        if v == None:
-            return None
-        
-        return to_date(v)
 
 
 class PersonalCertificationShema(BasePersonalCertificationShema):
-    ident: UUID
-    personal_ident: UUID
+    ident: t.Annotated[UUID, plain_uuid_serializer]
+    personal_ident: t.Annotated[UUID, plain_uuid_serializer]
     job_title: str
     certification_number: str
-    certification_date: date
-    expiration_date: date
-    expiration_date_fact: date
+    certification_date: t.Annotated[date, before_date_validator, plain_date_serializer]
+    expiration_date: t.Annotated[date, before_date_validator, plain_date_serializer]
+    expiration_date_fact: t.Annotated[date, before_date_validator, plain_date_serializer]
     company: str
     gtd: list[str]
-    
-    
-    @field_validator("certification_date", "expiration_date", "expiration_date_fact", mode="before")
-    @classmethod
-    def validate_date(cls, v: str | date | None):
-        return to_date(v)
 
 
 class CreatePersonalCertificationShema(PersonalCertificationShema):
-    ident: UUID = Field(default_factory=uuid4)
+    ident: t.Annotated[UUID, plain_uuid_serializer] = Field(default_factory=uuid4)
 
 
 class UpdatePersonalCertificationShema(BasePersonalCertificationShema): ...

@@ -1,8 +1,11 @@
 from uuid import UUID
 from datetime import date
-from typing import Self
+import typing as t
 
 from pydantic.dataclasses import dataclass
+
+from naks_library import Eq
+from naks_library.validators import before_optional_date_validator, before_date_validator
 
 
 __all__ = [ 
@@ -11,36 +14,27 @@ __all__ = [
     "NDTData"
 ]
 
+
 @dataclass(eq=False)
-class PersonalData:
+class PersonalData(Eq):
     ident: UUID
     kleymo: str | None
     name: str 
-    birthday: date | None
+    birthday: t.Annotated[date | None, before_optional_date_validator]
     passport_number: str | None
     exp_age: int | None
     nation: str | None
 
 
-    def __eq__(self, other: Self) -> bool:
-        self_dict = self.__dict__
-
-        for key, value in other.__dict__.items():
-            if self_dict[key] != value:
-                return False
-            
-        return True
-
-
 @dataclass(eq=False)
-class PersonalCertificationData:
+class PersonalCertificationData(Eq):
     ident: UUID
     personal_ident: UUID
     job_title: str
     certification_number: str
-    certification_date: date
-    expiration_date: date
-    expiration_date_fact: date
+    certification_date: t.Annotated[date, before_date_validator]
+    expiration_date: t.Annotated[date, before_date_validator]
+    expiration_date_fact: t.Annotated[date, before_date_validator]
     insert: str | None
     company: str
     gtd: list[str]
@@ -61,36 +55,16 @@ class PersonalCertificationData:
     details_diameter_before: float | None
 
 
-    def __eq__(self, other: Self) -> bool:
-        self_dict = self.__dict__
-
-        for key, value in other.__dict__.items():
-            if self_dict[key] != value:
-                return False
-            
-        return True
-
-
 @dataclass(eq=False)
-class NDTData:
+class NDTData(Eq):
     ident: UUID
     personal_ident: UUID
     company: str | None
     subcompany: str | None
     project: str | None
-    welding_date: date
+    welding_date: t.Annotated[date, before_date_validator]
     ndt_type: str | None
     total_welded: float | None
     total_ndt: float | None
     total_accepted: float | None
     total_rejected: float | None
-
-
-    def __eq__(self, other: Self) -> bool:
-        self_dict = self.__dict__
-
-        for key, value in other.__dict__.items():
-            if self_dict[key] != value:
-                return False
-            
-        return True

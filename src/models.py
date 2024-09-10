@@ -1,10 +1,9 @@
 from datetime import date
 import uuid
 
-from sqlalchemy.orm import Mapped, attributes, DeclarativeBase
+from sqlalchemy.orm import Mapped, DeclarativeBase
 from sqlalchemy.schema import UniqueConstraint, Index
 import sqlalchemy as sa
-from naks_library import is_uuid, CRUDMixin
 
 
 __all__ = [
@@ -15,7 +14,7 @@ __all__ = [
 ]
 
 
-class Base(DeclarativeBase, CRUDMixin): ...
+class Base(DeclarativeBase): ...
 
 
 class PersonalModel(Base):
@@ -34,21 +33,6 @@ class PersonalModel(Base):
         Index("personal_kleymo_idx", kleymo),
         Index("name_idx", name),
     )
-
-
-    @classmethod
-    def _dump_get_many_stmt(cls, expression: sa.ColumnExpressionArgument):
-        return sa.select(cls).join(
-            PersonalCertificationModel
-        ).filter(expression).distinct()
-
-
-    @classmethod
-    def _get_column(cls, ident: str | uuid.UUID) -> attributes.InstrumentedAttribute:
-        if is_uuid(ident):
-            return PersonalModel.ident
-        
-        return PersonalModel.kleymo
 
 
 class PersonalCertificationModel(Base):

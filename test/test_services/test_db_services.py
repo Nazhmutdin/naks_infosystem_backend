@@ -1,6 +1,5 @@
 from naks_library.testing.base_test_db_service import BaseTestDBService
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import ValidationError
 import pytest
 
 from services.db_services import *
@@ -12,29 +11,25 @@ from funcs import test_data
 
 @pytest.mark.asyncio
 class TestPersonalDBService(BaseTestDBService):
-    service = PersonalDBService(AsyncSession(engine))
+    service = PersonalDBService()
+    session = AsyncSession(engine)
     __dto__ = PersonalData
     __create_shema__ = CreatePersonalShema
     __update_shema__ = UpdatePersonalShema
 
 
     @pytest.mark.usefixtures('personals')
-    async def test_add(self, personals: list[PersonalData]) -> None:
-        await super().test_add(personals)
+    async def test_insert(self, personals: list[PersonalData]) -> None:
+        await super().test_insert(personals)
 
 
     @pytest.mark.usefixtures('personals')
     @pytest.mark.parametrize(
-            "attr, index",
-            [
-                ("kleymo", 1), 
-                ("ident", 7), 
-                ("kleymo", 5), 
-                ("ident", 4)
-            ]
+            "index",
+            [0, 7, 1, 9]
     )
-    async def test_get(self, attr: str, index: int, personals: list[PersonalData]) -> None:
-        ident = getattr(personals[index], attr)
+    async def test_get(self, index: int, personals: list[PersonalData]) -> None:
+        ident = personals[index].ident
 
         await super().test_get(ident, personals[index])
 
@@ -60,15 +55,16 @@ class TestPersonalDBService(BaseTestDBService):
 
 @pytest.mark.asyncio
 class TestPersonalCertificationDBService(BaseTestDBService):
-    service = PersonalCertificationDBService(AsyncSession(engine))
+    service = PersonalCertificationDBService()
+    session = AsyncSession(engine)
     __dto__ = PersonalCertificationData
     __create_shema__ = CreatePersonalCertificationShema
     __update_shema__ = UpdatePersonalCertificationShema
 
 
     @pytest.mark.usefixtures('personal_certifications')
-    async def test_add(self, personal_certifications: list[PersonalCertificationData]) -> None:
-        await super().test_add(personal_certifications)
+    async def test_insert(self, personal_certifications: list[PersonalCertificationData]) -> None:
+        await super().test_insert(personal_certifications)
 
 
     @pytest.mark.usefixtures('personal_certifications')
@@ -103,15 +99,16 @@ class TestPersonalCertificationDBService(BaseTestDBService):
 
 @pytest.mark.asyncio
 class TestNDTDBService(BaseTestDBService):
-    service = NDTDBService(AsyncSession(engine))
+    service = NDTDBService()
+    session = AsyncSession(engine)
     __dto__ = NDTData
     __create_shema__ = CreateNDTShema
     __update_shema__ = UpdateNDTShema
 
 
     @pytest.mark.usefixtures('ndts')
-    async def test_add(self, ndts: list[NDTShema]) -> None:
-        await super().test_add(ndts)
+    async def test_insert(self, ndts: list[NDTShema]) -> None:
+        await super().test_insert(ndts)
 
 
     @pytest.mark.usefixtures('ndts')

@@ -11,6 +11,7 @@ dateutils==0.6.12
 dnspython==2.6.1
 ecdsa==0.19.0
 email_validator==2.1.1
+Faker==26.2.0
 fastapi==0.112.0
 fastapi-cli==0.0.4
 greenlet==3.0.3
@@ -27,7 +28,7 @@ markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
 mypy-extensions==1.0.0
-naks_library @ https://github.com/Nazhmutdin/naks_library/archive/master.zip
+naks_library @ https://github.com/Nazhmutdin/naks_library/archive/master.zip#sha256=b00eda3cddfcb6538ae77a5d5d03c5e8821ea2481f892bae99670dbb24346f9a
 orjson==3.10.3
 packaging==24.0
 pathspec==0.12.1

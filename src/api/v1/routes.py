@@ -23,12 +23,12 @@ async def add_personal(
     data: CreatePersonalShema = Depends(InputValidationDependency(CreatePersonalShema).execute), 
     session: AsyncSession = Depends(get_session)
     ) -> dict[str, str]:
-    service = PersonalDBService(session)
+    service = PersonalDBService()
 
     try:
-        await service.add(data)
+        await service.insert(session, data)
     except CreateDBException as e:
-        raise HTTPException(400, e.message)
+        raise HTTPException(session, 400, e.message)
 
     return {
         "detail": "personal added"
@@ -37,10 +37,10 @@ async def add_personal(
 
 @v1_router.get("/personal/{ident}")
 async def get_personal(ident: str = Depends(validate_personal_ident_dependency), session: AsyncSession = Depends(get_session)) -> PersonalShema:
-    service = PersonalDBService(session)
+    service = PersonalDBService()
 
     try:
-        result = await service.get(ident)
+        result = await service.get(session, ident)
     except GetDBException as e:
         raise HTTPException(400, e.args)
 
@@ -55,19 +55,22 @@ async def get_personal(ident: str = Depends(validate_personal_ident_dependency),
 
 @v1_router.post("/personal/select")
 async def select_personal(
-    filters: PersonalRequestShema = Depends(InputValidationDependency(PersonalRequestShema).execute),
-    session: AsyncSession = Depends(get_session)
+    filters: PersonalSelectShema = Depends(InputValidationDependency(PersonalSelectShema).execute),
+    session: AsyncSession = Depends(get_session),
+    limit: int = 100,
+    offset: int = 0
     ) -> dict[str, list[PersonalShema] | int]:
-    service = PersonalDBService(session)
+    service = PersonalDBService()
 
     try:
-        result = await service.get_many(filters)
+        result = await service.get_many(session, filters, limit, offset)
+        count = await service.count(session, filters)
     except GetDBException as e:
         raise HTTPException(400, e.args)
 
     return {
-        "result": result[0],
-        "count": result[1]
+        "result": result,
+        "count": count
     }
 
 
@@ -77,10 +80,10 @@ async def update_personal(
     data: UpdatePersonalShema = Depends(InputValidationDependency(UpdatePersonalShema).execute), 
     session: AsyncSession = Depends(get_session)
     ) -> dict[str, str]:
-    service = PersonalDBService(session)
+    service = PersonalDBService()
 
     try:
-        await service.update(ident, data)
+        await service.update(session, ident, data)
     except UpdateDBException as e:
         raise HTTPException(400, e.args)
 
@@ -91,10 +94,10 @@ async def update_personal(
 
 @v1_router.delete("/personal/{ident}")
 async def delete_personal(ident: str = Depends(validate_personal_ident_dependency), session: AsyncSession = Depends(get_session)):
-    service = PersonalDBService(session)
+    service = PersonalDBService()
 
     try:
-        await service.delete(ident)
+        await service.delete(session, ident)
     except DeleteDBException as e:
         raise HTTPException(400, e.args)
 
@@ -116,10 +119,10 @@ async def add_personal_certification(
     session: AsyncSession = Depends(get_session)
     ) -> dict[str, str]:
 
-    service = PersonalCertificationDBService(session)
+    service = PersonalCertificationDBService()
 
     try:
-        await service.add(data)
+        await service.insert(session, data)
     except CreateDBException as e:
         raise HTTPException(400, e.message)
     
@@ -130,10 +133,10 @@ async def add_personal_certification(
 
 @v1_router.get("/personal-certification/{ident}")
 async def get_personal_certification(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> PersonalCertificationShema:
-    service = PersonalCertificationDBService(session)
+    service = PersonalCertificationDBService()
 
     try:
-        result = await service.get(ident)
+        result = await service.get(session, ident)
     except GetDBException as e:
         raise HTTPException(400, e.args)
 
@@ -148,19 +151,22 @@ async def get_personal_certification(ident: str = Depends(validate_ident_depende
 
 @v1_router.post("/personal-certification/select")
 async def select_personal_certifications(
-    filters: PersonalCertificationRequestShema = Depends(InputValidationDependency(PersonalCertificationRequestShema).execute),
-    session: AsyncSession = Depends(get_session)
+    filters: PersonalCertificationSelectShema = Depends(InputValidationDependency(PersonalCertificationSelectShema).execute),
+    session: AsyncSession = Depends(get_session),
+    limit: int = 100,
+    offset: int = 0
     ) -> dict[str, list[PersonalCertificationShema] | int]:
-    service = PersonalCertificationDBService(session)
+    service = PersonalCertificationDBService()
 
     try:
-        result = await service.get_many(filters)
+        result = await service.get_many(session, filters, limit, offset)
+        count = await service.count(session, filters)
     except GetDBException as e:
         raise HTTPException(400, e.args)
 
     return {
-        "result": result[0],
-        "count": result[1]
+        "result": result,
+        "count": count
     }
 
 
@@ -170,10 +176,10 @@ async def update_personal_certification(
     data: UpdatePersonalCertificationShema = Depends(InputValidationDependency(UpdatePersonalCertificationShema).execute),
     session: AsyncSession = Depends(get_session)
     ):
-    service = PersonalCertificationDBService(session)
+    service = PersonalCertificationDBService()
 
     try:
-        await service.update(ident, data)
+        await service.update(session, ident, data)
     except UpdateDBException as e:
         raise HTTPException(400, e.args)
     
@@ -185,10 +191,10 @@ async def update_personal_certification(
 @v1_router.delete("/personal-certification/{ident}")
 async def delete_personal_certification(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):
     
-    service = PersonalCertificationDBService(session)
+    service = PersonalCertificationDBService()
 
     try:
-        await service.delete(ident)
+        await service.delete(session, ident)
     except DeleteDBException as e:
         raise HTTPException(400, e.args)
     
@@ -209,10 +215,10 @@ async def add_ndt(
     data: CreateNDTShema = Depends(InputValidationDependency(CreateNDTShema).execute), 
     session: AsyncSession = Depends(get_session)
     ) -> dict[str, str]:
-    service = NDTDBService(session)
+    service = NDTDBService()
 
     try:
-        await service.add(data)
+        await service.insert(session, data)
     except CreateDBException as e:
         raise HTTPException(400, e.message)
 
@@ -223,10 +229,10 @@ async def add_ndt(
 
 @v1_router.get("/ndt/{ident}")
 async def get_ndt(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)) -> NDTShema:
-    service = NDTDBService(session)
+    service = NDTDBService()
 
     try:
-        result = await service.get(ident)
+        result = await service.get(session, ident)
     except GetDBException as e:
         raise HTTPException(400, e.args)
     
@@ -241,19 +247,22 @@ async def get_ndt(ident: str = Depends(validate_ident_dependency), session: Asyn
 
 @v1_router.post("/ndt/select")
 async def select_ndts(
-    filters: NDTRequestShema = Depends(InputValidationDependency(NDTRequestShema).execute),
-    session: AsyncSession = Depends(get_session)
+    filters: NDTSelectShema = Depends(InputValidationDependency(NDTSelectShema).execute),
+    session: AsyncSession = Depends(get_session),
+    limit: int = 100,
+    offset: int = 0
     ) -> dict[str, list[NDTShema] | int]:
-    service = NDTDBService(session)
+    service = NDTDBService()
 
     try:
-        result = await service.get_many(filters)
+        result = await service.get_many(session, filters, limit, offset)
+        count = await service.count(session, filters)
     except GetDBException as e:
         raise HTTPException(400, e.args)
 
     return {
-        "result": result[0],
-        "count": result[1]
+        "result": result,
+        "count": count
     }
 
 
@@ -263,10 +272,10 @@ async def update_ndt(
     data: UpdateNDTShema = Depends(InputValidationDependency(UpdateNDTShema).execute), 
     session: AsyncSession = Depends(get_session)
     ):    
-    service = NDTDBService(session)
+    service = NDTDBService()
 
     try:
-        await service.update(ident, data)
+        await service.update(session, ident, data)
     except UpdateDBException as e:
         raise HTTPException(400, e.args)
 
@@ -277,10 +286,10 @@ async def update_ndt(
 
 @v1_router.delete("/ndt/{ident}")
 async def delete_ndt(ident: str = Depends(validate_ident_dependency), session: AsyncSession = Depends(get_session)):    
-    service = NDTDBService(session)
+    service = NDTDBService()
 
     try:
-        await service.delete(ident)
+        await service.delete(session, ident)
     except DeleteDBException as e:
         raise HTTPException(400, e.args)
 

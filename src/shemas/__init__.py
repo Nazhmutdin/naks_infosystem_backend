@@ -1,7 +1,7 @@
 from src.shemas.personal import PersonalShema, CreatePersonalShema, UpdatePersonalShema
 from src.shemas.personal_certification import PersonalCertificationShema, CreatePersonalCertificationShema, UpdatePersonalCertificationShema
 from src.shemas.ndt import NDTShema, CreateNDTShema, UpdateNDTShema
-from src.shemas.request_shemas import BaseRequestShema, PersonalCertificationRequestShema, PersonalRequestShema, NDTRequestShema
+from src.shemas.select_shemas import PersonalCertificationSelectShema, PersonalSelectShema, NDTSelectShema
 
 
 __all__: list[str] = [
@@ -14,8 +14,7 @@ __all__: list[str] = [
     "NDTShema",
     "CreateNDTShema",
     "UpdateNDTShema",
-    "BaseRequestShema",
-    "PersonalCertificationRequestShema",
-    "PersonalRequestShema",
-    "NDTRequestShema",
+    "PersonalCertificationSelectShema",
+    "PersonalSelectShema",
+    "NDTSelectShema",
 ]

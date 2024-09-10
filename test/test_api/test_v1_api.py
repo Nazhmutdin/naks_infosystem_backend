@@ -21,10 +21,12 @@ class BaseTestCRUDEndpoints[DTO, Shema: BaseShema]:
         assert res.status_code == 200
 
 
-    def test_get(self, api_path: str, item: DTO): 
+    def test_get(self, api_path: str, item: DTO):
         res = client.get(api_path)
 
-        assert item == self.__dto__(**json.loads(res.text)) 
+        sub_data = json.loads(res.text)
+
+        assert item == self.__dto__(**sub_data)
 
     
     def test_update(self, api_path: str, data: Shema):
@@ -81,20 +83,6 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints):
 
         return super().test_get(
             f"/v1/personal/{personal.ident.hex}",
-            personal
-        )
-
-
-    @pytest.mark.parametrize(
-            "index",
-            [0, 1, 2, 3]
-    )
-    @pytest.mark.usefixtures("personals")
-    def test_get_by_kleymo(self, index: int, personals: list[PersonalData]):
-        personal = personals[index]
-
-        return super().test_get(
-            f"/v1/personal/{personal.kleymo}",
             personal
         )
     
