@@ -1,13 +1,12 @@
-import json
 from uuid import uuid4
 from datetime import date, timedelta
 from string import digits, ascii_uppercase
 
-from faker import Faker
 from dateutils import relativedelta
+from naks_library.testing.fake_data_generator import BaseFakeDataGenerator, seq
 
 from shemas import *
-from utils.DTOs import *
+from src._types import PersonalData, PersonalCertificationData, NDTData
 
 
 GTDS = [
@@ -85,25 +84,7 @@ GTDS = [
 ]
 
 
-def seq(start: int, stop: int, step: float | int):
-    result = []
-    cur = start
-
-    if start > stop:
-        raise ValueError
-    
-    if step <= 0:
-        raise ValueError
-
-    while cur < stop:
-        result.append(cur)
-        cur += step
-
-    return result
-
-
-class FakePersonalDataGenerator:
-    faker = Faker()
+class FakePersonalDataGenerator(BaseFakeDataGenerator):
 
     def generate(self, k: int = 20) -> list[dict]:
         data = []
@@ -124,8 +105,7 @@ class FakePersonalDataGenerator:
         return data
 
 
-class FakePersonalCertificationDataGenerator:
-    faker = Faker()
+class FakePersonalCertificationDataGenerator(BaseFakeDataGenerator):
 
     def __init__(self, personals: list[PersonalData]) -> None:
         self.personals = personals
@@ -189,8 +169,7 @@ class FakePersonalCertificationDataGenerator:
 
             
 
-class FakeNDTDataGenerator:
-    faker = Faker()
+class FakeNDTDataGenerator(BaseFakeDataGenerator):
 
     def __init__(self, personals: list[PersonalData]) -> None:
         self.personals = personals

@@ -5,7 +5,7 @@ from naks_library.utils import AbstractFilter, BeforeFilter, FromFilter, InFilte
 
 from src.shemas import *
 from src.models import PersonalModel, PersonalCertificationModel, NDTModel
-from src.utils.DTOs import *
+from src._types import PersonalData, PersonalCertificationData, NDTData
 
 
 __all__: list[str] = [
@@ -62,13 +62,15 @@ PERSONAL_AND_SELECT_COLUMNS: list[InstrumentedAttribute] = [
 
 
 class PersonalDBService(BaseDBService[PersonalData, PersonalModel, PersonalSelectShema, CreatePersonalShema, UpdatePersonalShema]):
-    __dto__ = PersonalData
-    __model__ = PersonalModel
-    _filters_map = PERSONAL_FILTERS_MAP
-    _select_attrs = PERSONAL_SELECT_ATTRS
-    _select_from_attrs = PERSONAL_SELECT_FROM_ATTRS
-    _and_model_columns = PERSONAL_AND_SELECT_COLUMNS
-    _or_model_columns = PERSONAL_OR_SELECT_COLUMNS
+
+    def __init__(self):
+        self.__dto__ = PersonalData
+        self.__model__ = PersonalModel
+        self._filters_map = PERSONAL_FILTERS_MAP
+        self._select_attrs = PERSONAL_SELECT_ATTRS
+        self._select_from_attrs = PERSONAL_SELECT_FROM_ATTRS
+        self._and_model_columns = PERSONAL_AND_SELECT_COLUMNS
+        self._or_model_columns = PERSONAL_OR_SELECT_COLUMNS
 
 
 PERSONAL_CERTIFICATION_FILTERS_MAP: dict[str, AbstractFilter] = {
@@ -114,13 +116,14 @@ PERSONAL_CERTIFICATION_AND_SELECT_COLUMNS: list[InstrumentedAttribute] = [
 
 
 class PersonalCertificationDBService(BaseDBService[PersonalCertificationData, PersonalCertificationModel, PersonalCertificationSelectShema, CreatePersonalCertificationShema, UpdatePersonalCertificationShema]):
-    __dto__ = PersonalCertificationData
-    __model__ = PersonalCertificationModel
-    _filters_map = PERSONAL_CERTIFICATION_FILTERS_MAP
-    _select_attrs = PERSONAL_CERTIFICATION_SELECT_ATTRS
-    _select_from_attrs = PERSONAL_CERTIFICATION_SELECT_FROM_ATTRS
-    _and_model_columns = PERSONAL_CERTIFICATION_AND_SELECT_COLUMNS
-    _or_model_columns = PERSONAL_CERTIFICATION_OR_SELECT_COLUMNS
+    def __init__(self):
+        self.__dto__ = PersonalCertificationData
+        self.__model__ = PersonalCertificationModel
+        self._filters_map = PERSONAL_CERTIFICATION_FILTERS_MAP
+        self._select_attrs = PERSONAL_CERTIFICATION_SELECT_ATTRS
+        self._select_from_attrs = PERSONAL_CERTIFICATION_SELECT_FROM_ATTRS
+        self._and_model_columns = PERSONAL_CERTIFICATION_AND_SELECT_COLUMNS
+        self._or_model_columns = PERSONAL_CERTIFICATION_OR_SELECT_COLUMNS
 
 
 NDT_FILTERS_MAP: dict[str, AbstractFilter] = {
@@ -166,10 +169,11 @@ NDT_AND_SELECT_COLUMNS: list[InstrumentedAttribute] = [
 
 
 class NDTDBService(BaseDBService[NDTData, NDTModel, NDTSelectShema, CreateNDTShema, UpdateNDTShema]):
-    __dto__ = NDTData
-    __model__ = NDTModel
-    _filters_map = NDT_FILTERS_MAP
-    _select_attrs = NDT_SELECT_ATTRS
-    _select_from_attrs = NDT_SELECT_FROM_ATTRS
-    _and_model_columns = NDT_AND_SELECT_COLUMNS
-    _or_model_columns = NDT_OR_SELECT_COLUMNS
+    def __init__(self):
+        self.__dto__ = NDTData
+        self.__model__ = NDTModel
+        self._filters_map = NDT_FILTERS_MAP
+        self._select_attrs = NDT_SELECT_ATTRS
+        self._select_from_attrs = NDT_SELECT_FROM_ATTRS
+        self._and_model_columns = NDT_AND_SELECT_COLUMNS
+        self._or_model_columns = NDT_OR_SELECT_COLUMNS

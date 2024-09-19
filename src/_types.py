@@ -1,18 +1,17 @@
+import typing as t
 from uuid import UUID
 from datetime import date
-import typing as t
 
+from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 
 from naks_library import Eq
 from naks_library.validators import before_optional_date_validator, before_date_validator
 
 
-__all__ = [ 
-    "PersonalData",
-    "PersonalCertificationData",
-    "NDTData"
-]
+class SelectResponse[T](BaseModel):
+    result: list[T]
+    count: int
 
 
 @dataclass(eq=False)

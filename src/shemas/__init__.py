@@ -16,5 +16,5 @@ __all__: list[str] = [
     "UpdateNDTShema",
     "PersonalCertificationSelectShema",
     "PersonalSelectShema",
-    "NDTSelectShema",
+    "NDTSelectShema"
 ]

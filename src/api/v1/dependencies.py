@@ -1,64 +1,94 @@
 from uuid import UUID
-from re import fullmatch
 import typing as t
 
-from pydantic import ValidationError, BaseModel
-from fastapi import HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException, Depends
+from naks_library.exc import *
+from naks_library import BaseDBService
+from naks_library.base_shema import BaseSelectShema, BaseShema
 
-from src.shemas import *
-
+from src.database import get_session
 
 __all__ = [
-    "validate_ident_dependency",
-    "validate_personal_ident_dependency",
-    "InputValidationDependency"
+    "get",
+    "get_many",
+    "insert",
+    "update",
+    "delete",
+    "SessionDep"
 ]
 
 
-def validate_ident_dependency(ident: str) -> str:
+SessionDep = t.Annotated[AsyncSession, Depends(get_session)]
+
+
+_DBService = t.TypeVar("_DBService", bound=BaseDBService)
+_SelectShema = t.TypeVar("_SelectShema", bound=BaseSelectShema)
+_CreateShema = t.TypeVar("_CreateShema", bound=BaseShema)
+_UpdateShema = t.TypeVar("_UpdateShema", bound=BaseShema)
+_DTO = t.TypeVar("_DTO")
+
+
+async def get(
+    service: _DBService, 
+    ident: UUID, 
+    session: AsyncSession
+    ) -> _DTO | None:
     try:
-        UUID(ident)
+        result = await service.get(session, ident)
+    except SelectDBException as err:
+        raise HTTPException(400, err.message)
+
+    return result
+
+
+async def get_many(
+    service: _DBService,
+    filters: _SelectShema,
+    session: AsyncSession
+    ) -> tuple[list[_DTO], int]:
+
+    try:
+        result = await service.get_many(session, filters, filters.limit, filters.offset)
+        count = await service.count(session, filters)
+    except SelectDBException as err:
+        raise HTTPException(400, err.args)
+
+    return result, count
+
+
+async def insert(
+    service: _DBService,
+    data: _CreateShema, 
+    session: AsyncSession
+    ):
+
+    try:
+        await service.insert(session, data)
+    except InsertDBException as err:
+        raise HTTPException(session, 400, err.message)
     
-    except:
-        raise HTTPException(
-            400,
-            "Invalid ident"
-        )
 
-    return ident
+async def update(
+    service: _DBService,
+    ident: UUID, 
+    data: _UpdateShema, 
+    session: AsyncSession
+    ):
 
-
-def validate_personal_ident_dependency(ident: str) -> str:
-    if not fullmatch(r"[A-Z0-9]{4}", ident):
-        try:
-            UUID(ident)
-        
-        except:
-            raise HTTPException(
-                400,
-                "Invalid ident"
-            )
+    try:
+        await service.update(session, ident, data)
+    except UpdateDBException as err:
+        raise HTTPException(400, err.args)
     
-    return ident
 
+async def delete(
+    service: _DBService,
+    ident: UUID, 
+    session: AsyncSession
+    ):
 
-def base_error_handler(err: ValidationError) -> t.NoReturn:
-    
-    raise HTTPException(
-        400,
-        err.args
-    )
-
-
-class InputValidationDependency[T: BaseModel]:
-    def __init__(self, validation_shema: type[T]) -> None:
-        self.shema = validation_shema
-        
-
-    async def execute(self, request: Request, err_handler: t.Callable[[ValidationError], t.NoReturn] = base_error_handler):
-        try:
-            return self.shema.model_validate(
-                await request.json()
-            )
-        except ValidationError as e:
-            err_handler(e)
+    try:
+        await service.delete(session, ident)
+    except DeleteDBException as err:
+        raise HTTPException(400, err.args)

@@ -3,10 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import pytest
 
 from services.db_services import *
-from src.utils.DTOs import *
 from database import engine
 from shemas import *
 from funcs import test_data
+from src._types import PersonalData, PersonalCertificationData, NDTData
 
 
 @pytest.mark.asyncio

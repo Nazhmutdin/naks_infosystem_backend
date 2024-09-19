@@ -6,9 +6,9 @@ from naks_library import BaseShema
 
 from services.db_services import *
 from client import client
-from utils.DTOs import *
 from shemas import *
 from funcs import test_data
+from src._types import PersonalData, PersonalCertificationData, NDTData
 
 
 class BaseTestCRUDEndpoints[DTO, Shema: BaseShema]:
@@ -138,7 +138,7 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints):
             f"/v1/personal-certification/{certification.ident.hex}",
             certification
         )
-    
+
 
     @pytest.mark.parametrize(
         "ident, data",

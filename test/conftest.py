@@ -6,9 +6,9 @@ from shemas import *
 from database import engine
 from settings import Settings
 from models import Base
-from utils.DTOs import *
 
 from funcs import test_data
+from src._types import PersonalData, PersonalCertificationData, NDTData
 
 
 @pytest.fixture(scope="module", autouse=True)
