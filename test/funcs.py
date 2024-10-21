@@ -2,11 +2,17 @@ from uuid import uuid4
 from datetime import date, timedelta
 from string import digits, ascii_uppercase
 
-from dateutils import relativedelta
-from naks_library.testing.fake_data_generator import BaseFakeDataGenerator, seq
+from faker import Faker
 
-from shemas import *
-from src._types import PersonalData, PersonalCertificationData, NDTData
+from dateutils import relativedelta
+from naks_library.utils.funcs import seq
+
+from app.application.dto import PersonalDTO, PersonalNaksCertificationDTO, NdtDTO
+from app.infrastructure.database.setup import create_engine
+
+
+engine = create_engine()
+
 
 
 GTDS = [
@@ -84,7 +90,8 @@ GTDS = [
 ]
 
 
-class FakePersonalDataGenerator(BaseFakeDataGenerator):
+class FakePersonalDataGenerator:
+    faker = Faker()
 
     def generate(self, k: int = 20) -> list[dict]:
         data = []
@@ -105,9 +112,10 @@ class FakePersonalDataGenerator(BaseFakeDataGenerator):
         return data
 
 
-class FakePersonalCertificationDataGenerator(BaseFakeDataGenerator):
+class FakePersonalCertificationDataGenerator:
+    faker = Faker()
 
-    def __init__(self, personals: list[PersonalData]) -> None:
+    def __init__(self, personals: list[PersonalDTO]) -> None:
         self.personals = personals
 
     def generate(self, k: int = 100) -> list[dict]:
@@ -169,9 +177,10 @@ class FakePersonalCertificationDataGenerator(BaseFakeDataGenerator):
 
             
 
-class FakeNDTDataGenerator(BaseFakeDataGenerator):
+class FakeNDTDataGenerator:
+    faker = Faker()
 
-    def __init__(self, personals: list[PersonalData]) -> None:
+    def __init__(self, personals: list[PersonalDTO]) -> None:
         self.personals = personals
 
 
@@ -212,18 +221,18 @@ class TestData:
 
 
     @property
-    def fake_personals(self) -> list[PersonalData]:
-        return [PersonalData(**el) for el in self.fake_personals_dicts]
+    def fake_personals(self) -> list[PersonalDTO]:
+        return [PersonalDTO(**el) for el in self.fake_personals_dicts]
 
 
     @property
-    def fake_personal_certifications(self) -> list[PersonalCertificationData]:
-        return [PersonalCertificationData(**el) for el in self.fake_personal_certifications_dicts]
+    def fake_personal_certifications(self) -> list[PersonalNaksCertificationDTO]:
+        return [PersonalNaksCertificationDTO(**el) for el in self.fake_personal_certifications_dicts]
 
 
     @property
-    def fake_ndts(self) -> list[NDTData]:
-        return [NDTData(**el) for el in self.fake_ndts_dicts]
+    def fake_ndts(self) -> list[NdtDTO]:
+        return [NdtDTO(**el) for el in self.fake_ndts_dicts]
 
 
 test_data = TestData()

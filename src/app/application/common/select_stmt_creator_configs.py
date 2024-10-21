@@ -1,0 +1,104 @@
+from dataclasses import dataclass
+
+from sqlalchemy import join
+from naks_library.selector_filters import InFilter, FromFilter, BeforeFilter, ILikeAnyFilter, AbstractFilter
+
+from app.infrastructure.database.models import PersonalModel, PersonalNaksCertificationModel, NdtModel
+
+PERSONAL_FILTERS_MAP: dict[str, AbstractFilter] = {
+    "idents": InFilter(PersonalModel.ident),
+    "naks_certification_idents": InFilter(PersonalNaksCertificationModel.ident),
+    "names": ILikeAnyFilter(PersonalModel.name),
+    "kleymos": InFilter(PersonalModel.kleymo),
+    "naks_certification_numbers": InFilter(PersonalNaksCertificationModel.certification_number),
+    "inserts": InFilter(PersonalNaksCertificationModel.insert),
+    "methods": InFilter(PersonalNaksCertificationModel.method),
+    "certification_date_from": FromFilter(PersonalNaksCertificationModel.certification_date),
+    "certification_date_before": BeforeFilter(PersonalNaksCertificationModel.certification_date),
+    "expiration_date_from": FromFilter(PersonalNaksCertificationModel.expiration_date),
+    "expiration_date_before": BeforeFilter(PersonalNaksCertificationModel.expiration_date),
+    "expiration_date_fact_from": FromFilter(PersonalNaksCertificationModel.expiration_date_fact),
+    "expiration_date_fact_before": BeforeFilter(PersonalNaksCertificationModel.expiration_date_fact)
+}
+
+
+PERSONAL_SELECT_ATTRS = [
+    PersonalModel
+]
+
+
+PERSONAL_SELECT_FROM_ATTRS = [
+    join(PersonalModel, PersonalNaksCertificationModel)
+]
+
+
+@dataclass
+class PersonalSelectStmtCreatorConfig:
+    filters_map = PERSONAL_FILTERS_MAP
+    select_attrs = PERSONAL_SELECT_ATTRS
+    select_from_attrs = PERSONAL_SELECT_FROM_ATTRS
+
+
+PERSONAL_NAKS_CERTIFICATION_FILTERS_MAP: dict[str, AbstractFilter] = {
+    "idents": InFilter(PersonalNaksCertificationModel.ident),
+    "personal_idents": InFilter(PersonalNaksCertificationModel.personal_ident),
+    "certification_numbers": InFilter(PersonalNaksCertificationModel.certification_number),
+    "inserts": InFilter(PersonalNaksCertificationModel.insert),
+    "methods": InFilter(PersonalNaksCertificationModel.method),
+    "certification_date_from": FromFilter(PersonalNaksCertificationModel.certification_date),
+    "certification_date_before": BeforeFilter(PersonalNaksCertificationModel.certification_date),
+    "expiration_date_from": FromFilter(PersonalNaksCertificationModel.expiration_date),
+    "expiration_date_before": BeforeFilter(PersonalNaksCertificationModel.expiration_date),
+    "expiration_date_fact_from": FromFilter(PersonalNaksCertificationModel.expiration_date_fact),
+    "expiration_date_fact_before": BeforeFilter(PersonalNaksCertificationModel.expiration_date_fact)
+}
+
+
+PERSONAL_NAKS_CERTIFICATION_SELECT_ATTRS = [
+    PersonalNaksCertificationModel
+]
+
+
+PERSONAL_NAKS_CERTIFICATION_SELECT_FROM_ATTRS = [
+    PersonalNaksCertificationModel
+]
+
+
+@dataclass
+class PersonalNaksCertificationSelectStmtCreatorConfig:
+    filters_map = PERSONAL_NAKS_CERTIFICATION_FILTERS_MAP
+    select_attrs = PERSONAL_NAKS_CERTIFICATION_SELECT_ATTRS
+    select_from_attrs = PERSONAL_NAKS_CERTIFICATION_SELECT_FROM_ATTRS
+
+
+NDT_FILTERS_MAP: dict[str, AbstractFilter] = {
+    "idents": InFilter(NdtModel.ident),
+    "personal_idents": InFilter(NdtModel.personal_ident),
+    "welding_date_from": FromFilter(NdtModel.welding_date),
+    "welding_date_before": BeforeFilter(NdtModel.welding_date),
+    "total_welded_from": FromFilter(NdtModel.total_welded),
+    "total_welded_before": BeforeFilter(NdtModel.total_welded),
+    "total_ndt_from": FromFilter(NdtModel.total_ndt),
+    "total_ndt_before": BeforeFilter(NdtModel.total_ndt),
+    "total_accepted_from": FromFilter(NdtModel.total_accepted),
+    "total_accepted_before": BeforeFilter(NdtModel.total_accepted),
+    "total_rejected_from": FromFilter(NdtModel.total_rejected),
+    "total_rejected_before": BeforeFilter(NdtModel.total_rejected)
+}
+
+
+NDT_SELECT_ATTRS = [
+    NdtModel
+]
+
+
+NDT_SELECT_FROM_ATTRS = [
+    NdtModel
+]
+
+
+@dataclass
+class NdtSelectStmtCreatorConfig:
+    filters_map = NDT_FILTERS_MAP
+    select_attrs = NDT_SELECT_ATTRS
+    select_from_attrs = NDT_SELECT_FROM_ATTRS
