@@ -84,7 +84,7 @@ class PersonalNaksCertificationModel(Base):
         Index("rod_diameter_from_idx", rod_diameter_from),
         Index("rod_diameter_before_idx", rod_diameter_before),
     )
-  
+
 
 class NdtModel(Base):
     __tablename__ = "ndt_table"

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import join
+from sqlalchemy import join, desc
 from naks_library.selector_filters import InFilter, FromFilter, BeforeFilter, ILikeAnyFilter, AbstractFilter
 
 from app.infrastructure.database.models import PersonalModel, PersonalNaksCertificationModel, NdtModel
@@ -31,12 +31,17 @@ PERSONAL_SELECT_FROM_ATTRS = [
     join(PersonalModel, PersonalNaksCertificationModel)
 ]
 
+PERSONAL_ORDER_BY_ATTRS = [
+    PersonalModel.ident
+]
+
 
 @dataclass
 class PersonalSelectStmtCreatorConfig:
     filters_map = PERSONAL_FILTERS_MAP
     select_attrs = PERSONAL_SELECT_ATTRS
     select_from_attrs = PERSONAL_SELECT_FROM_ATTRS
+    order_by_attrs = PERSONAL_ORDER_BY_ATTRS
 
 
 PERSONAL_NAKS_CERTIFICATION_FILTERS_MAP: dict[str, AbstractFilter] = {
@@ -63,12 +68,17 @@ PERSONAL_NAKS_CERTIFICATION_SELECT_FROM_ATTRS = [
     PersonalNaksCertificationModel
 ]
 
+PERSONAL_NAKS_CERTIFICATION_ORDER_BY_ATTRS = [
+    desc(PersonalNaksCertificationModel.expiration_date_fact)
+]
+
 
 @dataclass
 class PersonalNaksCertificationSelectStmtCreatorConfig:
     filters_map = PERSONAL_NAKS_CERTIFICATION_FILTERS_MAP
     select_attrs = PERSONAL_NAKS_CERTIFICATION_SELECT_ATTRS
     select_from_attrs = PERSONAL_NAKS_CERTIFICATION_SELECT_FROM_ATTRS
+    order_by_attrs = PERSONAL_NAKS_CERTIFICATION_ORDER_BY_ATTRS
 
 
 NDT_FILTERS_MAP: dict[str, AbstractFilter] = {
@@ -97,8 +107,14 @@ NDT_SELECT_FROM_ATTRS = [
 ]
 
 
+NDT_ORDER_BY_ATTRS = [
+    desc(NdtModel.welding_date)
+]
+
+
 @dataclass
 class NdtSelectStmtCreatorConfig:
     filters_map = NDT_FILTERS_MAP
     select_attrs = NDT_SELECT_ATTRS
     select_from_attrs = NDT_SELECT_FROM_ATTRS
+    order_by_attrs = NDT_ORDER_BY_ATTRS

@@ -19,9 +19,9 @@ class CreatePersonalShema(BaseShema):
     kleymo: str | None = Field(default=None)
     name: str = Field(default=None)
     birthday: t.Annotated[date | None, before_optional_date_validator, plain_optional_date_serializer] = Field(default=None)
-    passport_number: str | None = Field(default=None, serialization_alias="passportNumber", validation_alias="passportNumber")
+    passport_number: str | None = Field(default=None)
     nation: str | None = Field(default=None)
-    exp_age: int | None = Field(default=None, serialization_alias="expAge", validation_alias="expAge")
+    exp_age: int | None = Field(default=None)
 
 
     @field_validator("kleymo")
@@ -47,9 +47,9 @@ class UpdatePersonalShema(BaseShema):
     kleymo: str | None = Field(default=None)
     name: str | None = Field(default=None)
     birthday: t.Annotated[date | None, before_optional_date_validator, plain_optional_date_serializer] = Field(default=None)
-    passport_number: str | None = Field(default=None, serialization_alias="passportNumber", validation_alias="passportNumber")
+    passport_number: str | None = Field(default=None)
     nation: str | None = Field(default=None)
-    exp_age: int | None = Field(default=None, serialization_alias="expAge", validation_alias="expAge")
+    exp_age: int | None = Field(default=None)
 
 
     @field_validator("kleymo")
@@ -73,15 +73,15 @@ class UpdatePersonalShema(BaseShema):
 class PersonalSelectShema(BaseSelectShema):
 
     idents: list[UUID] | None = Field(default=None)
-    certification_idents: list[UUID] | None = Field(default=None, validation_alias="certificationIdents")
+    certification_idents: list[UUID] | None = Field(default=None,)
     names: list[str] | None = Field(default=None)
     kleymos: list[str] | None = Field(default=None)
-    certification_numbers: list[str] | None = Field(default=None, validation_alias="certificationNumbers")
+    certification_numbers: list[str] | None = Field(default=None)
     inserts: list[str] | None = Field(default=None)
     methods: list[str] | None = Field(default=None)
-    certification_date_from: t.Annotated[date | None, before_optional_date_validator] = Field(default=None, validation_alias="certificationDateFrom")
-    certification_date_before: t.Annotated[date | None, before_optional_date_validator] = Field(default=None, validation_alias="certificationDateBefore")
-    expiration_date_from: t.Annotated[date | None, before_optional_date_validator] = Field(default=None, validation_alias="expirationDateFrom")
-    expiration_date_before: t.Annotated[date | None, before_optional_date_validator] = Field(default=None, validation_alias="expirationDateBefore")
-    expiration_date_fact_from: t.Annotated[date | None, before_optional_date_validator] = Field(default=None, validation_alias="expirationDateFactFrom")
-    expiration_date_fact_before: t.Annotated[date | None, before_optional_date_validator] = Field(default=None, validation_alias="expirationDateFactBefore")
+    certification_date_from: t.Annotated[date | None, before_optional_date_validator] = Field(default=None)
+    certification_date_before: t.Annotated[date | None, before_optional_date_validator] = Field(default=None)
+    expiration_date_from: t.Annotated[date | None, before_optional_date_validator] = Field(default=None)
+    expiration_date_before: t.Annotated[date | None, before_optional_date_validator] = Field(default=None)
+    expiration_date_fact_from: t.Annotated[date | None, before_optional_date_validator] = Field(default=None)
+    expiration_date_fact_before: t.Annotated[date | None, before_optional_date_validator] = Field(default=None)

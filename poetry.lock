@@ -515,7 +515,7 @@ files = [
 
 [[package]]
 name = "naks_library"
-version = "0.2.4"
+version = "0.2.5"
 description = "package for naks projects"
 optional = false
 python-versions = ">=3.12"
@@ -533,7 +533,7 @@ SQLAlchemy = "*"
 type = "git"
 url = "https://github.com/Nazhmutdin/naks_library.git"
 reference = "HEAD"
-resolved_reference = "e9921c816594df96ec3697d42822b194d1a767eb"
+resolved_reference = "8482ac680aafda60326a158798e22e593b45c1c6"
 
 [[package]]
 name = "orjson"
@@ -1056,4 +1056,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "08ac07849b9a46ccd6fc2068030b36c9d186f6e918db56fa42aa511203db1a5c"
+content-hash = "5a5b9cf5bb0dfc6f7aade2f42ee8e95dfd4c3844efc31133703b98574bfc1f0b"

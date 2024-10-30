@@ -10,12 +10,14 @@ from app.application.interactors.personal_naks_certification import (
     GetPersonalNaksCertificationInteractor,
     SelectPersonalNaksCertificationInteractor,
     UpdatePersonalNaksCertificationInteractor,
-    DeletePersonalNaksCertificationInteractor
+    DeletePersonalNaksCertificationInteractor,
+    GetCertainPersonalNaksCertificationsInteractor
 )
 from app.application.interactors.ndt import (
     CreateNdtInteractor,
     GetNdtInteractor,
     SelectNdtInteractor,
     UpdateNdtInteractor,
-    DeleteNdtInteractor
+    DeleteNdtInteractor,
+    GetCertainPersonalNdtsInteractor
 )

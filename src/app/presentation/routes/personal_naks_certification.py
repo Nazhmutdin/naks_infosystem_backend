@@ -16,6 +16,7 @@ from app.application.interactors import (
     UpdatePersonalNaksCertificationInteractor,
     DeletePersonalNaksCertificationInteractor,
     GetPersonalNaksCertificationInteractor,
+    GetCertainPersonalNaksCertificationsInteractor,
     SelectPersonalNaksCertificationInteractor
 )
 from app.application.dto import PersonalNaksCertificationDTO
@@ -39,7 +40,18 @@ async def create_personal_naks_certification(
         content={
             "detail": "personal naks certification created"
         }
-    ) 
+    )
+
+
+@personal_naks_certification_router.get("/personal-naks-certification/personal/{personal_ident}")
+async def get_certain_personal_naks_certifications(
+    get: FromDishka[GetCertainPersonalNaksCertificationsInteractor],
+    personal_ident: UUID
+) -> list[PersonalNaksCertificationDTO]: 
+
+    certs = await get(personal_ident)
+
+    return certs
 
 
 @personal_naks_certification_router.get("/personal-naks-certification/{ident}")

@@ -13,11 +13,13 @@ from app.application.interactors import (
     CreatePersonalNaksCertificationInteractor,
     UpdatePersonalNaksCertificationInteractor,
     GetPersonalNaksCertificationInteractor,
+    GetCertainPersonalNaksCertificationsInteractor,
     SelectPersonalNaksCertificationInteractor,
     DeletePersonalNaksCertificationInteractor,
     CreateNdtInteractor,
     UpdateNdtInteractor,
     GetNdtInteractor,
+    GetCertainPersonalNdtsInteractor,
     SelectNdtInteractor,
     DeleteNdtInteractor
 )
@@ -38,7 +40,8 @@ class ApplicationProvider(Provider):
         return StandartSqlAlchemyGetManyStmtCreator(
             filters_map=PersonalSelectStmtCreatorConfig.filters_map,
             select_attrs=PersonalSelectStmtCreatorConfig.select_attrs,
-            select_from_attrs=PersonalSelectStmtCreatorConfig.select_from_attrs
+            select_from_attrs=PersonalSelectStmtCreatorConfig.select_from_attrs,
+            order_by_attrs=PersonalSelectStmtCreatorConfig.order_by_attrs
         )
     
 
@@ -47,7 +50,8 @@ class ApplicationProvider(Provider):
         return StandartSqlAlchemyGetManyStmtCreator(
             filters_map=PersonalNaksCertificationSelectStmtCreatorConfig.filters_map,
             select_attrs=PersonalNaksCertificationSelectStmtCreatorConfig.select_attrs,
-            select_from_attrs=PersonalNaksCertificationSelectStmtCreatorConfig.select_from_attrs
+            select_from_attrs=PersonalNaksCertificationSelectStmtCreatorConfig.select_from_attrs,
+            order_by_attrs=PersonalNaksCertificationSelectStmtCreatorConfig.order_by_attrs
         )
     
 
@@ -56,7 +60,8 @@ class ApplicationProvider(Provider):
         return StandartSqlAlchemyGetManyStmtCreator(
             filters_map=NdtSelectStmtCreatorConfig.filters_map,
             select_attrs=NdtSelectStmtCreatorConfig.select_attrs,
-            select_from_attrs=NdtSelectStmtCreatorConfig.select_from_attrs
+            select_from_attrs=NdtSelectStmtCreatorConfig.select_from_attrs,
+            order_by_attrs=NdtSelectStmtCreatorConfig.order_by_attrs
         )
     
 
@@ -172,6 +177,17 @@ class ApplicationProvider(Provider):
 
 
     @provide(scope=Scope.REQUEST)
+    async def get_certain_personal_naks_certifications_data_interactor(
+        self, 
+        personal_naks_certification_gateway: PersonalNaksCertificationGateway
+    ) -> GetCertainPersonalNaksCertificationsInteractor:
+
+        return GetCertainPersonalNaksCertificationsInteractor(
+            gateway=personal_naks_certification_gateway
+        )
+
+
+    @provide(scope=Scope.REQUEST)
     async def get_select_personal_naks_certification_interactor(
         self, 
         create_stmt: PersonalNaksCertificationGetManyStmtCreator,
@@ -230,6 +246,17 @@ class ApplicationProvider(Provider):
     ) -> GetNdtInteractor:
 
         return GetNdtInteractor(
+            gateway=ndt_gateway
+        )
+
+
+    @provide(scope=Scope.REQUEST)
+    async def get_certain_personal_ndts_data_interactor(
+        self, 
+        ndt_gateway: NdtGateway
+    ) -> GetCertainPersonalNdtsInteractor:
+
+        return GetCertainPersonalNdtsInteractor(
             gateway=ndt_gateway
         )
 

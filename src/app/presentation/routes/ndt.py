@@ -6,7 +6,7 @@ from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 
 from app.presentation.shemas import CreateNdtShema, UpdateNdtShema, NDTSelectShema, SelectResponse
-from app.application.interactors import CreateNdtInteractor, UpdateNdtInteractor, DeleteNdtInteractor, GetNdtInteractor, SelectNdtInteractor
+from app.application.interactors import CreateNdtInteractor, UpdateNdtInteractor, DeleteNdtInteractor, GetNdtInteractor, SelectNdtInteractor, GetCertainPersonalNdtsInteractor
 from app.application.dto import NdtDTO
 from app.application.common.exc import NdtNotFoundException
 
@@ -28,6 +28,17 @@ async def create_ndt(
             "detail": "ndt created"
         }
     ) 
+
+
+@ndt_router.get("/ndt/personal/{personal_ident}")
+async def get_certain_personal_ndts(
+    get: FromDishka[GetCertainPersonalNdtsInteractor],
+    personal_ident: UUID
+) -> list[NdtDTO]: 
+
+    certs = await get(personal_ident)
+
+    return certs
 
 
 @ndt_router.get("/ndt/{ident}")

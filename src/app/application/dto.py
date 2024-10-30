@@ -5,7 +5,7 @@ from datetime import date
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 from naks_library.utils.validators import plain_optional_date_serializer, plain_date_serializer
-from naks_library.common.root import camel_case_serialization_alias_generator
+from naks_library.common.root import camel_case_alias_generator
 
 """
 ===========================================================================================================
@@ -14,7 +14,7 @@ personal
 """
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class BasePersonal:
     kleymo: str | None
     birthday: Annotated[date | None, plain_optional_date_serializer]
@@ -23,19 +23,19 @@ class BasePersonal:
     nation: str | None
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class PersonalDTO(BasePersonal):
     ident: UUID
     name: str 
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class CreatePersonalDTO(BasePersonal):
     ident: UUID
     name: str
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class UpdatePersonalDTO(BasePersonal): 
     name: str | None
 
@@ -47,7 +47,7 @@ personal naks certification
 """
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class BasePersonalNaksCertification:
     personal_ident: UUID
     job_title: str
@@ -75,17 +75,17 @@ class BasePersonalNaksCertification:
     details_diameter_before: float | None
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class PersonalNaksCertificationDTO(BasePersonalNaksCertification):
     ident: UUID
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class CreatePersonalNaksCertificationDTO(BasePersonalNaksCertification):
     ident: UUID
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class UpdatePersonalNaksCertificationDTO(BasePersonalNaksCertification):
     personal_ident: UUID | None
     job_title: str | None
@@ -104,7 +104,7 @@ ndt
 """
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class BaseNdt:
     personal_ident: UUID
     welding_date: Annotated[date, plain_date_serializer]
@@ -118,17 +118,17 @@ class BaseNdt:
     total_rejected: float
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class NdtDTO(BaseNdt):
     ident: UUID
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class CreateNdtDTO(BaseNdt):
     ident: UUID
 
 
-@dataclass(config=ConfigDict(alias_generator=camel_case_serialization_alias_generator))
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class UpdateNdtDTO(BaseNdt):
     personal_ident: UUID | None
     welding_date: Annotated[date | None, plain_optional_date_serializer]

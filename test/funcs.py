@@ -212,6 +212,7 @@ class FakeNDTDataGenerator:
 
 class TestData:
     def __init__(self) -> None:
+        self.faker = Faker()
         self.fake_personal_generator = FakePersonalDataGenerator()
         self.fake_personals_dicts = self.fake_personal_generator.generate(10)
         self.fake_personal_certification_generator = FakePersonalCertificationDataGenerator(self.fake_personals)

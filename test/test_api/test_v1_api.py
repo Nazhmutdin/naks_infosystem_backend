@@ -48,7 +48,7 @@ class BaseTestCRUDEndpoints:
 
         result: dict = json.loads(res.text)
 
-        for key, value in data.model_dump(mode="json").items():
+        for key, value in data.model_dump(mode="json", by_alias=True).items():
             assert result.get(key, None) == value
 
 
@@ -134,7 +134,6 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints):
             )
         
 
-
     @pytest.mark.parametrize(
             "index",
             [0, 1, 2, 3]
@@ -148,6 +147,18 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints):
             f"/v1/personal-naks-certification/{certification.ident.hex}",
             certification
         )
+        
+
+    @pytest.mark.parametrize('execution_number', range(5))
+    def test_get_certain_personal_certs(self, execution_number): 
+
+        random_personal_ident = test_data.faker.random_element(test_data.fake_personal_certifications).personal_ident
+
+        certifications = [cert for cert in test_data.fake_personal_certifications if cert.personal_ident == random_personal_ident]
+
+        res = client.get(f"/v1/personal-naks-certification/personal/{random_personal_ident.hex}")
+        
+        assert len(certifications) == len(json.loads(res.text))
 
 
     @pytest.mark.parametrize(
@@ -204,6 +215,18 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints):
             f"/v1/ndt/{ndt.ident.hex}",
             ndt
         )
+        
+
+    @pytest.mark.parametrize('execution_number', range(5))
+    def test_get_certain_personal_ndts(self, execution_number): 
+
+        random_personal_ident = test_data.faker.random_element(test_data.fake_ndts).personal_ident
+
+        ndts = [ndt for ndt in test_data.fake_ndts if ndt.personal_ident == random_personal_ident]
+
+        res = client.get(f"/v1/ndt/personal/{random_personal_ident.hex}")
+        
+        assert len(ndts) == len(json.loads(res.text))
 
 
     @pytest.mark.parametrize(
