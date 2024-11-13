@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
 from sqlalchemy import join, desc
-from naks_library.selector_filters import InFilter, FromFilter, BeforeFilter, ILikeAnyFilter, AbstractFilter
+from naks_library.selector_filters import InFilter, FromFilter, BeforeFilter, ILikeAnyFilter, AbstractFilter, EqualFilter
 
-from app.infrastructure.database.models import PersonalModel, PersonalNaksCertificationModel, NdtModel
+from app.infrastructure.database.models import PersonalModel, PersonalNaksCertificationModel, NdtModel, AcstModel
 
 PERSONAL_FILTERS_MAP: dict[str, AbstractFilter] = {
     "idents": InFilter(PersonalModel.ident),
@@ -118,3 +118,42 @@ class NdtSelectStmtCreatorConfig:
     select_attrs = NDT_SELECT_ATTRS
     select_from_attrs = NDT_SELECT_FROM_ATTRS
     order_by_attrs = NDT_ORDER_BY_ATTRS
+
+
+ACST_FILTERS_MAP: dict[str, AbstractFilter] = {
+    "idents": InFilter(AcstModel.ident),
+    "acst_numbers": InFilter(AcstModel.acst_number),
+    "certification_date_from": FromFilter(AcstModel.certification_date),
+    "certification_date_before": BeforeFilter(AcstModel.certification_date),
+    "expiration_date_from": FromFilter(AcstModel.expiration_date),
+    "expiration_date_before": BeforeFilter(AcstModel.expiration_date),
+    "thikness_from": FromFilter(AcstModel.thikness_from),
+    "thikness_before": BeforeFilter(AcstModel.thikness_before),
+    "diameter_from": FromFilter(AcstModel.diameter_from),
+    "diameter_before": BeforeFilter(AcstModel.diameter_before),
+    "preheating": EqualFilter(AcstModel.preheating),
+    "heat_treatment": EqualFilter(AcstModel.heat_treatment),
+    "gtds": InFilter(AcstModel.gtd),
+    "methods": InFilter(AcstModel.method)
+}
+
+
+ACST_SELECT_ATTRS = [
+    AcstModel
+]
+
+ACST_SELECT_FROM_ATTRS = [
+    AcstModel
+]
+
+ACST_ORDER_BY_ATTRS = [
+    desc(AcstModel.expiration_date)
+]
+
+
+@dataclass
+class AcstSelectStmtCreatorConfig:
+    filters_map = ACST_FILTERS_MAP
+    select_attrs = ACST_SELECT_ATTRS
+    select_from_attrs = ACST_SELECT_FROM_ATTRS
+    order_by_attrs = ACST_ORDER_BY_ATTRS

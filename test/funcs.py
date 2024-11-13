@@ -7,7 +7,7 @@ from faker import Faker
 from dateutils import relativedelta
 from naks_library.utils.funcs import seq
 
-from app.application.dto import PersonalDTO, PersonalNaksCertificationDTO, NdtDTO
+from app.application.dto import PersonalDTO, PersonalNaksCertificationDTO, NdtDTO, AcstDTO
 from app.infrastructure.database.setup import create_engine
 
 
@@ -207,6 +207,41 @@ class FakeNDTDataGenerator:
         return data
 
 
+class FakeAcstDataGenerator:
+    faker = Faker()
+
+    def generate(self, k: int = 100) -> list[dict]:
+        data = []
+
+        for _ in range(k):
+            sub_data = {}
+
+            sub_data["ident"] = uuid4()
+            sub_data["acst_number"] = "АЦСТ-11-" + str(self.faker.random_number(digits=5, fix_len=True))
+            sub_data["certification_date"] = self.faker.date_between(
+                date.today() - timedelta(weeks=200),
+                date.today()
+            )
+            sub_data["expiration_date"] = sub_data["certification_date"] + relativedelta(years=5)
+            sub_data["company"] = self.faker.company()
+            sub_data["gtd"] = self.faker.random_choices(GTDS, 15)
+            sub_data["method"] = self.faker.random_element(["РД", "РАД", "МПГ", "МП", "АФ", "П"])
+            sub_data["detail_types"] = self.faker.random_elements(["Л+Т", "Т", "Л"])
+            sub_data["joint_types"] = ["УШ", "СШ"]
+            sub_data["materials"] = self.faker.random_elements(["M01", "M03", "M07", "M11"])
+            sub_data["thikness_from"] = self.faker.random_element(seq(0, 150, 0.1))
+            sub_data["thikness_before"] = sub_data["thikness_from"] + self.faker.random_element(seq(0, 2000, 0.1))
+            sub_data["diameter_from"] = self.faker.random_element(seq(0, 150, 0.1))
+            sub_data["diameter_before"] = sub_data["diameter_from"] + self.faker.random_element(seq(0, 2000, 0.1))
+            sub_data["preheating"] = self.faker.random_element([True, True, True, False])
+            sub_data["heat_treatment"] = self.faker.random_element([True, True, True, False])
+            sub_data["html"] = ""
+
+            data.append(sub_data)
+        
+        return data
+
+
 class TestData:
     def __init__(self) -> None:
         self.faker = Faker()
@@ -216,6 +251,8 @@ class TestData:
         self.fake_personal_certifications_dicts = self.fake_personal_certification_generator.generate(25)
         self.fake_ndt_generator = FakeNDTDataGenerator(self.fake_personals)
         self.fake_ndts_dicts = self.fake_ndt_generator.generate(25)
+        self.fake_acst_generator = FakeAcstDataGenerator()
+        self.fake_acsts_dicts = self.fake_acst_generator.generate(25)
 
 
     @property
@@ -231,6 +268,11 @@ class TestData:
     @property
     def fake_ndts(self) -> list[NdtDTO]:
         return [NdtDTO(**el) for el in self.fake_ndts_dicts]
+
+
+    @property
+    def fake_acsts(self) -> list[AcstDTO]:
+        return [AcstDTO(**el) for el in self.fake_acsts_dicts]
 
 
 test_data = TestData()

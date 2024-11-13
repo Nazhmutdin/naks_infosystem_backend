@@ -3,19 +3,18 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi.responses import ORJSONResponse
 from dishka import FromDishka
-from dishka.integrations.fastapi import DishkaRoute
+from dishka.integrations.fastapi import inject
 
 from app.presentation.shemas import NDTSelectShema, SelectResponse
 from app.application.interactors import CreateNdtInteractor, UpdateNdtInteractor, DeleteNdtInteractor, GetNdtInteractor, SelectNdtInteractor, GetCertainPersonalNdtsInteractor
 from app.application.dto import NdtDTO, UpdateNdtDTO, CreateNdtDTO
 from app.application.common.exc import NdtNotFoundException
 
-ndt_router = APIRouter(
-    route_class=DishkaRoute
-)
+ndt_router = APIRouter()
 
 
 @ndt_router.post("/ndt")
+@inject
 async def create_ndt(
     create: FromDishka[CreateNdtInteractor],
     data: CreateNdtDTO
@@ -31,6 +30,7 @@ async def create_ndt(
 
 
 @ndt_router.get("/ndt/personal/{personal_ident}")
+@inject
 async def get_certain_personal_ndts(
     get: FromDishka[GetCertainPersonalNdtsInteractor],
     personal_ident: UUID
@@ -42,6 +42,7 @@ async def get_certain_personal_ndts(
 
 
 @ndt_router.get("/ndt/{ident}")
+@inject
 async def get_ndt(
     get: FromDishka[GetNdtInteractor],
     ident: UUID
@@ -56,6 +57,7 @@ async def get_ndt(
 
 
 @ndt_router.post("/ndt/select")
+@inject
 async def select_ndt(
     select: FromDishka[SelectNdtInteractor],
     filters: NDTSelectShema
@@ -74,6 +76,7 @@ async def select_ndt(
 
 
 @ndt_router.patch("/ndt/{ident}")
+@inject
 async def update_ndt(
     update: FromDishka[UpdateNdtInteractor],
     ident: UUID, 
@@ -90,6 +93,7 @@ async def update_ndt(
 
 
 @ndt_router.delete("/ndt/{ident}")
+@inject
 async def delete_ndt(
     delete: FromDishka[DeleteNdtInteractor],
     ident: UUID

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi.responses import ORJSONResponse
 from dishka import FromDishka
-from dishka.integrations.fastapi import DishkaRoute
+from dishka.integrations.fastapi import inject
 
 from app.application.interactors import CreatePersonalInteractor, UpdatePersonalInteractor, DeletePersonalInteractor, SelectPersonalInteractor, GetPersonalInteractor
 from app.presentation.shemas import PersonalSelectShema, SelectResponse
@@ -11,12 +11,11 @@ from app.application.dto import PersonalDTO, CreatePersonalDTO, UpdatePersonalDT
 from app.application.common.exc import PersonalNotFoundException
 
 
-personal_router = APIRouter(
-    route_class=DishkaRoute
-)
+personal_router = APIRouter()
 
 
 @personal_router.post("/personal")
+@inject
 async def create_personal(
     create: FromDishka[CreatePersonalInteractor],
     data: CreatePersonalDTO
@@ -32,6 +31,7 @@ async def create_personal(
 
 
 @personal_router.get("/personal/{ident}")
+@inject
 async def get_personal(
     get: FromDishka[GetPersonalInteractor],
     ident: UUID
@@ -46,6 +46,7 @@ async def get_personal(
 
 
 @personal_router.post("/personal/select")
+@inject
 async def select_personal(
     select: FromDishka[SelectPersonalInteractor],
     filters: PersonalSelectShema
@@ -64,6 +65,7 @@ async def select_personal(
 
 
 @personal_router.patch("/personal/{ident}")
+@inject
 async def update_personal(
     update: FromDishka[UpdatePersonalInteractor],
     ident: UUID, 
@@ -80,6 +82,7 @@ async def update_personal(
 
 
 @personal_router.delete("/personal/{ident}")
+@inject
 async def delete_personal(
     delete: FromDishka[DeletePersonalInteractor],
     ident: UUID

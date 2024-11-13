@@ -14,3 +14,8 @@ class PersonalNaksCertificationNotFoundException(Exception):
 class NdtNotFoundException(Exception):
     def __init__(self, ident: UUID) -> None:
         self.ident = ident
+
+
+class AcstNotFoundException(Exception):
+    def __init__(self, ident: UUID) -> None:
+        self.ident = ident

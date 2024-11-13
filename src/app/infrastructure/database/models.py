@@ -106,5 +106,42 @@ class NdtModel(Base):
         Index("total_welded_idx", total_welded),
         Index("total_ndt_idx", total_ndt),
         Index("total_accepted_idx", total_accepted),
-        Index("total_rejectedidx", total_rejected)
+        Index("total_rejected_idx", total_rejected)
+    )
+
+
+class AcstModel(Base):
+    __tablename__ = "acst_table"
+
+    ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
+    acst_number: Mapped[str] = sa.Column(sa.String(), nullable=False)
+    certification_date: Mapped[date] = sa.Column(sa.Date(), nullable=False)
+    expiration_date: Mapped[date] = sa.Column(sa.Date(), nullable=False)
+    company: Mapped[str] = sa.Column(sa.String(), nullable=False)
+    gtd: Mapped[list[str]] = sa.Column(sa.ARRAY(sa.String), nullable=False)
+    method: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
+    detail_types: Mapped[list[str] | None] = sa.Column(sa.ARRAY(sa.String), nullable=True)
+    joint_types: Mapped[list[str] | None] = sa.Column(sa.ARRAY(sa.String), nullable=True)
+    materials: Mapped[list[str] | None] = sa.Column(sa.ARRAY(sa.String), nullable=True)
+    thikness_from: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
+    thikness_before: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
+    diameter_from: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
+    diameter_before: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
+    preheating: Mapped[bool] = sa.Column(sa.Boolean(), nullable=False)
+    heat_treatment: Mapped[bool] = sa.Column(sa.Boolean(), nullable=False)
+    html: Mapped[str] = sa.Column(sa.String(), nullable=False)
+
+
+    __table_args__ = (
+        UniqueConstraint(
+            acst_number
+        ),
+        Index("acst_ident_idx", ident),
+        Index("acst_idx", acst_number, certification_date, expiration_date),
+        Index("acst_method_idx", method),
+        Index("acst_gtd_idx", gtd),
+        Index("thikness_from_idx", thikness_from),
+        Index("thikness_before_idx", thikness_before),
+        Index("diameter_from_idx", diameter_from),
+        Index("diameter_before_idx", diameter_before)
     )

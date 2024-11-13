@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi.responses import ORJSONResponse
 from dishka import FromDishka
-from dishka.integrations.fastapi import DishkaRoute
+from dishka.integrations.fastapi import inject
 
 from app.presentation.shemas import (
     PersonalNaksCertificationSelectShema,
@@ -21,12 +21,11 @@ from app.application.dto import PersonalNaksCertificationDTO, UpdatePersonalNaks
 from app.application.common.exc import PersonalNaksCertificationNotFoundException
 
 
-personal_naks_certification_router = APIRouter(
-    route_class=DishkaRoute
-)
+personal_naks_certification_router = APIRouter()
 
 
 @personal_naks_certification_router.post("/personal-naks-certification")
+@inject
 async def create_personal_naks_certification(
     create: FromDishka[CreatePersonalNaksCertificationInteractor],
     data: CreatePersonalNaksCertificationDTO
@@ -42,6 +41,7 @@ async def create_personal_naks_certification(
 
 
 @personal_naks_certification_router.get("/personal-naks-certification/personal/{personal_ident}")
+@inject
 async def get_certain_personal_naks_certifications(
     get: FromDishka[GetCertainPersonalNaksCertificationsInteractor],
     personal_ident: UUID
@@ -53,6 +53,7 @@ async def get_certain_personal_naks_certifications(
 
 
 @personal_naks_certification_router.get("/personal-naks-certification/{ident}")
+@inject
 async def get_personal_naks_certification(
     get: FromDishka[GetPersonalNaksCertificationInteractor],
     ident: UUID
@@ -67,6 +68,7 @@ async def get_personal_naks_certification(
 
 
 @personal_naks_certification_router.post("/personal-naks-certification/select")
+@inject
 async def select_personal_naks_certification(
     select: FromDishka[SelectPersonalNaksCertificationInteractor],
     filters: PersonalNaksCertificationSelectShema
@@ -85,6 +87,7 @@ async def select_personal_naks_certification(
 
 
 @personal_naks_certification_router.patch("/personal-naks-certification/{ident}")
+@inject
 async def update_personal_naks_certification( 
     update: FromDishka[UpdatePersonalNaksCertificationInteractor],
     ident: UUID, 
@@ -101,6 +104,7 @@ async def update_personal_naks_certification(
 
 
 @personal_naks_certification_router.delete("/personal-naks-certification/{ident}")
+@inject
 async def delete_personal_naks_certification(
     delete: FromDishka[DeletePersonalNaksCertificationInteractor],
     ident: UUID

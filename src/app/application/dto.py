@@ -97,6 +97,55 @@ class UpdatePersonalNaksCertificationDTO(BasePersonalNaksCertification):
 
 """
 ===========================================================================================================
+acst
+===========================================================================================================
+"""
+
+
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
+class BaseAcst:
+    acst_number: str
+    certification_date: Annotated[date, before_date_validator, plain_date_serializer]
+    expiration_date: Annotated[date, before_date_validator, plain_date_serializer]
+    company: str
+    gtd: list[str]
+    method: str | None
+    detail_types: list[str] | None
+    joint_types: list[str] | None
+    materials: list[str] | None
+    thikness_from: float | None
+    thikness_before: float | None
+    diameter_from: float | None
+    diameter_before: float | None
+    preheating: bool | None
+    heat_treatment: bool | None
+    html: str | None
+
+
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
+class AcstDTO(BaseAcst):
+    ident: UUID
+    html: str
+
+
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
+class CreateAcstDTO(BaseAcst):
+    ident: UUID
+    html: str
+
+
+@dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
+class UpdateAcstDTO(BaseAcst):
+    acst_number: str | None
+    certification_date: Annotated[date | None, before_optional_date_validator, plain_optional_date_serializer]
+    expiration_date: Annotated[date | None, before_optional_date_validator, plain_optional_date_serializer]
+    company: str | None
+    gtd: list[str] | None
+
+
+
+"""
+===========================================================================================================
 ndt
 ===========================================================================================================
 """

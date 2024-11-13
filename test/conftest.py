@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from app.application.dto import PersonalDTO, PersonalNaksCertificationDTO, NdtDTO
+from app.application.dto import PersonalDTO, PersonalNaksCertificationDTO, NdtDTO, AcstDTO
 from app.configs import DBConfig
 from app.infrastructure.database.models import Base
 
@@ -52,3 +52,13 @@ def ndts() -> list[NdtDTO]:
 @pytest.fixture
 def ndt_dicts() -> list[dict]:
     return test_data.fake_ndts_dicts
+
+
+@pytest.fixture
+def acsts() -> list[AcstDTO]:
+    return test_data.fake_acsts
+
+
+@pytest.fixture
+def acst_dicts() -> list[dict]:
+    return test_data.fake_acsts_dicts

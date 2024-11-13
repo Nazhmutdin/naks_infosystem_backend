@@ -21,3 +21,10 @@ from app.application.interactors.ndt import (
     DeleteNdtInteractor,
     GetCertainPersonalNdtsInteractor
 )
+from app.application.interactors.acst import (
+    CreateAcstInteractor,
+    GetAcstInteractor,
+    SelectAcstInteractor,
+    UpdateAcstInteractor,
+    DeleteAcstInteractor,
+)

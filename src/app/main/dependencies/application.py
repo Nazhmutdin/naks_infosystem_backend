@@ -3,7 +3,7 @@ from naks_library.commiter import SqlAlchemyCommitter
 from naks_library.common.get_many_stmt_creator import IGetManyStmtCreator, StandartSqlAlchemyGetManyStmtCreator
 from fastapi import Request
 
-from app.application.interfaces.gateways import PersonalGateway, PersonalNaksCertificationGateway, NdtGateway
+from app.application.interfaces.gateways import PersonalGateway, PersonalNaksCertificationGateway, NdtGateway, AcstGateway
 from app.application.interactors import (
     CreatePersonalInteractor,
     UpdatePersonalInteractor,
@@ -21,15 +21,26 @@ from app.application.interactors import (
     GetNdtInteractor,
     GetCertainPersonalNdtsInteractor,
     SelectNdtInteractor,
-    DeleteNdtInteractor
+    DeleteNdtInteractor,
+    GetAcstInteractor,
+    CreateAcstInteractor,
+    UpdateAcstInteractor,
+    DeleteAcstInteractor,
+    SelectAcstInteractor
 )
-from app.infrastructure.database.mappers import PersonalMapper, PersonalNaksCertificationMapper, NdtMapper
-from app.application.common.select_stmt_creator_configs import PersonalSelectStmtCreatorConfig, PersonalNaksCertificationSelectStmtCreatorConfig, NdtSelectStmtCreatorConfig
+from app.infrastructure.database.mappers import PersonalMapper, PersonalNaksCertificationMapper, NdtMapper, AcstMapper
+from app.application.common.select_stmt_creator_configs import (
+    PersonalSelectStmtCreatorConfig, 
+    PersonalNaksCertificationSelectStmtCreatorConfig, 
+    NdtSelectStmtCreatorConfig,
+    AcstSelectStmtCreatorConfig
+)
 
 
 type PersonalGetManyStmtCreator = IGetManyStmtCreator
 type PersonalNaksCertificationGetManyStmtCreator = IGetManyStmtCreator
 type NdtGetManyStmtCreator = IGetManyStmtCreator
+type AcstGetManyStmtCreator = IGetManyStmtCreator
 
 
 class ApplicationProvider(Provider):
@@ -65,6 +76,16 @@ class ApplicationProvider(Provider):
         )
     
 
+    @provide(scope=Scope.APP)
+    async def get_acst_get_many_stmt_creator(self) -> AcstGetManyStmtCreator:
+        return StandartSqlAlchemyGetManyStmtCreator(
+            filters_map=AcstSelectStmtCreatorConfig.filters_map,
+            select_attrs=AcstSelectStmtCreatorConfig.select_attrs,
+            select_from_attrs=AcstSelectStmtCreatorConfig.select_from_attrs,
+            order_by_attrs=AcstSelectStmtCreatorConfig.order_by_attrs
+        )
+    
+
     @provide(scope=Scope.REQUEST)
     async def get_personal_gateway(
         self,
@@ -87,6 +108,14 @@ class ApplicationProvider(Provider):
         committer: SqlAlchemyCommitter,
     ) -> NdtGateway:
         return NdtMapper(committer.session)
+    
+    
+    @provide(scope=Scope.REQUEST)
+    async def get_acst_gateway(
+        self,
+        committer: SqlAlchemyCommitter,
+    ) -> AcstGateway:
+        return AcstMapper(committer.session)
 
 
     @provide(scope=Scope.REQUEST)
@@ -299,3 +328,65 @@ class ApplicationProvider(Provider):
             commiter=committer
         )
 
+
+    @provide(scope=Scope.REQUEST)
+    async def get_create_acst_interactor(
+        self, 
+        committer: SqlAlchemyCommitter,
+        acst_gateway: AcstGateway
+    ) -> CreateAcstInteractor:
+
+        return CreateAcstInteractor(
+            gateway=acst_gateway,
+            commiter=committer
+        )
+
+
+    @provide(scope=Scope.REQUEST)
+    async def get_acst_data_interactor(
+        self, 
+        acst_gateway: AcstGateway
+    ) -> GetAcstInteractor:
+
+        return GetNdtInteractor(
+            gateway=acst_gateway
+        )
+
+
+    @provide(scope=Scope.REQUEST)
+    async def get_select_acst_interactor(
+        self, 
+        create_stmt: AcstGetManyStmtCreator,
+        acst_gateway: AcstGateway
+    ) -> SelectAcstInteractor:
+
+        return SelectAcstInteractor(
+            create_stmt=create_stmt,
+            gateway=acst_gateway
+        )
+
+
+    @provide(scope=Scope.REQUEST)
+    async def get_update_acst_interactor(
+        self, 
+        committer: SqlAlchemyCommitter,
+        acst_gateway: AcstGateway
+    ) -> UpdateAcstInteractor:
+
+        return UpdateAcstInteractor(
+            gateway=acst_gateway,
+            commiter=committer
+        )
+
+
+    @provide(scope=Scope.REQUEST)
+    async def get_delete_acst_interactor(
+        self, 
+        committer: SqlAlchemyCommitter,
+        acst_gateway: AcstGateway
+    ) -> DeleteAcstInteractor:
+
+        return DeleteAcstInteractor(
+            gateway=acst_gateway,
+            commiter=committer
+        )

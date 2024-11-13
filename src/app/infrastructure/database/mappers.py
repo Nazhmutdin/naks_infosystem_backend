@@ -12,9 +12,12 @@ from app.application.dto import (
     UpdatePersonalNaksCertificationDTO, 
     NdtDTO,
     CreateNdtDTO,
-    UpdateNdtDTO
+    UpdateNdtDTO,
+    AcstDTO,
+    CreateAcstDTO, 
+    UpdateAcstDTO
 )
-from app.infrastructure.database.models import PersonalModel, PersonalNaksCertificationModel, NdtModel
+from app.infrastructure.database.models import PersonalModel, PersonalNaksCertificationModel, NdtModel, AcstModel
 
 
 class PersonalMapper(SqlAlchemyCrudMapper[PersonalDTO, CreatePersonalDTO, UpdatePersonalDTO]):
@@ -100,4 +103,30 @@ class NdtMapper(SqlAlchemyCrudMapper[NdtDTO, CreateNdtDTO, UpdateNdtDTO]):
             total_ndt=row.total_ndt,
             total_accepted=row.total_accepted,
             total_rejected=row.total_rejected
+        )
+
+
+class AcstMapper(SqlAlchemyCrudMapper[AcstDTO, CreateAcstDTO, UpdateAcstDTO]):
+    __model__ = AcstModel
+
+
+    def _convert(self, row: AcstModel) -> AcstDTO:
+        return AcstDTO(
+            ident=row.ident,
+            acst_number=row.acst_number,
+            certification_date=row.certification_date,
+            expiration_date=row.expiration_date,
+            company=row.company,
+            gtd=row.gtd,
+            method=row.method,
+            detail_types=row.detail_types,
+            joint_types=row.joint_types,
+            materials=row.materials,
+            thikness_from=row.thikness_from,
+            thikness_before=row.thikness_before,
+            diameter_from=row.diameter_from,
+            diameter_before=row.diameter_before,
+            preheating=row.preheating,
+            heat_treatment=row.heat_treatment,
+            html=row.html
         )

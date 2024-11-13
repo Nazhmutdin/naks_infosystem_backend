@@ -11,7 +11,10 @@ from app.application.dto import (
     UpdatePersonalNaksCertificationDTO,
     NdtDTO, 
     CreateNdtDTO, 
-    UpdateNdtDTO
+    UpdateNdtDTO,
+    AcstDTO,
+    CreateAcstDTO, 
+    UpdateAcstDTO
 )
 
 
@@ -26,3 +29,6 @@ class PersonalNaksCertificationGateway(ICrudGateway[PersonalNaksCertificationDTO
 class NdtGateway(ICrudGateway[NdtDTO, CreateNdtDTO, UpdateNdtDTO]):
 
     async def get_certain_personal_ndts(self, personal_ident: UUID) -> list[NdtDTO]: ...
+
+
+class AcstGateway(ICrudGateway[AcstDTO, CreateAcstDTO, UpdateAcstDTO]): ...

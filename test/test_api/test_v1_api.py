@@ -2,33 +2,40 @@ import typing as t
 import json
 
 import pytest
-from naks_library import BaseShema
-
 from client import client
-from funcs import test_data
+from pydantic import RootModel
 
 from app.application.dto import (
     PersonalDTO, 
+    CreatePersonalDTO,
+    UpdatePersonalDTO,
     PersonalNaksCertificationDTO, 
-    NdtDTO
+    CreatePersonalNaksCertificationDTO, 
+    UpdatePersonalNaksCertificationDTO, 
+    NdtDTO, 
+    CreateNdtDTO, 
+    UpdateNdtDTO,
+    AcstDTO, 
+    CreateAcstDTO, 
+    UpdateAcstDTO
 )
-from app.presentation.shemas.personal import CreatePersonalShema, UpdatePersonalShema
-from app.presentation.shemas.personal_naks_certification import CreatePersonalNaksCertificationShema, UpdatePersonalNaksCertificationShema
-from app.presentation.shemas.ndt import CreateNdtShema, UpdateNdtShema
+from funcs import test_data
 
 
-_Shema = t.TypeVar("_Shema", bound=BaseShema)
-_DTO = t.TypeVar("_DTO", bound=BaseShema)
+_DTO = t.TypeVar("_DTO")
 
 
-class BaseTestCRUDEndpoints:
+class BaseTestCRUDEndpoints[DTO, CreateDTO, UpdateDTO]:
     __dto__: type[_DTO]
-    __update_shema__: type[_Shema]
-    __create_shema__: type[_Shema]
+    __update_dto__: type[UpdateDTO]
+    __create_dto__: type[CreateDTO]
 
 
-    def test_add(self, api_path, item: _Shema):
-        res = client.post(api_path, json=item.model_dump(mode="json"))
+    def test_add(self, api_path, item: _DTO):
+        res = client.post(
+            api_path, 
+            json=RootModel[CreateDTO](item).model_dump(mode="json")
+        )
 
         assert res.status_code == 200
 
@@ -38,11 +45,14 @@ class BaseTestCRUDEndpoints:
 
         sub_data = json.loads(res.text)
 
-        assert item.__dict__ == self.__create_shema__.model_validate(sub_data).__dict__
+        assert item == self.__dto__(**sub_data)
 
     
-    def test_update(self, api_path: str, data: _Shema):
-        res = client.patch(api_path, json=data.model_dump(mode="json", exclude_unset=True))
+    def test_update(self, api_path: str, data: _DTO):
+        res = client.patch(
+            api_path, 
+            json=RootModel[UpdateDTO](data).model_dump(mode="json")
+        )
 
         assert res.status_code == 200
 
@@ -50,27 +60,30 @@ class BaseTestCRUDEndpoints:
 
         assert res.status_code == 200
 
-        result: dict = json.loads(res.text)
+        result: dict = self.__dto__(**json.loads(res.text))
 
-        for key, value in data.model_dump(mode="json", by_alias=True).items():
-            assert result.get(key, None) == value
+        for key, value in data.__dict__.items():
+            assert getattr(result, key, None) == value
 
 
-    def test_delete(self, api_path: str, item: _Shema): 
+    def test_delete(self, api_path: str, item: _DTO): 
         res = client.delete(f"{api_path}/{item.ident}")
 
         assert res.status_code == 200
 
         assert client.get(f"{api_path}/{item.ident}").status_code == 404
         
-        res = client.post(api_path, json=item.model_dump(mode="json"))
+        res = client.post(
+            api_path, 
+            json=RootModel[CreateDTO](item).model_dump(mode="json")
+        )
 
         assert res.status_code == 200
 
 
-class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints):
-    __update_shema__ = UpdatePersonalShema
-    __create_shema__ = CreatePersonalShema
+class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalDTO, CreatePersonalDTO, UpdatePersonalDTO]):
+    __update_dto__ = UpdatePersonalDTO
+    __create_dto__ = CreatePersonalDTO
     __dto__ = PersonalDTO
 
 
@@ -80,7 +93,7 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints):
 
             super().test_add(
                 "/v1/personal",
-                self.__create_shema__.model_validate(personal.__dict__)
+                self.__create_dto__(**personal.__dict__)
             )
 
 
@@ -105,7 +118,7 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints):
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
             f"/v1/personal/{ident}",
-            self.__update_shema__.model_validate(data)
+            self.__update_dto__(**data)
         )
 
 
@@ -119,13 +132,13 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints):
 
         return super().test_delete(
             "/v1/personal",
-            self.__create_shema__.model_validate(personal.__dict__)
+            self.__create_dto__(**personal.__dict__)
         )
 
 
-class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints):
-    __update_shema__ = UpdatePersonalNaksCertificationShema
-    __create_shema__ = CreatePersonalNaksCertificationShema
+class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalNaksCertificationDTO, CreatePersonalNaksCertificationDTO, UpdatePersonalNaksCertificationDTO]):
+    __update_dto__ = UpdatePersonalNaksCertificationDTO
+    __create_dto__ = CreatePersonalNaksCertificationDTO
     __dto__ = PersonalNaksCertificationDTO
 
 
@@ -134,7 +147,7 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints):
         for certification in personal_certifications:
             super().test_add(
                 "/v1/personal-naks-certification",
-                self.__create_shema__.model_validate(certification.__dict__)
+                self.__create_dto__(**certification.__dict__)
             )
         
 
@@ -172,7 +185,7 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints):
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
             f"/v1/personal-naks-certification/{ident}",
-            self.__update_shema__.model_validate(data)
+            self.__update_dto__(**data)
         )
 
 
@@ -186,13 +199,13 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints):
 
         return super().test_delete(
             "/v1/personal-naks-certification",
-            self.__create_shema__.model_validate(certification.__dict__)
+            self.__create_dto__(**certification.__dict__)
         )
 
 
-class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints):
-    __update_shema__ = UpdateNdtShema
-    __create_shema__ = CreateNdtShema
+class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NdtDTO, CreateNdtDTO, UpdateNdtDTO]):
+    __update_dto__ = UpdateNdtDTO
+    __create_dto__ = CreateNdtDTO
     __dto__ = NdtDTO
 
 
@@ -203,7 +216,7 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints):
 
             super().test_add(
                 "/v1/ndt",
-                self.__create_shema__.model_validate(ndt.__dict__)
+                self.__create_dto__(**ndt.__dict__)
             )
 
 
@@ -240,7 +253,7 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints):
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
             f"/v1/ndt/{ident}",
-            self.__update_shema__.model_validate(data)
+            self.__update_dto__(**data)
         )
 
 
@@ -254,5 +267,61 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints):
 
         return super().test_delete(
             "/v1/ndt",
-            self.__create_shema__.model_validate(ndt.__dict__)
+            self.__create_dto__(**ndt.__dict__)
+        )
+
+
+class TestAcstCRUDEndpoints(BaseTestCRUDEndpoints[AcstDTO, CreateAcstDTO, UpdateAcstDTO]):
+    __update_dto__ = UpdateAcstDTO
+    __create_dto__ = CreateAcstDTO
+    __dto__ = AcstDTO
+
+
+    @pytest.mark.usefixtures("acsts")
+    def test_add(self, acsts: list[AcstDTO]):
+
+        for acst in acsts:
+
+            super().test_add(
+                "/v1/acst",
+                self.__create_dto__(**acst.__dict__)
+            )
+
+
+    @pytest.mark.parametrize(
+            "index",
+            [0, 1, 2, 3]
+    )
+    @pytest.mark.usefixtures("acsts")
+    def test_get(self, index: int, acsts: list[AcstDTO]):
+        acst = acsts[index]
+
+        return super().test_get(
+            f"/v1/acst/{acst.ident.hex}",
+            acst
+        )
+
+
+    @pytest.mark.parametrize(
+        "ident, data",
+        [(acst.ident, new_acst_data) for acst, new_acst_data in zip(test_data.fake_acsts[:5], test_data.fake_acst_generator.generate(5))]
+    )
+    def test_update(self, ident: str, data: dict[str, t.Any]):
+        return super().test_update(
+            f"/v1/acst/{ident}",
+            self.__update_dto__(**data)
+        )
+
+
+    @pytest.mark.parametrize(
+            "index",
+            [0, 1, 2, 3]
+    )
+    @pytest.mark.usefixtures("acsts")
+    def test_delete(self, index: int, acsts: list[AcstDTO]):
+        acst = acsts[index]
+
+        return super().test_delete(
+            "/v1/acst",
+            self.__create_dto__(**acst.__dict__)
         )
