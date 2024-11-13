@@ -126,7 +126,6 @@ class FakePersonalCertificationDataGenerator:
 
             sub_data["ident"] = uuid4()
             sub_data["personal_ident"] = self.faker.random_element(self.personals).ident
-            sub_data["job_title"] = self.faker.random_element(["welder", "engineer"])
             sub_data["certification_number"] = "ТОР-6АЦ" + "-" + self.faker.random_element(["I", "II", "III", "IV", "V"]) + "-" + str(self.faker.random_number(digits=5, fix_len=True))
             sub_data["certification_date"] = self.faker.date_between(
                 date.today() - timedelta(weeks=200),
@@ -138,20 +137,18 @@ class FakePersonalCertificationDataGenerator:
             sub_data["company"] = self.faker.company()
             sub_data["gtd"] = self.faker.random_choices(GTDS, 15)
             sub_data["method"] = self.faker.random_element(["РД", "РАД", "МПГ", "МП", "АФ", "П"])
-            sub_data["details_type"] = self.faker.random_elements(["Л+Т", "Т", "Л"])
-            sub_data["joint_type"] = ["УШ", "СШ"]
-            sub_data["welding_materials_groups"] = self.faker.random_elements(["M01", "M03", "M07", "M11"])
-            sub_data["details_thikness_from"] = self.faker.random_element(seq(0, 150, 0.1))
-            sub_data["details_thikness_before"] = sub_data["details_thikness_from"] + self.faker.random_element(seq(0, 2000, 0.1))
+            sub_data["detail_types"] = self.faker.random_elements(["Л+Т", "Т", "Л"])
+            sub_data["joint_types"] = ["УШ", "СШ"]
+            sub_data["materials"] = self.faker.random_elements(["M01", "M03", "M07", "M11"])
+            sub_data["detail_thikness_from"] = self.faker.random_element(seq(0, 150, 0.1))
+            sub_data["detail_thikness_before"] = sub_data["detail_thikness_from"] + self.faker.random_element(seq(0, 2000, 0.1))
             sub_data["outer_diameter_from"] = None
             sub_data["outer_diameter_before"] = None
-            sub_data["welding_position"] = "Л: Н1, Н2, В1, Г; Т: Н1, Н2"
-            sub_data["connection_type"] = "ос (бп, сп), дс (зк, бз)"
             sub_data["rod_diameter_from"] = None
             sub_data["rod_diameter_before"] = None
-            sub_data["rod_axis_position"] = "В соответствии с ГОСТ 14098, В соответствии с ГОСТ 14098"
-            sub_data["details_diameter_from"] = None
-            sub_data["details_diameter_before"] = None
+            sub_data["detail_diameter_from"] = None
+            sub_data["detail_diameter_before"] = None
+            sub_data["html"] = ""
 
             self._dump_diameters(sub_data)
 
@@ -164,8 +161,8 @@ class FakePersonalCertificationDataGenerator:
         mode = self.faker.random_element(["details", "details", "details", "details", "outer", "rod"])
 
         if mode == "details":
-            data["details_diameter_from"] = self.faker.random_element(seq(0, 150, 0.1))
-            data["details_diameter_before"] = data["details_diameter_from"] + self.faker.random_element(seq(0, 2000, 0.1))
+            data["detail_diameter_from"] = self.faker.random_element(seq(0, 150, 0.1))
+            data["detail_diameter_before"] = data["detail_diameter_from"] + self.faker.random_element(seq(0, 2000, 0.1))
 
         elif mode == "outer":
             data["outer_diameter_from"] = self.faker.random_element(seq(0, 150, 0.1))

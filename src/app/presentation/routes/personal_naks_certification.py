@@ -6,8 +6,6 @@ from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 
 from app.presentation.shemas import (
-    CreatePersonalNaksCertificationShema, 
-    UpdatePersonalNaksCertificationShema, 
     PersonalNaksCertificationSelectShema,
     SelectResponse
 )
@@ -19,7 +17,7 @@ from app.application.interactors import (
     GetCertainPersonalNaksCertificationsInteractor,
     SelectPersonalNaksCertificationInteractor
 )
-from app.application.dto import PersonalNaksCertificationDTO
+from app.application.dto import PersonalNaksCertificationDTO, UpdatePersonalNaksCertificationDTO, CreatePersonalNaksCertificationDTO
 from app.application.common.exc import PersonalNaksCertificationNotFoundException
 
 
@@ -31,10 +29,10 @@ personal_naks_certification_router = APIRouter(
 @personal_naks_certification_router.post("/personal-naks-certification")
 async def create_personal_naks_certification(
     create: FromDishka[CreatePersonalNaksCertificationInteractor],
-    data: CreatePersonalNaksCertificationShema
+    data: CreatePersonalNaksCertificationDTO
 ) -> ORJSONResponse: 
 
-    await create(data.to_dto())
+    await create(data)
 
     return ORJSONResponse(
         content={
@@ -90,10 +88,10 @@ async def select_personal_naks_certification(
 async def update_personal_naks_certification( 
     update: FromDishka[UpdatePersonalNaksCertificationInteractor],
     ident: UUID, 
-    data: UpdatePersonalNaksCertificationShema
+    data: UpdatePersonalNaksCertificationDTO
 ) -> ORJSONResponse: 
 
-    await update(ident, data.to_dto())
+    await update(ident, data)
 
     return ORJSONResponse(
         content={

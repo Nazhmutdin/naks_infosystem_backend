@@ -6,8 +6,8 @@ from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 
 from app.application.interactors import CreatePersonalInteractor, UpdatePersonalInteractor, DeletePersonalInteractor, SelectPersonalInteractor, GetPersonalInteractor
-from app.presentation.shemas import CreatePersonalShema, UpdatePersonalShema, PersonalSelectShema, SelectResponse
-from app.application.dto import PersonalDTO
+from app.presentation.shemas import PersonalSelectShema, SelectResponse
+from app.application.dto import PersonalDTO, CreatePersonalDTO, UpdatePersonalDTO
 from app.application.common.exc import PersonalNotFoundException
 
 
@@ -19,10 +19,10 @@ personal_router = APIRouter(
 @personal_router.post("/personal")
 async def create_personal(
     create: FromDishka[CreatePersonalInteractor],
-    data: CreatePersonalShema
+    data: CreatePersonalDTO
 ) -> ORJSONResponse:
 
-    await create(data.to_dto())
+    await create(data)
 
     return ORJSONResponse(
         content={
@@ -67,10 +67,10 @@ async def select_personal(
 async def update_personal(
     update: FromDishka[UpdatePersonalInteractor],
     ident: UUID, 
-    data: UpdatePersonalShema
+    data: UpdatePersonalDTO
 ) -> ORJSONResponse:
 
-    await update(ident, data.to_dto())
+    await update(ident, data)
 
     return ORJSONResponse(
         content={

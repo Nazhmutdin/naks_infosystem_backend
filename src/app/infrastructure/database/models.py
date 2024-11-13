@@ -40,7 +40,6 @@ class PersonalNaksCertificationModel(Base):
 
     ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
     personal_ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), sa.ForeignKey("personal_table.ident", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    job_title: Mapped[str] = sa.Column(sa.String(), nullable=False)
     certification_number: Mapped[str] = sa.Column(sa.String(), nullable=False)
     certification_date: Mapped[date] = sa.Column(sa.Date(), nullable=False)
     expiration_date: Mapped[date] = sa.Column(sa.Date(), nullable=False)
@@ -49,36 +48,34 @@ class PersonalNaksCertificationModel(Base):
     company: Mapped[str] = sa.Column(sa.String(), nullable=False)
     gtd: Mapped[list[str]] = sa.Column(sa.ARRAY(sa.String), nullable=False)
     method: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
-    details_type: Mapped[list[str] | None] = sa.Column(sa.ARRAY(sa.String), nullable=True)
-    joint_type: Mapped[list[str] | None] = sa.Column(sa.ARRAY(sa.String), nullable=True)
-    welding_materials_groups: Mapped[list[str] | None] = sa.Column(sa.ARRAY(sa.String), nullable=True)
-    details_thikness_from: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    details_thikness_before: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
+    detail_types: Mapped[list[str] | None] = sa.Column(sa.ARRAY(sa.String), nullable=True)
+    joint_types: Mapped[list[str] | None] = sa.Column(sa.ARRAY(sa.String), nullable=True)
+    materials: Mapped[list[str] | None] = sa.Column(sa.ARRAY(sa.String), nullable=True)
+    detail_thikness_from: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
+    detail_thikness_before: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
     outer_diameter_from: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
     outer_diameter_before: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    welding_position: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
-    connection_type: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
     rod_diameter_from: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
     rod_diameter_before: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    rod_axis_position: Mapped[str | None] = sa.Column(sa.String(), nullable=True)
-    details_diameter_from: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    details_diameter_before: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
+    detail_diameter_from: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
+    detail_diameter_before: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
+    html: Mapped[str] = sa.Column(sa.String(), nullable=False)
 
 
     __table_args__ = (
         UniqueConstraint(
-            "certification_number", 
-            "certification_date", 
-            "expiration_date_fact", 
-            "insert"
+            certification_number, 
+            certification_date, 
+            expiration_date_fact, 
+            insert
         ),
         Index("personal_certification_ident_idx", ident),
         Index("certification_personal_ident_idx", personal_ident),
         Index("certification_idx", certification_number, certification_date, expiration_date_fact),
         Index("method_idx", method),
         Index("gtd_idx", gtd),
-        Index("details_thikness_from_idx", details_thikness_from),
-        Index("details_thikness_before_idx", details_thikness_before),
+        Index("details_thikness_from_idx", detail_thikness_from),
+        Index("details_thikness_before_idx", detail_thikness_before),
         Index("outer_diameter_from_idx", outer_diameter_from),
         Index("outer_diameter_before_idx", outer_diameter_before),
         Index("rod_diameter_from_idx", rod_diameter_from),

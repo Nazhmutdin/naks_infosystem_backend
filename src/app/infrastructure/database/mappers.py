@@ -50,7 +50,6 @@ class PersonalNaksCertificationMapper(SqlAlchemyCrudMapper[PersonalNaksCertifica
         return PersonalNaksCertificationDTO(
             ident=row.ident,
             personal_ident=row.personal_ident,
-            job_title=row.job_title,
             certification_number=row.certification_number,
             certification_date=row.certification_date,
             expiration_date=row.expiration_date,
@@ -59,20 +58,18 @@ class PersonalNaksCertificationMapper(SqlAlchemyCrudMapper[PersonalNaksCertifica
             company=row.company,
             gtd=row.gtd,
             method=row.method,
-            details_type=row.details_type,
-            joint_type=row.joint_type,
-            welding_materials_groups=row.welding_materials_groups,
-            details_thikness_from=row.details_thikness_from,
-            details_thikness_before=row.details_thikness_before,
+            detail_types=row.detail_types,
+            joint_types=row.joint_types,
+            materials=row.materials,
+            detail_thikness_from=row.detail_thikness_from,
+            detail_thikness_before=row.detail_thikness_before,
             outer_diameter_from=row.outer_diameter_from,
             outer_diameter_before=row.outer_diameter_before,
-            welding_position=row.welding_position,
-            connection_type=row.connection_type,
             rod_diameter_from=row.rod_diameter_from,
             rod_diameter_before=row.rod_diameter_before,
-            rod_axis_position=row.rod_axis_position,
-            details_diameter_from=row.details_diameter_from,
-            details_diameter_before=row.details_diameter_before
+            detail_diameter_from=row.detail_diameter_from,
+            detail_diameter_before=row.detail_diameter_before,
+            html=row.html
         )
 
 

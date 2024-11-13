@@ -19,7 +19,6 @@ from app.application.dto import CreatePersonalNaksCertificationDTO, UpdatePerson
 class CreatePersonalNaksCertificationShema(BaseShema):
     ident: t.Annotated[UUID, plain_uuid_serializer] = Field(default_factory=uuid4)
     personal_ident: t.Annotated[UUID, plain_uuid_serializer]
-    job_title: str | None = Field(default=None)
     certification_number: str = Field()
     certification_date: t.Annotated[date, before_date_validator, plain_date_serializer]
     expiration_date: t.Annotated[date, before_date_validator, plain_date_serializer]
@@ -28,20 +27,18 @@ class CreatePersonalNaksCertificationShema(BaseShema):
     company: str
     gtd: list[str]
     method: str | None = Field(default=None)
-    details_type: list[str] | None = Field(default=None)
-    joint_type: list[str] | None = Field(default=None)
-    welding_materials_groups: list[str] | None = Field(default=None)
-    details_thikness_from: float | None = Field(default=None)
-    details_thikness_before: float | None = Field(default=None)
+    detail_types: list[str] | None = Field(default=None)
+    joint_types: list[str] | None = Field(default=None)
+    materials: list[str] | None = Field(default=None)
+    detail_thikness_from: float | None = Field(default=None)
+    detail_thikness_before: float | None = Field(default=None)
     outer_diameter_from: float | None = Field(default=None)
     outer_diameter_before: float | None = Field(default=None)
-    welding_position: str | None = Field(default=None)
-    connection_type: str | None = Field(default=None)
     rod_diameter_from: float | None = Field(default=None)
     rod_diameter_before: float | None = Field(default=None)
-    rod_axis_position: str | None = Field(default=None)
-    details_diameter_from: float | None = Field(default=None)
-    details_diameter_before: float | None = Field(default=None)
+    detail_diameter_from: float | None = Field(default=None)
+    detail_diameter_before: float | None = Field(default=None)
+    html: str = Field(default="")
 
 
     def to_dto(self) -> CreatePersonalNaksCertificationDTO:
@@ -52,7 +49,6 @@ class CreatePersonalNaksCertificationShema(BaseShema):
 
 class UpdatePersonalNaksCertificationShema(BaseShema):
     personal_ident: t.Annotated[UUID | None, plain_optional_uuid_serializer] = Field(default=None)
-    job_title: str | None = Field(default=None)
     certification_number: str | None = Field(default=None)
     certification_date: t.Annotated[date | None, before_optional_date_validator, plain_optional_date_serializer] = Field(default=None)
     expiration_date: t.Annotated[date | None, before_optional_date_validator, plain_optional_date_serializer] = Field(default=None)
@@ -61,20 +57,18 @@ class UpdatePersonalNaksCertificationShema(BaseShema):
     company: str | None = Field(default=None)
     gtd: list[str] | None = Field(default=None)
     method: str | None = Field(default=None)
-    details_type: list[str] | None = Field(default=None)
-    joint_type: list[str] | None = Field(default=None)
-    welding_materials_groups: list[str] | None = Field(default=None)
-    details_thikness_from: float | None = Field(default=None)
-    details_thikness_before: float | None = Field(default=None)
+    detail_types: list[str] | None = Field(default=None)
+    joint_types: list[str] | None = Field(default=None)
+    materials: list[str] | None = Field(default=None)
+    detail_thikness_from: float | None = Field(default=None)
+    detail_thikness_before: float | None = Field(default=None)
     outer_diameter_from: float | None = Field(default=None)
     outer_diameter_before: float | None = Field(default=None)
-    welding_position: str | None = Field(default=None)
-    connection_type: str | None = Field(default=None)
     rod_diameter_from: float | None = Field(default=None)
     rod_diameter_before: float | None = Field(default=None)
-    rod_axis_position: str | None = Field(default=None)
-    details_diameter_from: float | None = Field(default=None)
-    details_diameter_before: float | None = Field(default=None)
+    detail_diameter_from: float | None = Field(default=None)
+    detail_diameter_before: float | None = Field(default=None)
+    html: str | None = Field(default=None)
 
 
     def to_dto(self) -> UpdatePersonalNaksCertificationDTO:

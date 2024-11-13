@@ -7,7 +7,11 @@ from naks_library import BaseShema
 from client import client
 from funcs import test_data
 
-from app.application.dto import (PersonalDTO, PersonalNaksCertificationDTO, NdtDTO)
+from app.application.dto import (
+    PersonalDTO, 
+    PersonalNaksCertificationDTO, 
+    NdtDTO
+)
 from app.presentation.shemas.personal import CreatePersonalShema, UpdatePersonalShema
 from app.presentation.shemas.personal_naks_certification import CreatePersonalNaksCertificationShema, UpdatePersonalNaksCertificationShema
 from app.presentation.shemas.ndt import CreateNdtShema, UpdateNdtShema

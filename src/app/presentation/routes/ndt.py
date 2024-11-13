@@ -5,9 +5,9 @@ from fastapi.responses import ORJSONResponse
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 
-from app.presentation.shemas import CreateNdtShema, UpdateNdtShema, NDTSelectShema, SelectResponse
+from app.presentation.shemas import NDTSelectShema, SelectResponse
 from app.application.interactors import CreateNdtInteractor, UpdateNdtInteractor, DeleteNdtInteractor, GetNdtInteractor, SelectNdtInteractor, GetCertainPersonalNdtsInteractor
-from app.application.dto import NdtDTO
+from app.application.dto import NdtDTO, UpdateNdtDTO, CreateNdtDTO
 from app.application.common.exc import NdtNotFoundException
 
 ndt_router = APIRouter(
@@ -18,10 +18,10 @@ ndt_router = APIRouter(
 @ndt_router.post("/ndt")
 async def create_ndt(
     create: FromDishka[CreateNdtInteractor],
-    data: CreateNdtShema
+    data: CreateNdtDTO
 ) -> ORJSONResponse:
 
-    await create(data.to_dto())
+    await create(data)
 
     return ORJSONResponse(
         content={
@@ -77,10 +77,10 @@ async def select_ndt(
 async def update_ndt(
     update: FromDishka[UpdateNdtInteractor],
     ident: UUID, 
-    data: UpdateNdtShema, 
+    data: UpdateNdtDTO, 
 ) -> ORJSONResponse: 
 
-    await update(ident, data.to_dto())
+    await update(ident, data)
 
     return ORJSONResponse(
         content={
