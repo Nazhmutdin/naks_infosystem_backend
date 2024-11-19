@@ -5,9 +5,9 @@ import asyncio
 import click
 from naks_library.commiter import SqlAlchemyCommitter
 
-from app.application.dto import PersonalNaksCertificationDTO, PersonalDTO
+from app.application.dto import PersonalNaksCertificationDTO, PersonalDTO, AcstDTO
 from app.infrastructure.database.setup import create_engine, create_session_maker
-from app.infrastructure.database.mappers import PersonalNaksCertificationMapper, PersonalMapper
+from app.infrastructure.database.mappers import PersonalNaksCertificationMapper, PersonalMapper, AcstMapper
 
 
 @click.group()
@@ -51,7 +51,6 @@ async def add_personals(data: list[PersonalDTO]):
 
         for el in data:
             await mapper.insert(el)
-            print(el)
 
         await committer.commit()
 
@@ -69,6 +68,32 @@ def add_personals_command(
     data = [PersonalDTO(**el) for el in json.load(open(path, "r", encoding="utf-8"))]
 
     asyncio.run(add_personals(data))
+
+
+async def add_acsts(data: list[AcstDTO]):
+    async with session_maker() as session:
+        committer = SqlAlchemyCommitter(session)
+        mapper = AcstMapper(session)
+
+        for el in data:
+            await mapper.insert(el)
+
+        await committer.commit()
+
+
+@cli.command("add-acsts")
+@click.option("--src-path", "-sp", type=str)
+def add_acsts_command(
+    src_path: str,
+):
+    path = pathlib.Path(src_path)
+
+    if not path.exists():
+        raise ValueError(f"path ({src_path}) not exists")
+    
+    data = [AcstDTO(**el) for el in json.load(open(path, "r", encoding="utf-8"))]
+
+    asyncio.run(add_acsts(data))
 
 
 if __name__ == "__main__":

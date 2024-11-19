@@ -127,8 +127,8 @@ class AcstModel(Base):
     thikness_before: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
     diameter_from: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
     diameter_before: Mapped[float | None] = sa.Column(sa.Float(), nullable=True)
-    preheating: Mapped[bool] = sa.Column(sa.Boolean(), nullable=False)
-    heat_treatment: Mapped[bool] = sa.Column(sa.Boolean(), nullable=False)
+    preheating: Mapped[list[bool]] = sa.Column(sa.ARRAY(sa.BOOLEAN), nullable=True)
+    heat_treatment: Mapped[list[bool]] = sa.Column(sa.ARRAY(sa.BOOLEAN), nullable=True)
     html: Mapped[str] = sa.Column(sa.String(), nullable=False)
 
 

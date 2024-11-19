@@ -117,8 +117,8 @@ class BaseAcst:
     thikness_before: float | None
     diameter_from: float | None
     diameter_before: float | None
-    preheating: bool | None
-    heat_treatment: bool | None
+    preheating: list[bool] | None
+    heat_treatment: list[bool] | None
     html: str | None
 
 
