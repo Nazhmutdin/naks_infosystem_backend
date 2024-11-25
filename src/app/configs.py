@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 
 if not os.getenv("MODE"):
-    load_dotenv(f"{Path(os.path.dirname(os.path.abspath(__file__))).parent.parent.parent}/.dev.env")
+    load_dotenv(f"{Path(os.path.dirname(os.path.abspath(__file__))).parent.parent}/.dev.env", override=True)
 
 
 class DBConfig:
