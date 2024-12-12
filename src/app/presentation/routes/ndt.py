@@ -1,6 +1,7 @@
 from uuid import UUID
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import ORJSONResponse
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
@@ -29,6 +30,25 @@ async def create_ndt(
     ) 
 
 
+@ndt_router.get("/ndt/select")
+@inject
+async def select_ndt(
+    select: FromDishka[SelectNdtInteractor],
+    filters: Annotated[NDTSelectShema, Query()],
+) -> SelectResponse[NdtDTO]:
+
+    res = await select(
+        filters=filters.model_dump(exclude_unset=True, exclude_none=True),
+        limit=filters.limit,
+        offset=filters.offset
+    )
+
+    return {
+        "result": res[0],
+        "count": res[1]
+    }
+
+
 @ndt_router.get("/ndt/personal/{personal_ident}")
 @inject
 async def get_certain_personal_ndts(
@@ -54,25 +74,6 @@ async def get_ndt(
         return res
     
     raise NdtNotFoundException(ident)
-
-
-@ndt_router.post("/ndt/select")
-@inject
-async def select_ndt(
-    select: FromDishka[SelectNdtInteractor],
-    filters: NDTSelectShema
-) -> SelectResponse[NdtDTO]:
-
-    res = await select(
-        filters=filters.model_dump(exclude_unset=True, exclude_none=True),
-        limit=filters.limit,
-        offset=filters.offset
-    )
-
-    return {
-        "result": res[0],
-        "count": res[1]
-    }
 
 
 @ndt_router.patch("/ndt/{ident}")

@@ -1,6 +1,7 @@
 from uuid import UUID
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import ORJSONResponse
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
@@ -40,6 +41,25 @@ async def create_personal_naks_certification(
     )
 
 
+@personal_naks_certification_router.get("/personal-naks-certification/select")
+@inject
+async def select_personal_naks_certification(
+    select: FromDishka[SelectPersonalNaksCertificationInteractor],
+    filters: Annotated[PersonalNaksCertificationSelectShema, Query()],
+) -> SelectResponse[PersonalNaksCertificationDTO]:
+    
+    res = await select(
+        filters=filters.model_dump(exclude_unset=True, exclude_none=True),
+        limit=filters.limit,
+        offset=filters.offset
+    )
+
+    return {
+        "result": res[0],
+        "count": res[1]
+    }
+
+
 @personal_naks_certification_router.get("/personal-naks-certification/personal/{personal_ident}")
 @inject
 async def get_certain_personal_naks_certifications(
@@ -65,25 +85,6 @@ async def get_personal_naks_certification(
         return res
     
     raise PersonalNaksCertificationNotFoundException(ident)
-
-
-@personal_naks_certification_router.post("/personal-naks-certification/select")
-@inject
-async def select_personal_naks_certification(
-    select: FromDishka[SelectPersonalNaksCertificationInteractor],
-    filters: PersonalNaksCertificationSelectShema
-) -> SelectResponse[PersonalNaksCertificationDTO]:
-
-    res = await select(
-        filters=filters.model_dump(exclude_unset=True, exclude_none=True),
-        limit=filters.limit,
-        offset=filters.offset
-    )
-
-    return {
-        "result": res[0],
-        "count": res[1]
-    }
 
 
 @personal_naks_certification_router.patch("/personal-naks-certification/{ident}")

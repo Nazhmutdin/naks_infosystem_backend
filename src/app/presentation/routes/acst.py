@@ -1,6 +1,7 @@
 from uuid import UUID
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import ORJSONResponse
 from dishka.integrations.fastapi import inject
 from dishka import FromDishka
@@ -40,6 +41,25 @@ async def create_acst(
     ) 
 
 
+@acst_router.get("/acst/select")
+@inject
+async def select_acst(
+    select: FromDishka[SelectAcstInteractor],
+    filters: Annotated[AcstSelectShema, Query()]
+) -> SelectResponse[AcstDTO]:
+
+    res = await select(
+        filters=filters.model_dump(exclude_unset=True, exclude_none=True),
+        limit=filters.limit,
+        offset=filters.offset
+    )
+
+    return {
+        "result": res[0],
+        "count": res[1]
+    }
+
+
 @acst_router.get("/acst/{ident}")
 @inject
 async def get_acst(
@@ -53,25 +73,6 @@ async def get_acst(
         return res
     
     raise AcstNotFoundException(ident)
-
-
-@acst_router.post("/acst/select")
-@inject
-async def select_acst(
-    select: FromDishka[SelectAcstInteractor],
-    filters: AcstSelectShema
-) -> SelectResponse[AcstDTO]:
-
-    res = await select(
-        filters=filters.model_dump(exclude_unset=True, exclude_none=True),
-        limit=filters.limit,
-        offset=filters.offset
-    )
-
-    return {
-        "result": res[0],
-        "count": res[1]
-    }
 
 
 @acst_router.patch("/acst/{ident}")
