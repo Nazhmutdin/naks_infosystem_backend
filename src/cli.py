@@ -5,9 +5,9 @@ import asyncio
 import click
 from naks_library.commiter import SqlAlchemyCommitter
 
-from app.application.dto import PersonalNaksCertificationDTO, PersonalDTO, AcstDTO
+from app.application.dto import PersonalNaksCertificationDTO, PersonalDTO, AcstDTO, NdtDTO
 from app.infrastructure.database.setup import create_engine, create_session_maker
-from app.infrastructure.database.mappers import PersonalNaksCertificationMapper, PersonalMapper, AcstMapper
+from app.infrastructure.database.mappers import PersonalNaksCertificationMapper, PersonalMapper, AcstMapper, NdtMapper
 
 
 @click.group()
@@ -68,6 +68,32 @@ def add_personals_command(
     data = [PersonalDTO(**el) for el in json.load(open(path, "r", encoding="utf-8"))]
 
     asyncio.run(add_personals(data))
+
+
+async def add_ndts(data: list[NdtDTO]):
+    async with session_maker() as session:
+        committer = SqlAlchemyCommitter(session)
+        mapper = NdtMapper(session)
+
+        for el in data:
+            await mapper.insert(el)
+
+        await committer.commit()
+
+
+@cli.command("add-ndts")
+@click.option("--src-path", "-sp", type=str)
+def add_ndts_command(
+    src_path: str,
+):
+    path = pathlib.Path(src_path)
+
+    if not path.exists():
+        raise ValueError(f"path ({src_path}) not exists")
+    
+    data = [NdtDTO(**el) for el in json.load(open(path, "r", encoding="utf-8"))]
+
+    asyncio.run(add_ndts(data))
 
 
 async def add_acsts(data: list[AcstDTO]):
