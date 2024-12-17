@@ -41,7 +41,7 @@ class PersonalNaksCertificationModel(Base):
     ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4)
     personal_ident: Mapped[uuid.UUID] = sa.Column(sa.UUID(as_uuid=True), sa.ForeignKey("personal_table.ident", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     certification_number: Mapped[str] = sa.Column(sa.String(), nullable=False)
-    protocol_number: Mapped[str] = sa.Column(sa.String(), nullable=False)
+    protocol_number: Mapped[str] = sa.Column(sa.String(), nullable=True)
     certification_date: Mapped[date] = sa.Column(sa.Date(), nullable=False)
     expiration_date: Mapped[date] = sa.Column(sa.Date(), nullable=False)
     expiration_date_fact: Mapped[date] = sa.Column(sa.Date(), nullable=False)
