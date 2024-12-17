@@ -233,8 +233,8 @@ class FakeAcstDataGenerator:
             sub_data["thikness_before"] = sub_data["thikness_from"] + self.faker.random_element(seq(0, 2000, 0.1))
             sub_data["diameter_from"] = self.faker.random_element(seq(0, 150, 0.1))
             sub_data["diameter_before"] = sub_data["diameter_from"] + self.faker.random_element(seq(0, 2000, 0.1))
-            sub_data["preheating"] = self.faker.random_element([True, True, True, False])
-            sub_data["heat_treatment"] = self.faker.random_element([True, True, True, False])
+            sub_data["preheating"] = self.faker.random_elements([True, True, True, False], 2)
+            sub_data["heat_treatment"] = self.faker.random_elements([True, True, True, False], 2)
             sub_data["html"] = ""
 
             data.append(sub_data)
