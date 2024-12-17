@@ -37,4 +37,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 pythonpath = "./src"
-env_files = "../.test.env"
+env_files = "./.test.env"

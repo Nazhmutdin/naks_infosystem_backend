@@ -60,11 +60,11 @@ async def select_acst(
     }
 
 
-@acst_router.get("/acst/{ident}")
+@acst_router.get("/acst")
 @inject
 async def get_acst(
     get: FromDishka[GetAcstInteractor],
-    ident: UUID
+    ident: Annotated[UUID, Query()],
 ) -> AcstDTO:
 
     res = await get(ident)
@@ -75,11 +75,11 @@ async def get_acst(
     raise AcstNotFoundException(ident)
 
 
-@acst_router.patch("/acst/{ident}")
+@acst_router.patch("/acst")
 @inject
 async def update_acst(
     update: FromDishka[UpdateAcstInteractor],
-    ident: UUID, 
+    ident: Annotated[UUID, Query()], 
     data: UpdateAcstDTO, 
 ) -> ORJSONResponse: 
 
@@ -92,11 +92,11 @@ async def update_acst(
     )
 
 
-@acst_router.delete("/acst/{ident}")
+@acst_router.delete("/acst")
 @inject
 async def delete_acst(
     delete: FromDishka[DeleteAcstInteractor],
-    ident: UUID
+    ident: Annotated[UUID, Query()],
 ) -> ORJSONResponse: 
 
     await delete(ident)

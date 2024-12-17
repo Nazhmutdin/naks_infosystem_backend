@@ -49,11 +49,11 @@ async def select_ndt(
     }
 
 
-@ndt_router.get("/ndt/personal/{personal_ident}")
+@ndt_router.get("/ndt/personal")
 @inject
 async def get_certain_personal_ndts(
     get: FromDishka[GetCertainPersonalNdtsInteractor],
-    personal_ident: UUID
+    personal_ident: Annotated[UUID, Query()],
 ) -> list[NdtDTO]: 
 
     certs = await get(personal_ident)
@@ -61,11 +61,11 @@ async def get_certain_personal_ndts(
     return certs
 
 
-@ndt_router.get("/ndt/{ident}")
+@ndt_router.get("/ndt")
 @inject
 async def get_ndt(
     get: FromDishka[GetNdtInteractor],
-    ident: UUID
+    ident: Annotated[UUID, Query()],
 ) -> NdtDTO:
 
     res = await get(ident)
@@ -76,11 +76,11 @@ async def get_ndt(
     raise NdtNotFoundException(ident)
 
 
-@ndt_router.patch("/ndt/{ident}")
+@ndt_router.patch("/ndt")
 @inject
 async def update_ndt(
     update: FromDishka[UpdateNdtInteractor],
-    ident: UUID, 
+    ident: Annotated[UUID, Query()],
     data: UpdateNdtDTO, 
 ) -> ORJSONResponse: 
 
@@ -93,11 +93,11 @@ async def update_ndt(
     )
 
 
-@ndt_router.delete("/ndt/{ident}")
+@ndt_router.delete("/ndt")
 @inject
 async def delete_ndt(
     delete: FromDishka[DeleteNdtInteractor],
-    ident: UUID
+    ident: Annotated[UUID, Query()],
 ) -> ORJSONResponse: 
 
     await delete(ident)

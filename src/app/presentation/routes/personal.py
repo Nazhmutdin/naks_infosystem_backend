@@ -50,11 +50,11 @@ async def select_personal(
     }
 
 
-@personal_router.get("/personal/{ident}")
+@personal_router.get("/personal")
 @inject
 async def get_personal(
     get: FromDishka[GetPersonalInteractor],
-    ident: UUID
+    ident: Annotated[UUID, Query()]
 ) -> PersonalDTO:
 
     res = await get(ident)
@@ -65,11 +65,11 @@ async def get_personal(
     raise PersonalNotFoundException(ident)
 
 
-@personal_router.patch("/personal/{ident}")
+@personal_router.patch("/personal")
 @inject
 async def update_personal(
     update: FromDishka[UpdatePersonalInteractor],
-    ident: UUID, 
+    ident: Annotated[UUID, Query()],
     data: UpdatePersonalDTO
 ) -> ORJSONResponse:
 
@@ -82,11 +82,11 @@ async def update_personal(
     )
 
 
-@personal_router.delete("/personal/{ident}")
+@personal_router.delete("/personal")
 @inject
 async def delete_personal(
     delete: FromDishka[DeletePersonalInteractor],
-    ident: UUID
+    ident: Annotated[UUID, Query()],
 ) -> ORJSONResponse: 
 
     await delete(ident)

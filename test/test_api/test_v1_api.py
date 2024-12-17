@@ -1,4 +1,5 @@
 import typing as t
+from uuid import UUID
 import json
 
 import pytest
@@ -40,23 +41,24 @@ class BaseTestCRUDEndpoints[DTO, CreateDTO, UpdateDTO]:
         assert res.status_code == 200
 
 
-    def test_get(self, api_path: str, item: _DTO):
-        res = client.get(api_path)
+    def test_get(self, api_path: str, ident: UUID, item: _DTO):
+        res = client.get(api_path, params={"ident": ident.hex})
 
         sub_data = json.loads(res.text)
 
         assert item == self.__dto__(**sub_data)
 
     
-    def test_update(self, api_path: str, data: _DTO):
+    def test_update(self, api_path: str, ident: UUID, data: _DTO):
         res = client.patch(
             api_path, 
+            params={"ident": ident.hex},
             json=RootModel[UpdateDTO](data).model_dump(mode="json")
         )
 
         assert res.status_code == 200
 
-        res = client.get(api_path)
+        res = client.get(api_path, params={"ident": ident.hex})
 
         assert res.status_code == 200
 
@@ -66,12 +68,12 @@ class BaseTestCRUDEndpoints[DTO, CreateDTO, UpdateDTO]:
             assert getattr(result, key, None) == value
 
 
-    def test_delete(self, api_path: str, item: _DTO): 
-        res = client.delete(f"{api_path}/{item.ident}")
+    def test_delete(self, api_path: str, ident: UUID, item: _DTO): 
+        res = client.delete(api_path, params={"ident": ident.hex})
 
         assert res.status_code == 200
 
-        assert client.get(f"{api_path}/{item.ident}").status_code == 404
+        assert client.get(api_path, params={"ident": ident.hex}).status_code == 404
         
         res = client.post(
             api_path, 
@@ -107,7 +109,8 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalDTO, CreatePersona
         personal = personals[index]
 
         return super().test_get(
-            f"/v1/personal/{personal.ident.hex}",
+            "/v1/personal",
+            personal.ident,
             personal
         )
 
@@ -117,7 +120,8 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalDTO, CreatePersona
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
-            f"/v1/personal/{ident}",
+            "/v1/personal",
+            ident,
             self.__update_dto__(**data)
         )
 
@@ -132,6 +136,7 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalDTO, CreatePersona
 
         return super().test_delete(
             "/v1/personal",
+            personal.ident,
             self.__create_dto__(**personal.__dict__)
         )
 
@@ -161,7 +166,8 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalNaksC
         certification = personal_certifications[index]
 
         return super().test_get(
-            f"/v1/personal-naks-certification/{certification.ident.hex}",
+            "/v1/personal-naks-certification",
+            certification.ident,
             certification
         )
         
@@ -173,7 +179,12 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalNaksC
 
         certifications = [cert for cert in test_data.fake_personal_certifications if cert.personal_ident == random_personal_ident]
 
-        res = client.get(f"/v1/personal-naks-certification/personal/{random_personal_ident.hex}")
+        res = client.get(
+            "/v1/personal-naks-certification/personal",
+            params={
+                "personal_ident": random_personal_ident.hex
+            }
+        )
         
         assert len(certifications) == len(json.loads(res.text))
 
@@ -184,7 +195,8 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalNaksC
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
-            f"/v1/personal-naks-certification/{ident}",
+            "/v1/personal-naks-certification",
+            ident,
             self.__update_dto__(**data)
         )
 
@@ -199,6 +211,7 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalNaksC
 
         return super().test_delete(
             "/v1/personal-naks-certification",
+            certification.ident,
             self.__create_dto__(**certification.__dict__)
         )
 
@@ -229,7 +242,8 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NdtDTO, CreateNdtDTO, UpdateNdt
         ndt = ndts[index]
 
         return super().test_get(
-            f"/v1/ndt/{ndt.ident.hex}",
+            "/v1/ndt",
+            ndt.ident,
             ndt
         )
         
@@ -241,7 +255,12 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NdtDTO, CreateNdtDTO, UpdateNdt
 
         ndts = [ndt for ndt in test_data.fake_ndts if ndt.personal_ident == random_personal_ident]
 
-        res = client.get(f"/v1/ndt/personal/{random_personal_ident.hex}")
+        res = client.get(
+            "/v1/ndt/personal",
+            params={
+                "personal_ident": random_personal_ident.hex
+            }
+        )
         
         assert len(ndts) == len(json.loads(res.text))
 
@@ -252,7 +271,8 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NdtDTO, CreateNdtDTO, UpdateNdt
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
-            f"/v1/ndt/{ident}",
+            "/v1/ndt",
+            ident,
             self.__update_dto__(**data)
         )
 
@@ -267,6 +287,7 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NdtDTO, CreateNdtDTO, UpdateNdt
 
         return super().test_delete(
             "/v1/ndt",
+            ndt.ident,
             self.__create_dto__(**ndt.__dict__)
         )
 
@@ -297,7 +318,8 @@ class TestAcstCRUDEndpoints(BaseTestCRUDEndpoints[AcstDTO, CreateAcstDTO, Update
         acst = acsts[index]
 
         return super().test_get(
-            f"/v1/acst/{acst.ident.hex}",
+            "/v1/acst",
+            acst.ident,
             acst
         )
 
@@ -308,7 +330,8 @@ class TestAcstCRUDEndpoints(BaseTestCRUDEndpoints[AcstDTO, CreateAcstDTO, Update
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
         return super().test_update(
-            f"/v1/acst/{ident}",
+            "/v1/acst",
+            ident,
             self.__update_dto__(**data)
         )
 
@@ -323,5 +346,6 @@ class TestAcstCRUDEndpoints(BaseTestCRUDEndpoints[AcstDTO, CreateAcstDTO, Update
 
         return super().test_delete(
             "/v1/acst",
+            acst.ident,
             self.__create_dto__(**acst.__dict__)
         )

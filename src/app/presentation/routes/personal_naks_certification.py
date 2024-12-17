@@ -60,11 +60,11 @@ async def select_personal_naks_certification(
     }
 
 
-@personal_naks_certification_router.get("/personal-naks-certification/personal/{personal_ident}")
+@personal_naks_certification_router.get("/personal-naks-certification/personal")
 @inject
 async def get_certain_personal_naks_certifications(
     get: FromDishka[GetCertainPersonalNaksCertificationsInteractor],
-    personal_ident: UUID
+    personal_ident: Annotated[UUID, Query()],
 ) -> list[PersonalNaksCertificationDTO]: 
 
     certs = await get(personal_ident)
@@ -72,11 +72,11 @@ async def get_certain_personal_naks_certifications(
     return certs
 
 
-@personal_naks_certification_router.get("/personal-naks-certification/{ident}")
+@personal_naks_certification_router.get("/personal-naks-certification")
 @inject
 async def get_personal_naks_certification(
     get: FromDishka[GetPersonalNaksCertificationInteractor],
-    ident: UUID
+    ident: Annotated[UUID, Query()],
 ) -> PersonalNaksCertificationDTO: 
 
     res = await get(ident)
@@ -87,11 +87,11 @@ async def get_personal_naks_certification(
     raise PersonalNaksCertificationNotFoundException(ident)
 
 
-@personal_naks_certification_router.patch("/personal-naks-certification/{ident}")
+@personal_naks_certification_router.patch("/personal-naks-certification")
 @inject
 async def update_personal_naks_certification( 
     update: FromDishka[UpdatePersonalNaksCertificationInteractor],
-    ident: UUID, 
+    ident: Annotated[UUID, Query()],
     data: UpdatePersonalNaksCertificationDTO
 ) -> ORJSONResponse: 
 
@@ -104,11 +104,11 @@ async def update_personal_naks_certification(
     ) 
 
 
-@personal_naks_certification_router.delete("/personal-naks-certification/{ident}")
+@personal_naks_certification_router.delete("/personal-naks-certification")
 @inject
 async def delete_personal_naks_certification(
     delete: FromDishka[DeletePersonalNaksCertificationInteractor],
-    ident: UUID
+    ident: Annotated[UUID, Query()],
 ) -> ORJSONResponse: 
 
     await delete(ident)

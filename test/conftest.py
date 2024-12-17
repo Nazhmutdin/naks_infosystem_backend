@@ -11,7 +11,7 @@ from funcs import test_data, engine
 
 @pytest.fixture(scope="module", autouse=True)
 def prepare_db():
-    assert DBConfig.DB_NAME() == "rhi_test_db"
+    assert DBConfig.DB_NAME() == "rhi_test_backend"
 
     async def start_db():
 
