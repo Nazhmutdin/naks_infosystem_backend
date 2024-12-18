@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from naks_library.crud_mapper import SqlAlchemyCrudMapper
-from sqlalchemy import select, desc
 
 from app.application.dto import (
     PersonalDTO, 
@@ -40,11 +39,7 @@ class PersonalNaksCertificationMapper(SqlAlchemyCrudMapper[PersonalNaksCertifica
 
 
     async def get_certain_personal_naks_certifications(self, personal_ident: UUID) -> list[PersonalNaksCertificationDTO]:
-        stmt = select(PersonalNaksCertificationModel).where(
-            PersonalNaksCertificationModel.personal_ident == personal_ident
-        ).order_by(desc(PersonalNaksCertificationModel.expiration_date_fact))
-
-        res = (await self.session.execute(stmt)).scalars().all()
+        res = (await self.get_by(PersonalNaksCertificationModel.personal_ident == personal_ident)).scalars().all()
 
         return [self._convert(el) for el in res]
 
@@ -81,11 +76,7 @@ class NdtMapper(SqlAlchemyCrudMapper[NdtDTO, CreateNdtDTO, UpdateNdtDTO]):
 
 
     async def get_certain_personal_ndts(self, personal_ident: UUID) -> list[NdtDTO]:
-        stmt = select(NdtModel).where(
-            NdtModel.personal_ident == personal_ident
-        ).order_by(desc(NdtModel.welding_date))
-
-        res = (await self.session.execute(stmt)).scalars().all()
+        res = (await self.get_by(NdtModel.personal_ident == personal_ident)).scalars().all()
 
         return [self._convert(el) for el in res]
 
