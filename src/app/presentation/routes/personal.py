@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 from fastapi.responses import ORJSONResponse
+from pydantic import RootModel
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 
@@ -70,10 +71,10 @@ async def get_personal(
 async def update_personal(
     update: FromDishka[UpdatePersonalInteractor],
     ident: Annotated[UUID, Query()],
-    data: UpdatePersonalDTO
+    data: RootModel[UpdatePersonalDTO]
 ) -> ORJSONResponse:
 
-    await update(ident, data)
+    await update(ident, data.model_dump(exclude_unset=True))
 
     return ORJSONResponse(
         content={

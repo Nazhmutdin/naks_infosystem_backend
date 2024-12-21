@@ -11,7 +11,8 @@ from app.application.interactors.personal_naks_certification import (
     SelectPersonalNaksCertificationInteractor,
     UpdatePersonalNaksCertificationInteractor,
     DeletePersonalNaksCertificationInteractor,
-    GetCertainPersonalNaksCertificationsInteractor
+    GetCertainPersonalNaksCertificationsInteractor,
+    GetPersonalNaksCertificationHtmlInteractor
 )
 from app.application.interactors.ndt import (
     CreateNdtInteractor,
@@ -27,4 +28,5 @@ from app.application.interactors.acst import (
     SelectAcstInteractor,
     UpdateAcstInteractor,
     DeleteAcstInteractor,
+    GetAcstHtmlInteractor
 )

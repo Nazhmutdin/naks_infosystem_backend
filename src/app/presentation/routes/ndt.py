@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 from fastapi.responses import ORJSONResponse
+from pydantic import RootModel
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 
@@ -81,10 +82,10 @@ async def get_ndt(
 async def update_ndt(
     update: FromDishka[UpdateNdtInteractor],
     ident: Annotated[UUID, Query()],
-    data: UpdateNdtDTO, 
+    data: RootModel[UpdateNdtDTO], 
 ) -> ORJSONResponse: 
 
-    await update(ident, data)
+    await update(ident, data.model_dump(exclude_unset=True))
 
     return ORJSONResponse(
         content={

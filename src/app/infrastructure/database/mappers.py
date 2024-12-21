@@ -5,21 +5,17 @@ from naks_library.crud_mapper import SqlAlchemyCrudMapper
 from app.application.dto import (
     PersonalDTO, 
     CreatePersonalDTO, 
-    UpdatePersonalDTO, 
     PersonalNaksCertificationDTO, 
     CreatePersonalNaksCertificationDTO, 
-    UpdatePersonalNaksCertificationDTO, 
     NdtDTO,
     CreateNdtDTO,
-    UpdateNdtDTO,
     AcstDTO,
-    CreateAcstDTO, 
-    UpdateAcstDTO
+    CreateAcstDTO
 )
 from app.infrastructure.database.models import PersonalModel, PersonalNaksCertificationModel, NdtModel, AcstModel
 
 
-class PersonalMapper(SqlAlchemyCrudMapper[PersonalDTO, CreatePersonalDTO, UpdatePersonalDTO]):
+class PersonalMapper(SqlAlchemyCrudMapper[PersonalDTO, CreatePersonalDTO]):
     __model__ = PersonalModel
 
     def _convert(self, row: PersonalModel) -> PersonalDTO:
@@ -34,7 +30,7 @@ class PersonalMapper(SqlAlchemyCrudMapper[PersonalDTO, CreatePersonalDTO, Update
         )
 
 
-class PersonalNaksCertificationMapper(SqlAlchemyCrudMapper[PersonalNaksCertificationDTO, CreatePersonalNaksCertificationDTO, UpdatePersonalNaksCertificationDTO]):
+class PersonalNaksCertificationMapper(SqlAlchemyCrudMapper[PersonalNaksCertificationDTO, CreatePersonalNaksCertificationDTO]):
     __model__ = PersonalNaksCertificationModel
 
 
@@ -42,6 +38,13 @@ class PersonalNaksCertificationMapper(SqlAlchemyCrudMapper[PersonalNaksCertifica
         res = (await self.get_by(PersonalNaksCertificationModel.personal_ident == personal_ident)).scalars().all()
 
         return [self._convert(el) for el in res]
+    
+
+    async def get_personal_naks_certification_html(self, ident: UUID) -> str | None:
+        res = (await self.get_by(PersonalNaksCertificationModel.ident == ident)).scalar_one_or_none()
+
+        if res:
+            return res.html
 
 
     def _convert(self, row: PersonalNaksCertificationModel) -> PersonalNaksCertificationDTO:
@@ -66,14 +69,12 @@ class PersonalNaksCertificationMapper(SqlAlchemyCrudMapper[PersonalNaksCertifica
             rod_diameter_from=row.rod_diameter_from,
             rod_diameter_before=row.rod_diameter_before,
             detail_diameter_from=row.detail_diameter_from,
-            detail_diameter_before=row.detail_diameter_before,
-            html=row.html
+            detail_diameter_before=row.detail_diameter_before
         )
 
 
-class NdtMapper(SqlAlchemyCrudMapper[NdtDTO, CreateNdtDTO, UpdateNdtDTO]):
+class NdtMapper(SqlAlchemyCrudMapper[NdtDTO, CreateNdtDTO]):
     __model__ = NdtModel
-
 
     async def get_certain_personal_ndts(self, personal_ident: UUID) -> list[NdtDTO]:
         res = (await self.get_by(NdtModel.personal_ident == personal_ident)).scalars().all()
@@ -97,8 +98,15 @@ class NdtMapper(SqlAlchemyCrudMapper[NdtDTO, CreateNdtDTO, UpdateNdtDTO]):
         )
 
 
-class AcstMapper(SqlAlchemyCrudMapper[AcstDTO, CreateAcstDTO, UpdateAcstDTO]):
+class AcstMapper(SqlAlchemyCrudMapper[AcstDTO, CreateAcstDTO]):
     __model__ = AcstModel
+    
+
+    async def get_acst_html(self, ident: UUID) -> str | None:
+        res = (await self.get_by(AcstModel.ident == ident)).scalar_one_or_none()
+
+        if res:
+            return res.html
 
 
     def _convert(self, row: AcstModel) -> AcstDTO:
@@ -118,6 +126,5 @@ class AcstMapper(SqlAlchemyCrudMapper[AcstDTO, CreateAcstDTO, UpdateAcstDTO]):
             diameter_from=row.diameter_from,
             diameter_before=row.diameter_before,
             preheating=row.preheating,
-            heat_treatment=row.heat_treatment,
-            html=row.html
+            heat_treatment=row.heat_treatment
         )

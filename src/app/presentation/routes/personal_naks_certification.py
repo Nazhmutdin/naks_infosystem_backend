@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 from fastapi.responses import ORJSONResponse
+from pydantic import RootModel
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 
@@ -16,9 +17,10 @@ from app.application.interactors import (
     DeletePersonalNaksCertificationInteractor,
     GetPersonalNaksCertificationInteractor,
     GetCertainPersonalNaksCertificationsInteractor,
+    GetPersonalNaksCertificationHtmlInteractor,
     SelectPersonalNaksCertificationInteractor
 )
-from app.application.dto import PersonalNaksCertificationDTO, UpdatePersonalNaksCertificationDTO, CreatePersonalNaksCertificationDTO
+from app.application.dto import UpdatePersonalNaksCertificationDTO, CreatePersonalNaksCertificationDTO, PersonalNaksCertificationDTO
 from app.application.common.exc import PersonalNaksCertificationNotFoundException
 
 
@@ -72,6 +74,21 @@ async def get_certain_personal_naks_certifications(
     return certs
 
 
+@personal_naks_certification_router.get("/personal-naks-certification/html")
+@inject
+async def get_personal_naks_certification_html(
+    get: FromDishka[GetPersonalNaksCertificationHtmlInteractor],
+    ident: Annotated[UUID, Query()],
+) -> str: 
+
+    res = await get(ident)
+
+    if res:
+        return res
+    
+    raise PersonalNaksCertificationNotFoundException(ident)
+
+
 @personal_naks_certification_router.get("/personal-naks-certification")
 @inject
 async def get_personal_naks_certification(
@@ -92,10 +109,10 @@ async def get_personal_naks_certification(
 async def update_personal_naks_certification( 
     update: FromDishka[UpdatePersonalNaksCertificationInteractor],
     ident: Annotated[UUID, Query()],
-    data: UpdatePersonalNaksCertificationDTO
+    data: RootModel[UpdatePersonalNaksCertificationDTO]
 ) -> ORJSONResponse: 
 
-    await update(ident, data)
+    await update(ident, data.model_dump(exclude_unset=True))
 
     return ORJSONResponse(
         content={

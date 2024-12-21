@@ -69,13 +69,11 @@ class BasePersonalNaksCertification:
     rod_diameter_before: float | None
     detail_diameter_from: float | None
     detail_diameter_before: float | None
-    html: str | None
 
 
 @dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class PersonalNaksCertificationDTO(BasePersonalNaksCertification):
     ident: UUID
-    html: str
 
 
 @dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
@@ -119,13 +117,11 @@ class BaseAcst:
     diameter_before: float | None
     preheating: list[bool] | None
     heat_treatment: list[bool] | None
-    html: str | None
 
 
 @dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
 class AcstDTO(BaseAcst):
     ident: UUID
-    html: str
 
 
 @dataclass(config=ConfigDict(alias_generator=camel_case_alias_generator, populate_by_name=True))
@@ -141,7 +137,6 @@ class UpdateAcstDTO(BaseAcst):
     expiration_date: Annotated[date | None, before_optional_date_validator, plain_optional_date_serializer]
     company: str | None
     gtd: list[str] | None
-
 
 
 """

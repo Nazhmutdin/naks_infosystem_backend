@@ -26,7 +26,9 @@ from app.application.interactors import (
     CreateAcstInteractor,
     UpdateAcstInteractor,
     DeleteAcstInteractor,
-    SelectAcstInteractor
+    SelectAcstInteractor,
+    GetPersonalNaksCertificationHtmlInteractor,
+    GetAcstHtmlInteractor
 )
 from app.infrastructure.database.mappers import PersonalMapper, PersonalNaksCertificationMapper, NdtMapper, AcstMapper
 from app.application.common.select_stmt_creator_configs import (
@@ -206,6 +208,17 @@ class ApplicationProvider(Provider):
 
 
     @provide(scope=Scope.REQUEST)
+    async def provide_personal_naks_certifications_html_interactor(
+        self, 
+        personal_naks_certification_gateway: PersonalNaksCertificationGateway
+    ) -> GetPersonalNaksCertificationHtmlInteractor:
+
+        return GetPersonalNaksCertificationHtmlInteractor(
+            gateway=personal_naks_certification_gateway
+        )
+
+
+    @provide(scope=Scope.REQUEST)
     async def provide_certain_personal_naks_certifications_data_interactor(
         self, 
         personal_naks_certification_gateway: PersonalNaksCertificationGateway
@@ -343,12 +356,23 @@ class ApplicationProvider(Provider):
 
 
     @provide(scope=Scope.REQUEST)
-    async def provide_acst_data_interactor(
+    async def provide_get_acst_data_interactor(
         self, 
         acst_gateway: AcstGateway
     ) -> GetAcstInteractor:
 
-        return GetNdtInteractor(
+        return GetAcstInteractor(
+            gateway=acst_gateway
+        )
+
+
+    @provide(scope=Scope.REQUEST)
+    async def provide_get_acst_html_interactor(
+        self, 
+        acst_gateway: AcstGateway
+    ) -> GetAcstHtmlInteractor:
+
+        return GetAcstHtmlInteractor(
             gateway=acst_gateway
         )
 

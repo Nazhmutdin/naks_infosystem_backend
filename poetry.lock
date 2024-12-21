@@ -531,7 +531,7 @@ sqlalchemy = "^2.0.36"
 type = "git"
 url = "https://github.com/Nazhmutdin/naks_library.git"
 reference = "HEAD"
-resolved_reference = "206f353036c1b126a03334aca9b2d4227414a306"
+resolved_reference = "bab1798a5503b366dd6763739b3f4efcafb06b03"
 
 [[package]]
 name = "orjson"

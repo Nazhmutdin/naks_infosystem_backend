@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 from fastapi.responses import ORJSONResponse
+from pydantic import RootModel
 from dishka.integrations.fastapi import inject
 from dishka import FromDishka
 
@@ -11,7 +12,8 @@ from app.application.interactors import (
     GetAcstInteractor,
     SelectAcstInteractor,
     UpdateAcstInteractor,
-    DeleteAcstInteractor
+    DeleteAcstInteractor,
+    GetAcstHtmlInteractor
 )
 from app.application.dto import (
     CreateAcstDTO,
@@ -60,6 +62,21 @@ async def select_acst(
     }
 
 
+@acst_router.get("/acst/html")
+@inject
+async def get_acst_html(
+    get: FromDishka[GetAcstHtmlInteractor],
+    ident: Annotated[UUID, Query()],
+) -> str:
+
+    res = await get(ident)
+
+    if res:
+        return res
+    
+    raise AcstNotFoundException(ident)
+
+
 @acst_router.get("/acst")
 @inject
 async def get_acst(
@@ -80,10 +97,10 @@ async def get_acst(
 async def update_acst(
     update: FromDishka[UpdateAcstInteractor],
     ident: Annotated[UUID, Query()], 
-    data: UpdateAcstDTO, 
+    data: RootModel[UpdateAcstDTO], 
 ) -> ORJSONResponse: 
 
-    await update(ident, data)
+    await update(ident, data.model_dump(exclude_unset=True))
 
     return ORJSONResponse(
         content={

@@ -12,27 +12,23 @@ from app.application.dto import (
     UpdatePersonalDTO,
     PersonalNaksCertificationDTO, 
     CreatePersonalNaksCertificationDTO, 
-    UpdatePersonalNaksCertificationDTO, 
+    UpdatePersonalNaksCertificationDTO,
     NdtDTO, 
     CreateNdtDTO, 
     UpdateNdtDTO,
     AcstDTO, 
-    CreateAcstDTO, 
+    CreateAcstDTO,
     UpdateAcstDTO
 )
 from funcs import test_data
 
 
-_DTO = t.TypeVar("_DTO")
-
-
-class BaseTestCRUDEndpoints[DTO, CreateDTO, UpdateDTO]:
-    __dto__: type[_DTO]
-    __update_dto__: type[UpdateDTO]
+class BaseTestCRUDEndpoints[DTO, CreateDTO]:
+    __dto__: type[DTO]
     __create_dto__: type[CreateDTO]
 
 
-    def test_add(self, api_path, item: _DTO):
+    def test_add(self, api_path, item: DTO):
         res = client.post(
             api_path, 
             json=RootModel[CreateDTO](item).model_dump(mode="json")
@@ -41,19 +37,19 @@ class BaseTestCRUDEndpoints[DTO, CreateDTO, UpdateDTO]:
         assert res.status_code == 200
 
 
-    def test_get(self, api_path: str, ident: UUID, item: _DTO):
+    def test_get(self, api_path: str, ident: UUID, item: DTO):
         res = client.get(api_path, params={"ident": ident.hex})
 
         sub_data = json.loads(res.text)
 
         assert item == self.__dto__(**sub_data)
 
-    
-    def test_update(self, api_path: str, ident: UUID, data: _DTO):
+
+    def test_update(self, api_path: str, ident: UUID, data: RootModel):
         res = client.patch(
             api_path, 
             params={"ident": ident.hex},
-            json=RootModel[UpdateDTO](data).model_dump(mode="json")
+            json=data.model_dump(mode="json")
         )
 
         assert res.status_code == 200
@@ -62,13 +58,13 @@ class BaseTestCRUDEndpoints[DTO, CreateDTO, UpdateDTO]:
 
         assert res.status_code == 200
 
-        result: dict = self.__dto__(**json.loads(res.text))
+        result: dict = data.model_validate(json.loads(res.text)).model_dump(mode="json", by_alias=False)
 
-        for key, value in data.__dict__.items():
-            assert getattr(result, key, None) == value
+        for key, value in data.model_dump(mode="json", by_alias=False).items():
+            assert result[key] == value
 
 
-    def test_delete(self, api_path: str, ident: UUID, item: _DTO): 
+    def test_delete(self, api_path: str, ident: UUID, item: DTO): 
         res = client.delete(api_path, params={"ident": ident.hex})
 
         assert res.status_code == 200
@@ -83,19 +79,17 @@ class BaseTestCRUDEndpoints[DTO, CreateDTO, UpdateDTO]:
         assert res.status_code == 200
 
 
-class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalDTO, CreatePersonalDTO, UpdatePersonalDTO]):
-    __update_dto__ = UpdatePersonalDTO
+class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalDTO, CreatePersonalDTO]):
     __create_dto__ = CreatePersonalDTO
     __dto__ = PersonalDTO
 
 
-    @pytest.mark.usefixtures("personals")
-    def test_add(self, personals: list[PersonalDTO]):
-        for personal in personals:
+    def test_add(self):
+        for personal in test_data.fake_personals_dicts:
 
             super().test_add(
                 "/v1/personal",
-                self.__create_dto__(**personal.__dict__)
+                self.__create_dto__(**personal)
             )
 
 
@@ -119,10 +113,11 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalDTO, CreatePersona
         [(personal.ident, new_personal_data) for personal, new_personal_data in zip(test_data.fake_personals[:5], test_data.fake_personal_generator.generate(5))]
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
+
         return super().test_update(
             "/v1/personal",
             ident,
-            self.__update_dto__(**data)
+            RootModel[UpdatePersonalDTO](data)
         )
 
 
@@ -141,18 +136,16 @@ class TestPersonalCRUDEndpoints(BaseTestCRUDEndpoints[PersonalDTO, CreatePersona
         )
 
 
-class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalNaksCertificationDTO, CreatePersonalNaksCertificationDTO, UpdatePersonalNaksCertificationDTO]):
-    __update_dto__ = UpdatePersonalNaksCertificationDTO
+class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalNaksCertificationDTO, CreatePersonalNaksCertificationDTO]):
     __create_dto__ = CreatePersonalNaksCertificationDTO
     __dto__ = PersonalNaksCertificationDTO
 
 
-    @pytest.mark.usefixtures("personal_certifications")
-    def test_add(self, personal_certifications: list[PersonalNaksCertificationDTO]): 
-        for certification in personal_certifications:
+    def test_add(self): 
+        for certification in test_data.fake_personal_certifications_dicts:
             super().test_add(
                 "/v1/personal-naks-certification",
-                self.__create_dto__(**certification.__dict__)
+                self.__create_dto__(**certification)
             )
         
 
@@ -194,10 +187,11 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalNaksC
         [(personal_certification.ident, new_personal_certification_data) for personal_certification, new_personal_certification_data in zip(test_data.fake_personal_certifications[:5], test_data.fake_personal_certification_generator.generate(5))]
     )
     def test_update(self, ident: str, data: dict[str, t.Any]):
+
         return super().test_update(
             "/v1/personal-naks-certification",
             ident,
-            self.__update_dto__(**data)
+            RootModel[UpdatePersonalNaksCertificationDTO](data)
         )
 
 
@@ -205,31 +199,30 @@ class TestPersonalCertificationCRUDEndpoints(BaseTestCRUDEndpoints[PersonalNaksC
             "index",
             [0, 1, 2, 3]
     )
-    @pytest.mark.usefixtures("personal_certifications")
-    def test_delete(self, index: int, personal_certifications: list[PersonalNaksCertificationDTO]):
-        certification = personal_certifications[index]
+    @pytest.mark.usefixtures("personal_certification_dicts")
+    def test_delete(self, index: int, personal_certification_dicts: list[dict]):
+
+        certification = personal_certification_dicts[index]
 
         return super().test_delete(
             "/v1/personal-naks-certification",
-            certification.ident,
-            self.__create_dto__(**certification.__dict__)
+            certification["ident"],
+            self.__create_dto__(**certification)
         )
 
 
-class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NdtDTO, CreateNdtDTO, UpdateNdtDTO]):
+class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NdtDTO, CreateNdtDTO]):
     __update_dto__ = UpdateNdtDTO
     __create_dto__ = CreateNdtDTO
     __dto__ = NdtDTO
 
 
-    @pytest.mark.usefixtures("ndts")
-    def test_add(self, ndts: list[NdtDTO]):
-
-        for ndt in ndts:
+    def test_add(self):
+        for ndt in test_data.fake_ndts_dicts:
 
             super().test_add(
                 "/v1/ndt",
-                self.__create_dto__(**ndt.__dict__)
+                self.__create_dto__(**ndt)
             )
 
 
@@ -273,7 +266,7 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NdtDTO, CreateNdtDTO, UpdateNdt
         return super().test_update(
             "/v1/ndt",
             ident,
-            self.__update_dto__(**data)
+            RootModel[UpdateNdtDTO](data)
         )
 
 
@@ -292,20 +285,19 @@ class TestNDTCRUDEndpoints(BaseTestCRUDEndpoints[NdtDTO, CreateNdtDTO, UpdateNdt
         )
 
 
-class TestAcstCRUDEndpoints(BaseTestCRUDEndpoints[AcstDTO, CreateAcstDTO, UpdateAcstDTO]):
+class TestAcstCRUDEndpoints(BaseTestCRUDEndpoints[AcstDTO, CreateAcstDTO]):
     __update_dto__ = UpdateAcstDTO
     __create_dto__ = CreateAcstDTO
     __dto__ = AcstDTO
 
 
-    @pytest.mark.usefixtures("acsts")
-    def test_add(self, acsts: list[AcstDTO]):
+    def test_add(self):
 
-        for acst in acsts:
+        for acst in test_data.fake_acsts_dicts:
 
             super().test_add(
                 "/v1/acst",
-                self.__create_dto__(**acst.__dict__)
+                self.__create_dto__(**acst)
             )
 
 
@@ -332,7 +324,7 @@ class TestAcstCRUDEndpoints(BaseTestCRUDEndpoints[AcstDTO, CreateAcstDTO, Update
         return super().test_update(
             "/v1/acst",
             ident,
-            self.__update_dto__(**data)
+            RootModel[UpdateAcstDTO](data)
         )
 
 
@@ -340,12 +332,12 @@ class TestAcstCRUDEndpoints(BaseTestCRUDEndpoints[AcstDTO, CreateAcstDTO, Update
             "index",
             [0, 1, 2, 3]
     )
-    @pytest.mark.usefixtures("acsts")
-    def test_delete(self, index: int, acsts: list[AcstDTO]):
-        acst = acsts[index]
+    @pytest.mark.usefixtures("acst_dicts")
+    def test_delete(self, index: int, acst_dicts: list[dict]):
+        acst = acst_dicts[index]
 
         return super().test_delete(
             "/v1/acst",
-            acst.ident,
-            self.__create_dto__(**acst.__dict__)
+            acst["ident"],
+            self.__create_dto__(**acst)
         )

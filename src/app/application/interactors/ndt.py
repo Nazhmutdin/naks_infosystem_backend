@@ -1,7 +1,7 @@
 from uuid import UUID
 from naks_library.interactors import BaseCreateInteractor, BaseGetInteractor, BaseUpdateInteractor, BaseDeleteInteractor, BaseSelectInteractor
 
-from app.application.dto import NdtDTO, CreateNdtDTO, UpdateNdtDTO
+from app.application.dto import NdtDTO, CreateNdtDTO
 from app.application.interfaces.gateways import NdtGateway
 
 
@@ -26,7 +26,7 @@ class GetCertainPersonalNdtsInteractor:
 class SelectNdtInteractor(BaseSelectInteractor[NdtDTO]): ...
 
 
-class UpdateNdtInteractor(BaseUpdateInteractor[UpdateNdtDTO]): ...
+class UpdateNdtInteractor(BaseUpdateInteractor): ...
 
 
 class DeleteNdtInteractor(BaseDeleteInteractor): ...
